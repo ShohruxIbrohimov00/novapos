@@ -1,0 +1,1104 @@
+{% extends "base.html" %}
+{% block title %}AI Skaner — NovaPOS{% endblock %}
+
+{% block extra_styles %}
+#ai-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    transition: background .2s, border-color .2s;
+}
+
+#ai-page {
+    background: var(--bg);
+    min-height: 100vh;
+    padding-bottom: 40px;
+    transition: background .2s;
+}
+
+/* ── Steps ── */
+.step-track {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+}
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    position: relative;
+}
+.step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--border2);
+    z-index: 0;
+}
+.step-item.done:not(:last-child)::after   { background: var(--success); }
+.step-item.active:not(:last-child)::after { background: linear-gradient(90deg, var(--primary), var(--border2)); }
+
+.step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text3);
+    position: relative;
+    z-index: 1;
+    transition: all .3s;
+}
+.step-item.done .step-circle {
+    background: color-mix(in srgb, var(--success) 15%, var(--surface2));
+    border-color: var(--success);
+    color: var(--success);
+}
+.step-item.active .step-circle {
+    background: var(--primary-s);
+    border-color: var(--primary);
+    color: var(--primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.step-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text3);
+    text-align: center;
+    white-space: nowrap;
+}
+.step-item.active .step-label { color: var(--primary); }
+.step-item.done   .step-label { color: var(--success); }
+
+/* ── Header inner ── */
+.ai-header-inner {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 16px 12px;
+}
+.ai-header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    margin-bottom: 12px;
+}
+.ai-header-title { flex: 1; min-width: 0; }
+.ai-header-title h1 {
+    font-weight: 900;
+    font-size: 15px;
+    line-height: 1.2;
+    color: var(--text);
+    margin: 0;
+}
+.ai-header-title p {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    margin: 0;
+}
+
+/* ── Cards ── */
+.ai-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+    transition: background .2s, border-color .2s;
+}
+
+/* ── Download cards ── */
+.dl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.dl-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all .15s;
+}
+.dl-card:hover  { border-color: var(--primary); background: var(--primary-s); }
+.dl-card:active { transform: scale(.97); }
+.dl-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+.dl-card-title { font-size: 13px; font-weight: 800; color: var(--text); }
+.dl-card-sub   { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.dl-card-arrow { flex-shrink: 0; }
+
+/* ── Sample table ── */
+.table-scroll-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+}
+.sample-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+    table-layout: fixed;
+}
+.sample-table th {
+    background: #1e40af;
+    color: #fff;
+    padding: 5px 6px;
+    font-weight: 800;
+    font-size: 9px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sample-table th.req { background: #2563eb; }
+.sample-table td {
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--border);
+    font-size: 9px;
+    color: var(--text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sample-table tr:nth-child(odd)  td { background: color-mix(in srgb, var(--primary) 4%, var(--surface2)); }
+.sample-table tr:nth-child(even) td { background: var(--surface2); }
+.sample-table td.req-cell {
+    background: color-mix(in srgb, #f59e0b 12%, var(--surface2)) !important;
+    font-weight: 700;
+    color: var(--text);
+}
+.sample-table td.num  { text-align: center; color: var(--primary); font-weight: 700; }
+.sample-table td.cat  { color: #8b5cf6; }
+.sample-table .hint-row td {
+    background: var(--primary-s) !important;
+    color: var(--primary);
+    font-style: italic;
+    font-size: 8.5px;
+}
+
+.sample-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 8px;
+    transition: opacity .15s;
+}
+.sample-toggle-btn:active { opacity: .7; }
+
+.sample-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.sample-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text3);
+}
+.sample-legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, #f59e0b 20%, var(--surface2));
+    border: 1px solid color-mix(in srgb, #f59e0b 30%, var(--border));
+}
+
+/* ── Drop zone ── */
+.drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 20px;
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--surface2);
+    position: relative;
+    transition: all .22s;
+}
+.drop-zone:hover,
+.drop-zone.drag-over { border-color: var(--primary); background: var(--primary-s); }
+
+.drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+.drop-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: var(--primary-s);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 22px;
+    pointer-events: none;
+}
+.drop-zone > *:not(input) { pointer-events: none; }
+.drop-zone-title {
+    font-weight: 900;
+    font-size: 14px;
+    color: var(--text);
+    margin: 0 0 4px;
+}
+.drop-zone-sub {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text3);
+    margin: 0;
+}
+
+/* ── Mobile camera buttons ── */
+.mobile-cam-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+@media (min-width: 1024px) {
+    .mobile-cam-btns { display: none; }
+}
+
+/* ── File preview ── */
+.file-prev {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: color-mix(in srgb, var(--success) 8%, var(--surface2));
+    border: 1.5px solid color-mix(in srgb, var(--success) 30%, var(--border));
+    border-radius: 16px;
+    margin-top: 12px;
+}
+.file-prev.show { display: flex; }
+.file-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: var(--surface2);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+.file-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.file-size { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.file-ok {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--success);
+    margin-top: 6px;
+}
+.file-remove {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--danger) 10%, var(--surface2));
+    border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--border));
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+.file-remove:active { transform: scale(.9); }
+
+/* ── Error box ── */
+.ai-error-box {
+    background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+    border: 1.5px solid color-mix(in srgb, var(--danger) 30%, var(--border));
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: none;
+    margin-top: 12px;
+}
+.ai-error-box.show { display: block; }
+.ai-error-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.ai-error-title {
+    font-size: 11px;
+    font-weight: 900;
+    color: var(--danger);
+    margin-bottom: 2px;
+}
+.ai-error-msg { font-size: 11px; color: var(--text2); }
+.ai-error-close {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* ── Analyze button ── */
+.analyze-btn-wrap { margin-top: 16px; }
+
+/* ── Tips ── */
+.tip-list { display: flex; flex-direction: column; gap: 10px; }
+.tip-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+}
+.tip-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--primary);
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+/* ── How steps ── */
+.how-list { display: flex; flex-direction: column; gap: 12px; }
+.how-step { display: flex; gap: 12px; }
+.how-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+.how-step-title { font-weight: 700; font-size: 12px; color: var(--text); }
+.how-step-sub   { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.4; }
+
+/* ── History ── */
+.hist-list { display: flex; flex-direction: column; gap: 8px; }
+.hist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.hist-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+}
+.hist-title { font-size: 11px; font-weight: 700; color: var(--text); }
+.hist-date  { font-size: 10px; color: var(--text3); }
+.hist-empty {
+    text-align: center;
+    padding: 16px 0;
+    font-size: 12px;
+    color: var(--text3);
+}
+.hist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.hist-refresh {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity .15s;
+}
+.hist-refresh:active { opacity: .6; }
+
+/* ── Content layout ── */
+.ai-content {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 16px;
+}
+.ai-left { display: flex; flex-direction: column; gap: 16px; }
+.card-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.card-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+.card-section-label {
+    font-weight: 900;
+    font-size: 13px;
+    color: var(--text);
+}
+.card-desc {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text2);
+    margin-bottom: 12px;
+}
+.section-heading {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text3);
+    margin-bottom: 12px;
+}
+.section-heading i { margin-right: 4px; }
+
+@media (min-width: 1024px) {
+    .ai-content {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 20px;
+        align-items: start;
+    }
+    #scan-sidebar    { display: block !important; }
+    #scan-tips-mobile { display: none !important; }
+}
+
+/* ── Badge ── */
+.badge-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 900;
+    background: var(--primary-s);
+    color: var(--primary);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+    flex-shrink: 0;
+}
+
+/* ── Back button ── */
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+.back-btn:active { transform: scale(.9); }
+
+/* ── AI Loading overlay ── */
+#ai-loading {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+}
+#ai-loading.show { display: flex; }
+.ai-loader-card {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 24px;
+    max-width: 300px;
+    width: calc(100% - 32px);
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,.4);
+    border: 1px solid var(--border);
+}
+.ai-spinner {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid var(--border2);
+    border-top-color: var(--primary);
+    animation: aispin .8s linear infinite;
+    margin: 0 auto 16px;
+}
+@keyframes aispin { to { transform: rotate(360deg); } }
+.ai-loader-title {
+    font-weight: 900;
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.ai-loader-sub {
+    font-size: 13px;
+    color: var(--text3);
+}
+.ai-hint-box {
+    margin-top: 12px;
+    background: var(--primary-s);
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+}
+.ai-hint-box p {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0;
+}
+{% endblock %}
+
+{% block content %}
+<div id="ai-page">
+
+    <!-- ══ HEADER ══ -->
+    <div id="ai-header">
+        <div class="ai-header-inner">
+            <div class="ai-header-top">
+                <button onclick="history.back()" class="back-btn">
+                    <i class="fa-solid fa-arrow-left" style="font-size:13px;color:var(--text2)"></i>
+                </button>
+                <div class="ai-header-title">
+                    <h1>AI Mahsulot Skaneri</h1>
+                    <p>Jadval rasmini yuklang — AI tahlil qiladi</p>
+                </div>
+                <span class="badge-ai">
+                    <i class="fa-solid fa-robot" style="font-size:9px"></i> AI
+                </span>
+            </div>
+            <!-- Steps -->
+            <div class="step-track">
+                <div class="step-item done" id="stp1">
+                    <div class="step-circle"><i class="fa-solid fa-check" style="font-size:10px"></i></div>
+                    <div class="step-label">Shablon</div>
+                </div>
+                <div class="step-item active" id="stp2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Yuklash</div>
+                </div>
+                <div class="step-item" id="stp3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Tasdiqlash</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ CONTENT ══ -->
+    <div class="ai-content" id="scan-layout">
+
+        <!-- CHAP -->
+        <div class="ai-left">
+
+            <!-- BLOK 1: Shablon -->
+            <div class="ai-card">
+                <div class="card-section-title">
+                    <div class="card-section-icon" style="background:var(--primary-s)">
+                        <i class="fa-solid fa-1" style="color:var(--primary)"></i>
+                    </div>
+                    <span class="card-section-label">Shablonni yuklab oling</span>
+                </div>
+                <p class="card-desc">
+                    Tayyor shablonni yuklab, qalamda yoki kompyuterda to'ldiring.
+                    Keyin rasmga olib yoki faylni yuklang.
+                </p>
+                <div class="dl-grid">
+                    <a href="/static/shablon/novapos_mahsulot.xlsx" download class="dl-card">
+                        <div class="dl-icon" style="background:color-mix(in srgb,#059669 12%,var(--surface2))">
+                            <i class="fa-solid fa-file-excel" style="color:#059669"></i>
+                        </div>
+                        <div style="flex:1;min-width:0">
+                            <div class="dl-card-title">Excel</div>
+                            <div class="dl-card-sub">.xlsx • PC/telefon</div>
+                        </div>
+                        <i class="fa-solid fa-download dl-card-arrow" style="font-size:12px;color:#059669"></i>
+                    </a>
+                    <a href="/static/shablon/novapos_mahsulot.pdf" download class="dl-card">
+                        <div class="dl-icon" style="background:color-mix(in srgb,#ef4444 10%,var(--surface2))">
+                            <i class="fa-solid fa-file-pdf" style="color:#ef4444"></i>
+                        </div>
+                        <div style="flex:1;min-width:0">
+                            <div class="dl-card-title">PDF</div>
+                            <div class="dl-card-sub">.pdf • Chop etish</div>
+                        </div>
+                        <i class="fa-solid fa-download dl-card-arrow" style="font-size:12px;color:#ef4444"></i>
+                    </a>
+                </div>
+
+                <button onclick="toggleSample()" class="sample-toggle-btn">
+                    <i class="fa-solid fa-table-cells" style="font-size:12px"></i>
+                    <span id="sample-btn-text">Namuna jadval ko'rish</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size:10px;transition:transform .2s" id="sample-chevron"></i>
+                </button>
+
+                <div id="sample-preview" style="display:none">
+                    <div class="table-scroll-wrap">
+                        <table class="sample-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:22px">№</th>
+                                    <th class="req" style="width:130px">Mahsulot nomi</th>
+                                    <th style="width:90px">Barcode</th>
+                                    <th style="width:42px">Miqdor</th>
+                                    <th style="width:76px">Kelish narxi</th>
+                                    <th class="req" style="width:76px">Sotuv narxi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="num">1</td>
+                                    <td class="req-cell">Coca Cola 1L</td>
+                                    <td>4870204270017</td>
+                                    <td class="num">24</td>
+                                    <td class="num">8000</td>
+                                    <td class="req-cell num">12000</td>
+                                </tr>
+                                <tr>
+                                    <td class="num">2</td>
+                                    <td class="req-cell">Ariel 3kg</td>
+                                    <td>5413149407680</td>
+                                    <td class="num">10</td>
+                                    <td class="num">45000</td>
+                                    <td class="req-cell num">62000</td>
+                                </tr>
+                                <tr>
+                                    <td class="num">3</td>
+                                    <td class="req-cell">Banan</td>
+                                    <td style="color:var(--text3);font-style:italic">—</td>
+                                    <td class="num">15.5</td>
+                                    <td class="num">4000</td>
+                                    <td class="req-cell num">7000</td>
+                                </tr>
+                                <tr class="hint-row">
+                                    <td class="num">...</td>
+                                    <td colspan="5">← Shu formatda to'ldiring. Birlik va kategoriyani AI o'zi aniqlaydi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="sample-legend">
+                        <div class="sample-legend-item">
+                            <div class="sample-legend-swatch"></div>
+                            <span>Sariq = Majburiy</span>
+                        </div>
+                        <div class="sample-legend-item">
+                            <i class="fa-solid fa-robot" style="font-size:10px;color:var(--primary)"></i>
+                            <span>AI birlik va kategoriyani o'zi aniqlaydi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLOK 2: Yuklash -->
+            <div class="ai-card">
+                <div class="card-section-title">
+                    <div class="card-section-icon" style="background:color-mix(in srgb,#8b5cf6 12%,var(--surface2))">
+                        <i class="fa-solid fa-2" style="font-size:12px;color:#8b5cf6"></i>
+                    </div>
+                    <span class="card-section-label">Rasm yoki faylni yuklang</span>
+                </div>
+
+                <!-- Drop zone -->
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,.xlsx,.xls">
+                    <div class="drop-icon-wrap">
+                        <i class="fa-solid fa-cloud-arrow-up" style="color:var(--primary)"></i>
+                    </div>
+                    <p class="drop-zone-title">Fayl tanlang yoki shu yerga tashlang</p>
+                    <p class="drop-zone-sub">
+                        <strong style="color:var(--text2)">Rasm:</strong> JPG, PNG, WebP &nbsp;•&nbsp;
+                        <strong style="color:var(--text2)">Excel:</strong> .xlsx<br>
+                        Maksimal: 10 MB
+                    </p>
+                </div>
+
+                <!-- Mobil kamera tugmalari -->
+                <div class="mobile-cam-btns">
+                    <button onclick="triggerCamera()"
+                        class="btn"
+                        style="flex:1;font-size:13px;padding:10px;font-weight:700;background:var(--primary-s);color:var(--primary);border:1px solid color-mix(in srgb,var(--primary) 25%,var(--border))">
+                        <i class="fa-solid fa-camera"></i> Kameradan olish
+                    </button>
+                    <button onclick="document.getElementById('fileInput').click()"
+                        class="btn"
+                        style="flex:1;font-size:13px;padding:10px;font-weight:700;background:var(--surface2);color:var(--text2);border:1px solid var(--border)">
+                        <i class="fa-solid fa-folder-open"></i> Galereya
+                    </button>
+                </div>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
+
+                <!-- File preview -->
+                <div class="file-prev" id="filePrev">
+                    <div class="file-thumb" id="fileThumb">📄</div>
+                    <div class="file-info">
+                        <div class="file-name" id="fileName">—</div>
+                        <div class="file-size" id="fileSize">—</div>
+                        <div class="file-ok">
+                            <i class="fa-solid fa-circle-check" style="font-size:11px"></i> Tayyor — tahlil qilish mumkin
+                        </div>
+                    </div>
+                    <button id="removeFile" class="file-remove">
+                        <i class="fa-solid fa-xmark" style="font-size:11px;color:var(--danger)"></i>
+                    </button>
+                </div>
+
+                <!-- Xato bloki -->
+                <div class="ai-error-box" id="errorBox">
+                    <div class="ai-error-inner">
+                        <i class="fa-solid fa-circle-exclamation" style="color:var(--danger);flex-shrink:0;margin-top:2px"></i>
+                        <div>
+                            <div class="ai-error-title">Xato yuz berdi</div>
+                            <div class="ai-error-msg" id="errorMsg"></div>
+                        </div>
+                        <button onclick="closeError()" class="ai-error-close">✕</button>
+                    </div>
+                </div>
+
+                <div class="analyze-btn-wrap">
+                    <button id="analyzeBtn" disabled onclick="doAnalyze()"
+                        class="btn btn-primary btn-w"
+                        style="font-size:13px;padding:12px;opacity:1">
+                        <i class="fa-solid fa-robot"></i> AI bilan tahlil qilish
+                    </button>
+                </div>
+            </div>
+
+            <!-- Maslahatlar (mobil) -->
+            <div id="scan-tips-mobile" class="ai-card">
+                <div class="section-heading">
+                    <i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Maslahatlar
+                </div>
+                <div class="tip-list">
+                    <div class="tip-item"><div class="tip-dot"></div>Rasmni tekis, yoritilgan joyda oling</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Barcha ustunlar aniq ko'rinsin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Raqamlar aniq, qo'l yozuvi o'qishli bo'lsin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Jadval to'liq kadrga sig'sin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Tasdiqlash sahifasida xatolarni to'g'rilash mumkin</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- O'NG: Sidebar (desktop) -->
+        <div id="scan-sidebar" style="display:none;display:flex;flex-direction:column;gap:16px">
+
+            <div class="ai-card">
+                <div class="section-heading">
+                    <i class="fa-solid fa-circle-info" style="color:var(--primary)"></i> Qanday ishlaydi
+                </div>
+                <div class="how-list">
+                    <div class="how-step">
+                        <div class="how-num" style="background:var(--primary-s);color:var(--primary)">1</div>
+                        <div>
+                            <div class="how-step-title">Shablonni yuklab oling</div>
+                            <div class="how-step-sub">Excel yoki PDF format</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-num" style="background:color-mix(in srgb,#8b5cf6 12%,var(--surface2));color:#8b5cf6">2</div>
+                        <div>
+                            <div class="how-step-title">Rasm oling yoki faylni yuklang</div>
+                            <div class="how-step-sub">To'ldirilgan jadvalni rasmga oling</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-num" style="background:color-mix(in srgb,var(--success) 12%,var(--surface2));color:var(--success)">3</div>
+                        <div>
+                            <div class="how-step-title">AI tahlil qiladi</div>
+                            <div class="how-step-sub">Mahsulotlarni tanib ro'yxat chiqaradi</div>
+                        </div>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-num" style="background:color-mix(in srgb,#f59e0b 12%,var(--surface2));color:#f59e0b">4</div>
+                        <div>
+                            <div class="how-step-title">Tekshirib tasdiqlang</div>
+                            <div class="how-step-sub">Xatolarni to'g'rilab, bazaga qo'shing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-card">
+                <div class="section-heading">
+                    <i class="fa-solid fa-lightbulb" style="color:#f59e0b"></i> Yaxshi natija uchun
+                </div>
+                <div class="tip-list">
+                    <div class="tip-item"><div class="tip-dot"></div>Rasmni tekis, yoritilgan joyda oling</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Barcha ustunlar aniq ko'rinsin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Raqamlar aniq, qo'l yozuvi o'qimli bo'lsin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>Jadval to'liq kadrga sig'sin</div>
+                    <div class="tip-item"><div class="tip-dot"></div>O'zbekcha yoki ruscha yozish mumkin</div>
+                </div>
+            </div>
+
+            <!-- So'nggi skanlar -->
+            <div class="ai-card">
+                <div class="hist-header">
+                    <div class="section-heading" style="margin-bottom:0">
+                        <i class="fa-solid fa-clock-rotate-left" style="color:var(--border2)"></i> So'nggi qo'shilganlar
+                    </div>
+                    <button onclick="loadHistory()" class="hist-refresh">Yangilash</button>
+                </div>
+                <div id="historyList">
+                    <div class="hist-empty">
+                        <i class="fa-solid fa-inbox" style="font-size:22px;display:block;margin-bottom:4px"></i>
+                        Hali qo'shilganlar yo'q
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- AI LOADING -->
+<div id="ai-loading">
+    <div class="ai-loader-card">
+        <div class="ai-spinner"></div>
+        <div class="ai-loader-title">AI tahlil qilmoqda</div>
+        <div class="ai-loader-sub">Biroz kuting — 10–30 soniya</div>
+        <div class="ai-hint-box">
+            <p id="loadingHint">Rasm sifatini tekshirmoqda...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fileInput   = document.getElementById('fileInput');
+const cameraInput = document.getElementById('cameraInput');
+const dropZone    = document.getElementById('dropZone');
+const filePrev    = document.getElementById('filePrev');
+const fileThumb   = document.getElementById('fileThumb');
+const fileNameEl  = document.getElementById('fileName');
+const fileSizeEl  = document.getElementById('fileSize');
+const analyzeBtn  = document.getElementById('analyzeBtn');
+const aiLoading   = document.getElementById('ai-loading');
+
+let selectedFile = null;
+
+function toggleSample() {
+    const el     = document.getElementById('sample-preview');
+    const ch     = document.getElementById('sample-chevron');
+    const txt    = document.getElementById('sample-btn-text');
+    const hidden = el.style.display === 'none';
+    el.style.display   = hidden ? '' : 'none';
+    ch.style.transform = hidden ? 'rotate(180deg)' : '';
+    txt.textContent    = hidden ? 'Yopish' : "Namuna jadval ko'rish";
+}
+
+function showError(msg) {
+    const box = document.getElementById('errorBox');
+    document.getElementById('errorMsg').textContent = msg;
+    box.classList.add('show');
+    if (typeof showToast === 'function') showToast('❌ ' + msg, 'error');
+}
+function closeError() {
+    document.getElementById('errorBox').classList.remove('show');
+}
+
+function setFile(file) {
+    if (!file) return;
+    closeError();
+    const isImg   = ['image/jpeg','image/png','image/webp'].includes(file.type);
+    const isExcel = /\.xlsx?$/i.test(file.name);
+    if (!isImg && !isExcel) { showError("Faqat rasm (JPG/PNG/WebP) yoki Excel (.xlsx) fayllar qabul qilinadi"); return; }
+    if (file.size > 10 * 1024 * 1024) { showError("Fayl hajmi 10 MB dan oshmasin"); return; }
+    selectedFile = file;
+    if (isImg) {
+        const url = URL.createObjectURL(file);
+        fileThumb.innerHTML = `<img src="${url}" alt="preview">`;
+    } else {
+        fileThumb.innerHTML = '<i class="fa-solid fa-file-excel" style="font-size:22px;color:#059669"></i>';
+    }
+    fileNameEl.textContent = file.name;
+    fileSizeEl.textContent = formatBytes(file.size);
+    filePrev.classList.add('show');
+    dropZone.style.display = 'none';
+    analyzeBtn.disabled    = false;
+}
+
+function formatBytes(b) {
+    if (b < 1024)    return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+}
+
+fileInput.addEventListener('change',   e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+cameraInput.addEventListener('change', e => { if (e.target.files[0]) setFile(e.target.files[0]); });
+
+document.getElementById('removeFile').addEventListener('click', () => {
+    selectedFile           = null;
+    fileInput.value        = '';
+    cameraInput.value      = '';
+    filePrev.classList.remove('show');
+    dropZone.style.display = '';
+    analyzeBtn.disabled    = true;
+    closeError();
+    const img = fileThumb.querySelector('img');
+    if (img) URL.revokeObjectURL(img.src);
+});
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', e => { e.stopPropagation(); dropZone.classList.remove('drag-over'); });
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) setFile(file);
+});
+
+function triggerCamera() { cameraInput.click(); }
+
+const HINTS = [
+    'Rasm sifatini tekshirmoqda...', 'Matnni tanib olmoqda...',
+    'Mahsulot nomlarini ajratmoqda...', 'Narxlarni tekshirmoqda...',
+    'Jadval strukturasini tahlil qilmoqda...', 'Natijalarni tartiblamoqda...',
+];
+let _hintIdx = 0, _hintTimer = null;
+function startHints() {
+    _hintIdx = 0;
+    document.getElementById('loadingHint').textContent = HINTS[0];
+    _hintTimer = setInterval(() => {
+        _hintIdx = (_hintIdx + 1) % HINTS.length;
+        document.getElementById('loadingHint').textContent = HINTS[_hintIdx];
+    }, 2500);
+}
+function stopHints() { if (_hintTimer) { clearInterval(_hintTimer); _hintTimer = null; } }
+
+async function doAnalyze() {
+    if (!selectedFile) { showError("Iltimos, avval fayl tanlang!"); return; }
+    closeError();
+    aiLoading.classList.add('show');
+    startHints();
+    analyzeBtn.disabled = true;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    const token = localStorage.getItem('access_token');
+    if (!token) { showError("Tizimga kirmagansiz! Iltimos, qayta login qiling."); window.location.href = '/login'; return; }
+    const isExcel = selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls');
+    const apiUrl  = isExcel ? '/api/ai/scan-excel' : '/api/ai/scan';
+    try {
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+        if (!response.ok) {
+            if (response.status === 401) throw new Error("Sessiya muddati tugagan. Iltimos, qayta login qiling.");
+            const errData = await response.json();
+            throw new Error(errData.detail || "Server tahlil qila olmadi");
+        }
+        const result = await response.json();
+        localStorage.setItem('ai_scan_result', JSON.stringify(result));
+        window.location.href = '/ai-scan/confirm';
+    } catch (err) {
+        showError(err.message || "Ulanishda xato.");
+    } finally {
+        aiLoading.classList.remove('show');
+        stopHints();
+        analyzeBtn.disabled = false;
+    }
+}
+
+async function loadHistory() {
+    const list = document.getElementById('historyList');
+    try {
+        const TOKEN = localStorage.getItem('access_token') || '';
+        const res   = await fetch('/api/ai/scan/history?limit=5', { headers: { 'Authorization': 'Bearer ' + TOKEN } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.length) return;
+        list.innerHTML = '<div class="hist-list">' + data.map(s => {
+            const isOk = s.status === 'success';
+            const dt   = s.created_at ? new Date(s.created_at).toLocaleString('uz-UZ') : '—';
+            return `
+            <div class="hist-item">
+                <div class="hist-icon" style="background:${isOk ? 'color-mix(in srgb,var(--success) 15%,var(--surface2))' : 'color-mix(in srgb,var(--danger) 10%,var(--surface2))'}">
+                    <i class="fa-solid ${isOk ? 'fa-check' : 'fa-times'}" style="color:${isOk ? 'var(--success)' : 'var(--danger)'}"></i>
+                </div>
+                <div>
+                    <div class="hist-title">${s.products_found || 0} topildi, ${s.products_added || 0} qo'shildi</div>
+                    <div class="hist-date">${dt}</div>
+                </div>
+            </div>`;
+        }).join('') + '</div>';
+    } catch (e) { /* jimlik */ }
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadHistory(); });
+</script>
+{% endblock %}

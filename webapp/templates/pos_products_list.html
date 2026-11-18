@@ -1,0 +1,43 @@
+{# /api/products/pos/products-fragment #}
+{% if not products %}
+<div class="area-empty" style="height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.1; margin-bottom: 16px;">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+    </svg>
+    <p style="font-weight: 800; color: var(--text3); font-size: 15px;">Hozircha mahsulot yo'q</p>
+</div>
+{% else %}
+
+{# Kategoriyalar bo'yicha guruhlash #}
+{% set categories = {} %}
+{% for p in products %}
+    {% set cat = p.category_name or 'Kategoriyasiz' %}
+    {% if cat not in categories %}
+        {% set _ = categories.update({cat: []}) %}
+    {% endif %}
+    {% set _ = categories[cat].append(p) %}
+{% endfor %}
+
+{% for cat_name, cat_products in categories.items() %}
+<div class="cat-label">{{ cat_name }}</div>
+<div class="plu-grid">
+    {% for p in cat_products %}
+    <div class="pcard {% if p.quantity <= 0 %}out{% elif p.quantity <= 5 %}low{% endif %}"
+         onclick="addProd({{ p.id }})"
+         data-pid="{{ p.id }}">
+        <span class="pcard-qty">{{ p.quantity }}</span>
+        {% if p.unit_type and p.unit_type != 'dona' %}
+            <span class="pcard-unit">{{ p.unit_type }}</span>
+        {% endif %}
+        <span class="pcard-name">{{ p.name }}</span>
+        <div class="pcard-price">
+            {{ "{:,.0f}".format(p.price_out).replace(',', ' ') }}
+            {% if p.short_code %}
+                <small style="display:block;font-size:9px;opacity:.6">PLU: {{ p.short_code }}</small>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+{% endif %}

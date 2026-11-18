@@ -1,0 +1,20 @@
+{% for p in products %}
+<tr class="table-row animate-fade-in">
+    <td>
+        <div class="p-name">{{ p.name }}</div>
+        <small class="text3">{{ p.barcode or 'Barcode yo\'q' }}</small>
+    </td>
+    <td><span class="badge badge-gray">{{ p.category_name }}</span></td>
+    <td class="font-mono text-right">{{ "{:,.0f}".format(p.price_out).replace(',', ' ') }}</td>
+    <td class="text-center">
+        <span class="stock-tag {% if p.quantity <= p.min_stock_limit %}low-stock{% endif %}">
+            {{ p.quantity }} {{ p.unit_type }}
+        </span>
+    </td>
+    <td class="text-right">
+        <button class="btn-ghost p-2" hx-get="/products/edit/{{ p.id }}" hx-target="#page-content">
+            <i class="fa-solid fa-pen-to-square"></i>
+        </button>
+    </td>
+</tr>
+{% endfor %}

@@ -1,0 +1,1280 @@
+{% extends "base.html" %}
+{% block title %}Tasdiqlash — NovaPOS{% endblock %}
+
+{% block extra_styles %}
+/* ══════════════════════════════════════════════════════════
+   ai_scan_confirm.html — v5.0  |  Sof CSS (Tailwindsiz)
+   ══════════════════════════════════════════════════════════ */
+
+#app-main { overflow: hidden !important; padding: 0 !important; }
+
+/* ── Root ── */
+#cf-root {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+/* ── Header ── */
+#cf-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 20;
+    padding-top: max(0px, env(safe-area-inset-top));
+}
+.cf-header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 16px;
+}
+.cf-header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+.cf-header-title h1 {
+    font-weight: 900;
+    font-size: 15px;
+    color: var(--text);
+    margin: 0;
+}
+.cf-header-title p {
+    font-size: 11px;
+    color: var(--text3);
+    margin: 0;
+}
+.cf-header-title { flex: 1; min-width: 0; }
+
+/* ── Scroll area ── */
+#cf-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+}
+#cf-scroll::-webkit-scrollbar       { width: 4px; }
+#cf-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+@media (max-width: 767px) { #cf-scroll { padding-bottom: 72px; } }
+
+/* ── Footer (mobile only) ── */
+#cf-footer {
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--surface) 97%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 10px 16px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 40;
+}
+.cf-footer-inner {
+    display: flex;
+    gap: 12px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+@media (min-width: 1024px) { #cf-footer { display: none !important; } }
+
+/* ── Keyboard toggle (desktop only) ── */
+#cf-kb-toggle {
+    display: none;
+    flex-shrink: 0;
+    padding: 7px 16px;
+    border-top: 1px solid var(--border);
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s;
+    z-index: 10;
+}
+#cf-kb-toggle:hover { background: var(--surface2); }
+@media (min-width: 1024px) { #cf-kb-toggle { display: flex; } }
+.kb-toggle-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.kb-toggle-field {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-left: 4px;
+}
+
+/* ── Keyboard panel ── */
+#cf-kb-panel {
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s cubic-bezier(.4,0,.2,1);
+}
+#cf-kb-panel.open { max-height: 300px; }
+
+#cf-kb-display {
+    margin: 7px 10px 4px;
+    background: var(--surface2);
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    padding: 5px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+#cf-kb-typed {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+#cf-kb-typed:empty::before { content: 'Maydon tanlang...'; color: var(--text3); font-weight: 500; font-size: 12px; }
+#cf-kb-hint { font-size: 10px; font-weight: 700; color: var(--text3); white-space: nowrap; flex-shrink: 0; }
+
+#cf-kb-rows { padding: 2px 7px 8px; display: flex; flex-direction: column; gap: 3px; }
+.cf-krow    { display: flex; gap: 2px; justify-content: center; }
+
+.cfkey {
+    height: 33px;
+    min-width: 24px;
+    flex: 1;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .07s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    user-select: none;
+    box-shadow: 0 1px 2px var(--shadow);
+}
+.cfkey:hover  { background: var(--primary-s); border-color: var(--primary); color: var(--primary); }
+.cfkey:active { transform: scale(.83) translateY(1px); box-shadow: none; }
+.cfkey.kdel   { background: color-mix(in srgb, var(--danger) 12%, var(--surface2)); color: var(--danger); }
+.cfkey.kenter { flex: 2.2; background: var(--primary); color: #fff; border-color: var(--primary); font-size: 10px; font-weight: 900; box-shadow: 0 2px 8px rgba(37,99,235,.3); }
+.cfkey.kenter:hover { background: #1d4ed8; }
+.cfkey.kshift { flex: 1.6; font-size: 12px; }
+.cfkey.kshift.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cfkey.kgray  { font-size: 11px; color: var(--text2); }
+.cfkey.kspace { flex: 4.5; font-size: 10px; color: var(--text3); }
+
+/* ── Layout ── */
+#cf-layout {
+    min-width: 0;
+    width: 100%;
+    padding: 14px 16px;
+}
+@media (min-width: 1024px) {
+    #cf-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 256px;
+        gap: 16px;
+        align-items: start;
+        padding: 16px 20px;
+        max-width: 1280px;
+        margin: 0 auto;
+    }
+    #cf-sidebar { display: block !important; }
+    .mob-cards  { display: none !important; }
+    .desk-tbl   { display: block !important; }
+}
+@media (max-width: 1023px) { .desk-tbl { display: none !important; } }
+
+/* ── Stat pills ── */
+.stat-pills {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.stat-pills::-webkit-scrollbar { display: none; }
+.stat-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+    gap: 2px;
+    min-width: 52px;
+    flex-shrink: 0;
+}
+.stat-pill span {
+    font-size: 8px;
+    font-weight: 700;
+    opacity: .7;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.stat-total { background: var(--primary-s); color: var(--primary); }
+.stat-ok    { background: color-mix(in srgb, var(--success) 12%, var(--surface2)); color: var(--success); }
+.stat-add   { background: color-mix(in srgb, var(--warning) 12%, var(--surface2)); color: var(--warning); }
+.stat-err   { background: color-mix(in srgb, var(--danger)  12%, var(--surface2)); color: var(--danger);  }
+
+/* ── Badges ── */
+.badge-new, .badge-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.badge-new {
+    background: var(--primary-s);
+    color: var(--primary);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
+}
+.badge-add {
+    background: color-mix(in srgb, var(--warning) 14%, var(--surface2));
+    color: var(--warning);
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, var(--border));
+}
+
+/* ── Toolbar ── */
+.toolbar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.toolbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.search-box {
+    flex: 1;
+    min-width: 130px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 7px 10px;
+    transition: border-color .15s;
+}
+.search-box:focus-within { border-color: var(--primary); }
+.search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    width: 100%;
+}
+.search-box input::placeholder { color: var(--text3); }
+
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.chip.active     { background: var(--primary); border-color: var(--primary); color: #fff; }
+.chip.add.active { background: var(--warning); border-color: var(--warning); color: #fff; }
+.chip.err.active { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+.chip:active     { transform: scale(.95); }
+
+.add-row-btn {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 12px;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    transition: all .15s;
+}
+.add-row-btn:active { transform: scale(.95); }
+
+/* ── Mobile cards ── */
+.prod-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 11px 12px;
+    position: relative;
+    transition: border-color .2s, background .2s;
+    margin-bottom: 8px;
+}
+.prod-card.is-warn { border-color: color-mix(in srgb, var(--warning) 50%, var(--border)); background: color-mix(in srgb, var(--warning) 4%, var(--surface)); }
+.prod-card.is-err  { border-color: color-mix(in srgb, var(--danger)  50%, var(--border)); background: color-mix(in srgb, var(--danger)  4%, var(--surface)); }
+.prod-card.is-add  { border-color: color-mix(in srgb, var(--warning) 40%, var(--border)); background: color-mix(in srgb, var(--warning) 3%, var(--surface)); }
+
+.prod-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding-right: 64px;
+}
+.prod-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    background: var(--primary-s);
+    border: 1px solid color-mix(in srgb, var(--primary) 20%, var(--border));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+.prod-name-wrap { flex: 1; min-width: 0; }
+.sdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-ok   { background: #22c55e; }
+.dot-warn { background: #f59e0b; }
+.dot-err  { background: #ef4444; }
+
+.card-acts {
+    display: flex;
+    gap: 5px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.act-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text3);
+    transition: all .15s;
+}
+.act-btn:active { transform: scale(.88); }
+.act-btn.dup:hover { color: var(--primary); background: var(--primary-s); }
+.act-btn.del:hover { color: var(--danger);  background: color-mix(in srgb, var(--danger) 8%, var(--surface2)); }
+
+.card-row-2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.card-barcode {
+    flex: 1;
+    min-width: 0;
+}
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.lbl {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text3);
+    margin-bottom: 3px;
+}
+.lbl.req { color: var(--primary); }
+
+.cinput {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color .15s, background .15s;
+    -moz-appearance: textfield;
+    box-sizing: border-box;
+}
+.cinput:focus { border-color: var(--primary); background: var(--surface); }
+.cinput.warn  { border-color: color-mix(in srgb, var(--warning) 70%, var(--border)) !important; }
+.cinput.err   { border-color: color-mix(in srgb, var(--danger)  70%, var(--border)) !important; }
+.cinput::-webkit-inner-spin-button { display: none; }
+select.cinput { cursor: pointer; }
+option { background: var(--surface); color: var(--text); }
+
+.match-hint {
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conf-bar   { display: flex; align-items: center; gap: 5px; }
+.conf-track { flex: 1; height: 3px; border-radius: 2px; background: var(--surface2); overflow: hidden; }
+.conf-fill  { height: 100%; border-radius: 2px; }
+
+/* ── Desktop table ── */
+.tbl-wrap {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+}
+.ctable { width: 100%; border-collapse: collapse; min-width: 640px; }
+.ctable thead th {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 9px 7px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text3);
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.ctable thead th.req { color: var(--primary); }
+.ctable tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+.ctable tbody tr:hover  { background: var(--surface2); }
+.ctable tbody tr.r-warn { background: color-mix(in srgb, var(--warning) 5%, var(--surface)); }
+.ctable tbody tr.r-err  { background: color-mix(in srgb, var(--danger)  5%, var(--surface)); }
+.ctable tbody tr.r-add  { background: color-mix(in srgb, var(--warning) 3%, var(--surface)); }
+.ctable td { padding: 0; vertical-align: middle; }
+
+.cedit { position: relative; min-width: 0; }
+.cedit input, .cedit select {
+    width: 100%;
+    padding: 8px 7px;
+    background: none;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    -moz-appearance: textfield;
+}
+.cedit input::-webkit-inner-spin-button { display: none; }
+.cedit::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1.5px solid transparent;
+    border-radius: 5px;
+    pointer-events: none;
+    transition: border-color .15s;
+}
+.cedit:focus-within::after {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.cedit select { cursor: pointer; }
+td.cn  { width: 32px; text-align: center; padding: 5px 3px; font-size: 10px; color: var(--text3); font-weight: 700; }
+td.ca  { width: 64px; padding: 3px 5px; }
+td.cm  { width: 86px; padding: 3px 5px; }
+.acts  { display: flex; gap: 3px; align-items: center; justify-content: center; }
+
+/* ── Sidebar ── */
+.sb-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+.sb-title {
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text3);
+    margin-bottom: 12px;
+}
+.sb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.sb-row:last-child { margin-bottom: 0; }
+.sb-label { font-size: 12px; color: var(--text2); }
+.sb-val   { font-weight: 900; color: var(--text); }
+.sb-divider { border-top: 1px solid var(--border); padding-top: 10px; }
+.sb-note-list { display: flex; flex-direction: column; gap: 6px; }
+.sb-note { font-size: 11px; line-height: 1.5; color: var(--text2); }
+
+/* ── Modals ── */
+.rmod {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    align-items: flex-end;
+    justify-content: center;
+}
+.rmod.show { display: flex; }
+.rmod-inner {
+    background: var(--surface);
+    width: 100%;
+    max-width: 480px;
+    border-top: 1px solid var(--border);
+    border-radius: 22px 22px 0 0;
+    padding: 20px;
+    padding-bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
+    animation: slideUp .28s ease;
+}
+@media (min-width: 768px) {
+    .rmod { align-items: center; justify-content: center; }
+    .rmod-inner {
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        max-width: 380px;
+        padding: 28px 24px;
+        box-shadow: 0 24px 64px rgba(0,0,0,.3);
+        animation: fadeScaleIn .22s ease;
+    }
+    .rmod-handle { display: none !important; }
+}
+.rmod-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 100px;
+    background: var(--border2);
+    margin: 0 auto 14px;
+}
+.rmod-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+.rmod-title {
+    font-weight: 900;
+    font-size: 17px;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 6px;
+}
+.rmod-sub {
+    font-size: 13px;
+    color: var(--text3);
+    text-align: center;
+    margin-bottom: 20px;
+}
+.rmod-btns { display: flex; gap: 12px; }
+
+/* ── Save loading ── */
+#save-loading {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(6px);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+}
+#save-loading.show { display: flex; }
+.save-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,.4);
+}
+.save-spin {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 3px solid var(--border2);
+    border-top-color: var(--primary);
+    animation: spin .8s linear infinite;
+    margin: 0 auto 12px;
+}
+.save-label { font-weight: 700; font-size: 13px; color: var(--text); }
+
+/* Back button */
+.back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface2);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+.back-btn:active { transform: scale(.9); }
+{% endblock %}
+
+{% block content %}
+<div id="cf-root">
+
+    <!-- ══ HEADER ══ -->
+    <div id="cf-header">
+        <div class="cf-header-inner">
+            <div class="cf-header-top">
+                <button onclick="window.location.href='/ai-scan'" class="back-btn">
+                    <i class="fa-solid fa-arrow-left" style="font-size:13px;color:var(--text2)"></i>
+                </button>
+                <div class="cf-header-title">
+                    <h1>Natijalarni tasdiqlang</h1>
+                    <p id="hdrSub">AI topgan mahsulotlarni ko'rib chiqing</p>
+                </div>
+            </div>
+            <div class="stat-pills">
+                <div class="stat-pill stat-total"><span id="sTotal">0</span><span>Jami</span></div>
+                <div class="stat-pill stat-ok">   <span id="sNew">0</span><span>Yangi</span></div>
+                <div class="stat-pill stat-add">  <span id="sAdd">0</span><span>Ustiga</span></div>
+                <div class="stat-pill stat-err">  <span id="sErr">0</span><span>Xato</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ SCROLL AREA ══ -->
+    <div id="cf-scroll">
+        <div id="cf-layout">
+
+            <!-- CHAP: jadval/kartlar -->
+            <div>
+                <!-- Toolbar -->
+                <div class="toolbar-card">
+                    <div class="toolbar-inner">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass" style="font-size:11px;color:var(--text3);flex-shrink:0"></i>
+                            <input id="searchQ" type="text" placeholder="Qidirish..."
+                                onfocus="cfKbFocus(this, false)"
+                                onclick="cfKbFocus(this, false)">
+                        </div>
+                        <div class="chip-group">
+                            <button class="chip active" onclick="setF('all',this)">Barchasi</button>
+                            <button class="chip add"    onclick="setF('add',this)">
+                                <i class="fa-solid fa-layer-plus" style="font-size:9px"></i> Ustiga
+                            </button>
+                            <button class="chip err"    onclick="setF('err',this)">Xato</button>
+                        </div>
+                        <button onclick="addRow()" class="add-row-btn">
+                            <i class="fa-solid fa-plus" style="font-size:11px"></i>
+                            Qo'shish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile cards -->
+                <div class="mob-cards" id="mobCards"></div>
+
+                <!-- Desktop table -->
+                <div class="desk-tbl" style="display:none">
+                    <div class="tbl-wrap">
+                        <table class="ctable">
+                            <thead>
+                                <tr>
+                                    <th style="width:32px;text-align:center">№</th>
+                                    <th style="width:20px"></th>
+                                    <th class="req" style="min-width:160px">Mahsulot nomi ★</th>
+                                    <th style="min-width:95px">PLU / Barcode</th>
+                                    <th style="min-width:60px">Miqdor</th>
+                                    <th style="min-width:70px">Birlik</th>
+                                    <th style="min-width:80px">Kelish narxi</th>
+                                    <th class="req" style="min-width:80px">Sotuv narxi ★</th>
+                                    <th style="min-width:58px">Ishonch</th>
+                                    <th style="width:86px">Holat</th>
+                                    <th style="width:64px;text-align:center">Amal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tBody"></tbody>
+                        </table>
+                        <div id="emptyMsg" class="hidden" style="padding:56px 0;text-align:center">
+                            <i class="fa-solid fa-box-open" style="font-size:28px;display:block;margin-bottom:8px;color:var(--border2)"></i>
+                            <p style="font-size:13px;font-weight:700;color:var(--text3)">Mahsulot topilmadi</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- O'NG: Sidebar (desktop) -->
+            <div id="cf-sidebar" style="display:none">
+                <div class="sb-card">
+                    <div class="sb-title">Xulosa</div>
+                    <div class="sb-row">
+                        <span class="sb-label">Jami</span>
+                        <span class="sb-val" id="sbTotal">0</span>
+                    </div>
+                    <div class="sb-row">
+                        <span class="badge-new">Yangi</span>
+                        <span class="sb-val" id="sbNew" style="color:var(--primary)">0</span>
+                    </div>
+                    <div class="sb-row">
+                        <span class="badge-add">Ustiga</span>
+                        <span class="sb-val" id="sbAdd" style="color:var(--warning)">0</span>
+                    </div>
+                    <div class="sb-row">
+                        <span class="sb-label">Xato</span>
+                        <span class="sb-val" id="sbErr" style="color:var(--danger)">0</span>
+                    </div>
+                    <div class="sb-row sb-divider">
+                        <span style="font-size:11px;color:var(--text3)">O'chirilgan</span>
+                        <span class="sb-val" id="sbDel" style="color:var(--text3);font-size:13px">0 ta</span>
+                    </div>
+                </div>
+
+                <div class="sb-card">
+                    <div class="sb-title">
+                        <i class="fa-solid fa-circle-info" style="color:var(--primary);margin-right:4px"></i>Eslatma
+                    </div>
+                    <div class="sb-note-list">
+                        <div class="sb-note"><span class="badge-new">Yangi</span> — birinchi marta qo'shiladi</div>
+                        <div class="sb-note"><span class="badge-add">Ustiga</span> — bazada bor, miqdori qo'shiladi</div>
+                        <div class="sb-note">• <strong style="color:var(--primary)">Nomi ★</strong> va <strong style="color:var(--primary)">Sotuv ★</strong> majburiy</div>
+                        <div class="sb-note">• Narxlar so'mda, vergulsiz</div>
+                    </div>
+                </div>
+
+                <button onclick="doConfirm()" class="btn btn-success btn-w" style="font-size:13px;padding:12px;margin-bottom:8px">
+                    <i class="fa-solid fa-check-double"></i> Tasdiqlash va qo'shish
+                </button>
+                <button onclick="window.location.href='/ai-scan'" class="btn btn-w"
+                    style="font-size:12px;font-weight:700;background:var(--surface2);color:var(--text2);border:1px solid var(--border)">
+                    <i class="fa-solid fa-rotate-left" style="font-size:11px"></i> Qayta yuklash
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══ FOOTER (mobile only) ══ -->
+    <div id="cf-footer">
+        <div class="cf-footer-inner">
+            <button onclick="window.location.href='/ai-scan'" class="btn"
+                style="font-size:13px;padding:12px 16px;font-weight:700;background:var(--surface2);color:var(--text2);border:1px solid var(--border);flex-shrink:0">
+                <i class="fa-solid fa-rotate-left" style="font-size:11px"></i>
+            </button>
+            <button onclick="doConfirm()" class="btn btn-success" style="flex:1;font-size:13px;padding:12px">
+                <i class="fa-solid fa-check-double"></i> Tasdiqlash va qo'shish
+            </button>
+        </div>
+    </div>
+
+    <!-- ══ KEYBOARD TOGGLE (desktop) ══ -->
+    <div id="cf-kb-toggle" onclick="cfKbToggle()">
+        <svg id="cf-kb-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="3" style="color:var(--text3);transition:transform .2s">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+        <span class="kb-toggle-label">Ekran klaviaturasi</span>
+        <span id="cf-kb-field-name" class="kb-toggle-field"></span>
+    </div>
+
+    <!-- ══ KEYBOARD PANEL ══ -->
+    <div id="cf-kb-panel">
+        <div id="cf-kb-display">
+            <span id="cf-kb-typed"></span>
+            <span id="cf-kb-hint">Maydon tanlang</span>
+        </div>
+        <div id="cf-kb-rows"></div>
+    </div>
+
+</div><!-- /cf-root -->
+
+<!-- ══ DELETE MODAL ══ -->
+<div id="delSheet" class="rmod">
+    <div class="rmod-inner">
+        <div class="rmod-handle"></div>
+        <div style="text-align:center;margin-bottom:16px">
+            <div style="font-size:28px;margin-bottom:8px">🗑️</div>
+            <h3 class="rmod-title">O'chirishni tasdiqlaysizmi?</h3>
+            <p class="rmod-sub" id="delMsg"></p>
+        </div>
+        <div class="rmod-btns">
+            <button onclick="closeDelSheet()" class="btn btn-ghost" style="flex:1">Bekor</button>
+            <button onclick="confirmDelete()" class="btn" style="flex:1;font-weight:700;border:none;background:var(--danger);color:#fff">O'chirish</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ SUCCESS MODAL ══ -->
+<div id="successModal" class="rmod">
+    <div class="rmod-inner" style="text-align:center">
+        <div class="rmod-handle"></div>
+        <div class="rmod-icon" style="background:color-mix(in srgb,var(--success) 15%,var(--surface2))">
+            <i class="fa-solid fa-check" style="font-size:20px;color:var(--success)"></i>
+        </div>
+        <h2 class="rmod-title">Muvaffaqiyatli!</h2>
+        <p class="rmod-sub" id="successMsg"></p>
+        <div class="rmod-btns">
+            <button onclick="window.location.href='/ai-scan'" class="btn btn-ghost" style="flex:1;font-size:13px">Yana skanerlash</button>
+            <button onclick="window.location.href='/products'" class="btn btn-primary" style="flex:1;font-size:13px">
+                Omborxona <i class="fa-solid fa-arrow-right" style="font-size:11px"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ SAVE LOADING ══ -->
+<div id="save-loading">
+    <div class="save-card">
+        <div class="save-spin"></div>
+        <div class="save-label">Mahsulotlar qo'shilmoqda...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const UNITS = ['dona','kg','litr','metr','blok'];
+const TOKEN = localStorage.getItem('access_token') || '';
+
+let products   = [];
+let dbProducts = [];
+let deleted    = new Set();
+let _delPend   = null;
+let _filter    = 'all';
+
+// ── Fuzzy match ───────────────────────────────────────────
+function sim(a, b) {
+    a = a.toLowerCase().trim(); b = b.toLowerCase().trim();
+    if (a === b) return 1;
+    if (b.includes(a) || a.includes(b)) return 0.85;
+    const m = a.length, n = b.length;
+    if (!m || !n) return 0;
+    const dp = Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?j?0:i:j));
+    for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+        dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+    return 1-dp[m][n]/Math.max(m,n);
+}
+function findMatch(name) {
+    if (!name.trim() || !dbProducts.length) return null;
+    let best=null, bs=0;
+    for (const d of dbProducts) { const s=sim(name,d.name); if(s>bs){bs=s;best=d;} }
+    return bs >= 0.72 ? {...best, score:bs} : null;
+}
+
+// ── Init ──────────────────────────────────────────────────
+(async function init() {
+    try {
+        const raw = localStorage.getItem('ai_scan_result');
+        if (!raw) { window.location.href='/ai-scan'; return; }
+        const data = JSON.parse(raw);
+        try {
+            if (window.NovaPOS_DB) dbProducts = await NovaPOS_DB.products.getAll();
+            if (!dbProducts.length && navigator.onLine) {
+                const r = await fetch('/api/products?limit=5000',{headers:{'Authorization':'Bearer '+TOKEN}});
+                if (r.ok) dbProducts = await r.json();
+            }
+        } catch {}
+        products = (data.products||[]).map((p,i) => ({
+            _id: i, name: (p.name||'').trim(),
+            barcode: p.barcode||'', quantity: p.quantity??0,
+            unit_type: p.unit_type||'dona', price_in: p.price_in??0,
+            price_out: p.price_out??0, confidence: p.confidence??1,
+            category_name: p.category_name||null, _match: findMatch((p.name||'').trim()),
+        }));
+        renderAll();
+    } catch {
+        showToast("Ma'lumot yuklanmadi",'error');
+        setTimeout(()=>window.location.href='/ai-scan',1500);
+    }
+})();
+
+// ── Helpers ───────────────────────────────────────────────
+function pst(p) { if(!p.name.trim()) return 'err'; if(p.price_out<=0) return 'warn'; return 'ok'; }
+function cc(c)  { return c>=.85?'#22c55e':c>=.6?'#f59e0b':'#ef4444'; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function bdg(p) {
+    if(p._match) return `<span class="badge-add" title="Omborda: ${esc(p._match.name)}"><i class="fa-solid fa-layer-plus" style="font-size:8px"></i>Ustiga</span>`;
+    return `<span class="badge-new"><i class="fa-solid fa-sparkles" style="font-size:8px"></i>Yangi</span>`;
+}
+const isDesk = () => window.innerWidth >= 1024;
+
+// ── Stats ─────────────────────────────────────────────────
+function updateStats() {
+    const act=products.filter(p=>!deleted.has(p._id));
+    const nC=act.filter(p=>!p._match&&pst(p)!=='err').length;
+    const aC=act.filter(p=>p._match).length;
+    const eC=act.filter(p=>pst(p)==='err').length;
+    ['sTotal','sbTotal'].forEach(id=>sel(id,act.length));
+    ['sNew','sbNew'].forEach(id=>sel(id,nC));
+    ['sAdd','sbAdd'].forEach(id=>sel(id,aC));
+    ['sErr','sbErr'].forEach(id=>sel(id,eC));
+    sel('sbDel',deleted.size+' ta');
+    const sub=document.getElementById('hdrSub');
+    if(sub&&act.length){
+        const pts=[];
+        if(nC) pts.push(`${nC} yangi`);
+        if(aC) pts.push(`${aC} ta mavjudga qo'shiladi`);
+        if(eC) pts.push(`${eC} xato`);
+        sub.textContent=pts.join(' • ');
+    }
+}
+function sel(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+// ── Filter ────────────────────────────────────────────────
+function setF(f,btn) {
+    _filter=f;
+    document.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    renderAll();
+}
+function mf(p) {
+    const q=(document.getElementById('searchQ')?.value||'').toLowerCase();
+    if(!(!q||p.name.toLowerCase().includes(q)||(p.barcode||'').includes(q))) return false;
+    if(_filter==='all') return true;
+    if(_filter==='add') return !!p._match;
+    if(_filter==='err') return pst(p)==='err';
+    return true;
+}
+document.getElementById('searchQ')?.addEventListener('input',renderAll);
+
+// ── Render ────────────────────────────────────────────────
+function renderAll(){ renderMob(); renderDesk(); updateStats(); }
+
+// MOBILE
+function renderMob() {
+    const c=document.getElementById('mobCards'); if(!c) return;
+    c.innerHTML=''; let shown=0, num=0;
+    products.forEach(p=>{
+        if(deleted.has(p._id)) return; num++; if(!mf(p)) return; shown++;
+        const s=pst(p), isAdd=!!p._match;
+        const dot=s==='ok'?'dot-ok':s==='warn'?'dot-warn':'dot-err';
+        const cl=isAdd?'is-add':s==='err'?'is-err':s==='warn'?'is-warn':'';
+        const pct=Math.round(p.confidence*100), col=cc(p.confidence);
+        const d=document.createElement('div');
+        d.className=`prod-card ${cl}`; d.dataset.id=p._id;
+        d.innerHTML=`
+        <div class="prod-card-top">
+            <div class="prod-num">${num}</div>
+            <div class="sdot ${dot}"></div>
+            <div class="prod-name-wrap">
+                <input class="cinput font-semibold ${!p.name?'err':''}" value="${esc(p.name)}"
+                    placeholder="Mahsulot nomi (majburiy)..."
+                    oninput="upName(${p._id},this.value)"
+                    onfocus="cfKbFocus(this,false)"
+                    style="padding:5px 8px;font-size:13px;font-weight:600;">
+                ${isAdd?`<div class="match-hint">↳ <b>${esc(p._match.name)}</b> · ${Number(p._match.quantity||0)} ${p._match.unit_type||'dona'}</div>`:''}
+            </div>
+        </div>
+        <div class="card-acts">
+            <button class="act-btn dup" onclick="dupRow(${p._id})">⎘</button>
+            <button class="act-btn del" onclick="askDel(${p._id})">🗑</button>
+        </div>
+        <div class="card-row-2">
+            ${bdg(p)}
+            <div class="card-barcode">
+                <input class="cinput" value="${esc(p.barcode)}" placeholder="Barcode / PLU"
+                    oninput="up(${p._id},'barcode',this.value)"
+                    onfocus="cfKbFocus(this,false)"
+                    style="padding:4px 7px;font-size:12px;">
+            </div>
+        </div>
+        <div class="card-grid">
+            <div>
+                <div class="lbl">Miqdor</div>
+                <input type="number" class="cinput" value="${p.quantity||''}" min="0" step="any" placeholder="0"
+                    oninput="up(${p._id},'quantity',+this.value||0)"
+                    onfocus="cfKbFocus(this,true)" inputmode="numeric"
+                    style="padding:5px;text-align:center;font-size:12px;">
+            </div>
+            <div>
+                <div class="lbl">Birlik</div>
+                <select class="cinput" onchange="up(${p._id},'unit_type',this.value)" style="padding:5px 3px;font-size:12px;">
+                    ${UNITS.map(u=>`<option value="${u}" ${p.unit_type===u?'selected':''}>${u}</option>`).join('')}
+                </select>
+            </div>
+            <div>
+                <div class="lbl">Kelish</div>
+                <input type="number" class="cinput" value="${p.price_in||''}" min="0" step="1" placeholder="0"
+                    oninput="up(${p._id},'price_in',+this.value||0)"
+                    onfocus="cfKbFocus(this,true)" inputmode="numeric"
+                    style="padding:5px;text-align:right;font-size:12px;">
+            </div>
+            <div>
+                <div class="lbl req">Sotuv★</div>
+                <input type="number" class="cinput ${p.price_out<=0?'warn':''}"
+                    value="${p.price_out||''}" min="0" step="1" placeholder="0"
+                    oninput="up(${p._id},'price_out',+this.value||0);patch(${p._id})"
+                    onfocus="cfKbFocus(this,true)" inputmode="numeric"
+                    style="padding:5px;text-align:right;font-size:12px;">
+            </div>
+        </div>
+        <div class="conf-bar">
+            <div class="conf-track"><div class="conf-fill" style="width:${pct}%;background:${col}"></div></div>
+            <span style="font-size:9px;color:${col};font-weight:700;">${pct}%</span>
+        </div>`;
+        c.appendChild(d);
+    });
+    if(!shown) c.innerHTML=`<div class="toolbar-card" style="padding:56px 0;text-align:center">
+        <i class="fa-solid fa-box-open" style="font-size:28px;display:block;margin-bottom:8px;color:var(--border2)"></i>
+        <p style="font-size:13px;font-weight:700;color:var(--text3)">Mahsulot topilmadi</p></div>`;
+}
+
+// DESKTOP
+function renderDesk() {
+    const tb=document.getElementById('tBody'); if(!tb) return;
+    tb.innerHTML=''; let shown=0, num=0;
+    products.forEach(p=>{
+        if(deleted.has(p._id)) return; num++; if(!mf(p)) return; shown++;
+        const s=pst(p), isAdd=!!p._match;
+        const rcl=isAdd?'r-add':s==='warn'?'r-warn':s==='err'?'r-err':'';
+        const dot=s==='ok'?'dot-ok':s==='warn'?'dot-warn':'dot-err';
+        const pct=Math.round(p.confidence*100), col=cc(p.confidence);
+        const tr=document.createElement('tr');
+        tr.className=rcl; tr.dataset.id=p._id;
+        tr.innerHTML=`
+        <td class="cn">${num}</td>
+        <td style="padding:5px 3px;text-align:center"><div class="sdot ${dot}" style="display:inline-block"></div></td>
+        <td class="cedit">
+            <div>
+                <input value="${esc(p.name)}" placeholder="Nomi *"
+                    style="${!p.name?'color:var(--danger);':''}"
+                    onchange="upName(${p._id},this.value);renderAll()"
+                    onfocus="cfKbFocus(this,false)">
+                ${isAdd?`<div class="match-hint" style="padding:0 7px 3px">↳ <b>${esc(p._match.name)}</b> (${Number(p._match.quantity||0)} ${p._match.unit_type||'dona'})</div>`:''}
+            </div>
+        </td>
+        <td class="cedit"><input value="${esc(p.barcode)}" placeholder="—"
+            onchange="up(${p._id},'barcode',this.value)" onfocus="cfKbFocus(this,false)"></td>
+        <td class="cedit" style="max-width:65px"><input type="number" value="${p.quantity||''}" min="0" step="any" placeholder="0"
+            onchange="up(${p._id},'quantity',+this.value||0)" onfocus="cfKbFocus(this,true)" inputmode="numeric"></td>
+        <td class="cedit" style="max-width:80px"><select onchange="up(${p._id},'unit_type',this.value)">
+            ${UNITS.map(u=>`<option value="${u}" ${p.unit_type===u?'selected':''}>${u}</option>`).join('')}</select></td>
+        <td class="cedit"><input type="number" value="${p.price_in||''}" min="0" step="1" placeholder="0"
+            onchange="up(${p._id},'price_in',+this.value||0)" onfocus="cfKbFocus(this,true)" inputmode="numeric"></td>
+        <td class="cedit"><input type="number" value="${p.price_out||''}" min="0" step="1" placeholder="0"
+            style="${p.price_out<=0?'color:var(--warning);font-weight:700':''}"
+            onchange="up(${p._id},'price_out',+this.value||0);renderAll()"
+            onfocus="cfKbFocus(this,true)" inputmode="numeric"></td>
+        <td style="padding:5px 7px">
+            <div class="conf-bar">
+                <div class="conf-track"><div class="conf-fill" style="width:${pct}%;background:${col}"></div></div>
+                <span style="font-size:10px;color:${col};font-weight:700;min-width:24px">${pct}%</span>
+            </div>
+        </td>
+        <td class="cm">${bdg(p)}</td>
+        <td class="ca"><div class="acts">
+            <button class="act-btn dup" onclick="dupRow(${p._id})">⎘</button>
+            <button class="act-btn del" onclick="askDel(${p._id})">🗑</button>
+        </div></td>`;
+        tb.appendChild(tr);
+    });
+    const em=document.getElementById('emptyMsg'); if(em) em.classList.toggle('hidden',shown>0);
+}
+
+// ── Patch ─────────────────────────────────────────────────
+function patch(id) {
+    const p=products.find(x=>x._id==id); if(!p) return;
+    const card=document.querySelector(`.prod-card[data-id="${id}"]`); if(!card) return;
+    const s=pst(p), isAdd=!!p._match;
+    card.className=`prod-card ${isAdd?'is-add':s==='err'?'is-err':s==='warn'?'is-warn':''}`;
+    const dot=card.querySelector('.sdot');
+    if(dot) dot.className=`sdot ${s==='ok'?'dot-ok':s==='warn'?'dot-warn':'dot-err'}`;
+    updateStats();
+}
+
+// ── Mutations ─────────────────────────────────────────────
+function up(id,f,v){const p=products.find(x=>x._id==id);if(p)p[f]=v;}
+function upName(id,v){ const p=products.find(x=>x._id==id);if(!p)return; p.name=v; p._match=findMatch(v); patch(id); }
+function addRow(){
+    products.push({_id:Date.now(),name:'',barcode:'',quantity:0,unit_type:'dona',price_in:0,price_out:0,confidence:1,category_name:null,_match:null});
+    renderAll();
+    setTimeout(()=>{ const cs=document.querySelectorAll('#mobCards .prod-card'); if(cs.length) cs[cs.length-1].querySelector('input')?.focus(); },80);
+}
+function dupRow(id){ const p=products.find(x=>x._id==id);if(!p)return; products.splice(products.indexOf(p)+1,0,{...p,_id:Date.now()}); renderAll(); showToast('Nusxa yaratildi','success'); }
+
+// ── Delete ────────────────────────────────────────────────
+function askDel(id){ _delPend=id; const p=products.find(x=>x._id==id); document.getElementById('delMsg').textContent=`"${p?.name||'Nomsiz'}" ro'yxatdan olib tashlanadi.`; document.getElementById('delSheet').classList.add('show'); }
+function closeDelSheet(){ document.getElementById('delSheet').classList.remove('show'); _delPend=null; }
+function confirmDelete(){ if(_delPend!==null) deleted.add(_delPend); closeDelSheet(); renderAll(); }
+
+// ── Confirm & submit ──────────────────────────────────────
+async function doConfirm() {
+    const act=products.filter(p=>!deleted.has(p._id)&&p.name.trim());
+    if(!act.length){showToast('Kamida 1 ta mahsulot kerak','error');return;}
+    const nPC=act.filter(p=>p.price_out<=0).length;
+    if(nPC&&!confirm(`${nPC} ta mahsulotda sotuv narxi yo'q. Davom etilsinmi?`)) return;
+    document.getElementById('save-loading').classList.add('show');
+    const payload={
+        products:act.map(p=>({
+            name:p.name.trim(), barcode:p.barcode||null, quantity:p.quantity,
+            unit_type:p.unit_type, price_in:p.price_in, price_out:p.price_out,
+            category_name:p.category_name||null, existing_product_id:p._match?.id??null,
+        })), scan_id:null,
+    };
+    try {
+        const res=await fetch('/api/ai/confirm',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},body:JSON.stringify(payload)});
+        const data=await res.json();
+        if(!res.ok) throw new Error(data.detail||'Xato');
+        document.getElementById('save-loading').classList.remove('show');
+        const nw=data.added_new??data.added_count??0, st2=data.added_stock??0;
+        let msg=''; if(nw) msg+=`${nw} ta yangi qo'shildi`; if(st2) msg+=(msg?', ':'')+`${st2} ta zaxiraga qo'shildi`; if(!msg) msg=`${act.length} ta qayta ishlandi`;
+        document.getElementById('successMsg').textContent=msg;
+        document.getElementById('successModal').classList.add('show');
+        localStorage.removeItem('ai_scan_result');
+    } catch(err){ document.getElementById('save-loading').classList.remove('show'); showToast('❌ '+(err.message||'Tarmoq xatosi'),'error'); }
+}
+
+// ══ EKRAN KLAVIATURASI ════════════════════════════════════
+let _cfKbOpen=false, _cfKbShift=false, _cfKbTarget=null, _cfKbIsNum=false;
+
+function cfKbFocus(inp, isNum) {
+    if (!isDesk()) return;
+    _cfKbTarget = inp;
+    _cfKbIsNum  = isNum;
+    const lbl = inp.closest('.card-grid-cell,.cedit')?.querySelector('.lbl')?.textContent || '';
+    document.getElementById('cf-kb-field-name').textContent = lbl ? `— ${lbl}` : '';
+    cfKbSyncDisplay(inp.value);
+    if (!_cfKbOpen) { _cfKbOpen=true; document.getElementById('cf-kb-panel').classList.add('open'); cfKbArrow(true); }
+    cfKbBuild();
+}
+function cfKbToggle() {
+    _cfKbOpen = !_cfKbOpen;
+    document.getElementById('cf-kb-panel').classList.toggle('open', _cfKbOpen);
+    cfKbArrow(_cfKbOpen);
+    if (_cfKbOpen) cfKbBuild();
+}
+function cfKbArrow(open) {
+    const a=document.getElementById('cf-kb-arrow');
+    if(a) a.style.transform = open ? 'rotate(180deg)' : '';
+}
+function cfKbSyncDisplay(val) {
+    const typed=document.getElementById('cf-kb-typed');
+    const hint =document.getElementById('cf-kb-hint');
+    if(typed) typed.textContent = val || '';
+    if(hint)  hint.textContent  = _cfKbIsNum ? 'Raqam' : 'Matn';
+}
+function cfKbBuild() {
+    const rows=document.getElementById('cf-kb-rows'); if(!rows) return;
+    if(_cfKbIsNum) {
+        rows.innerHTML=`
+        <div class="cf-krow">
+            <button class="cfkey" onclick="cfKbCh('7')">7</button>
+            <button class="cfkey" onclick="cfKbCh('8')">8</button>
+            <button class="cfkey" onclick="cfKbCh('9')">9</button>
+            <button class="cfkey kdel" onclick="cfKbDel()">⌫</button>
+        </div>
+        <div class="cf-krow">
+            <button class="cfkey" onclick="cfKbCh('4')">4</button>
+            <button class="cfkey" onclick="cfKbCh('5')">5</button>
+            <button class="cfkey" onclick="cfKbCh('6')">6</button>
+            <button class="cfkey" style="background:none;border:none;box-shadow:none;cursor:default"></button>
+        </div>
+        <div class="cf-krow">
+            <button class="cfkey" onclick="cfKbCh('1')">1</button>
+            <button class="cfkey" onclick="cfKbCh('2')">2</button>
+            <button class="cfkey" onclick="cfKbCh('3')">3</button>
+            <button class="cfkey" style="background:none;border:none;box-shadow:none;cursor:default"></button>
+        </div>
+        <div class="cf-krow">
+            <button class="cfkey" onclick="cfKbCh('0')" style="flex:2">0</button>
+            <button class="cfkey" onclick="cfKbCh('.')">.</button>
+            <button class="cfkey kenter" onclick="cfKbEnter()">OK ↵</button>
+        </div>`;
+        return;
+    }
+    const S=s=>_cfKbShift?s.toUpperCase():s;
+    const r1=['1','2','3','4','5','6','7','8','9','0'];
+    const r2=['q','w','e','r','t','y','u','i','o','p'];
+    const r3=['a','s','d','f','g','h','j','k','l'];
+    const r4=['z','x','c','v','b','n','m'];
+    const key=k=>{const disp=/^[a-z]$/.test(k)?S(k):k;const val=/^[a-z]$/.test(k)?S(k):k;return `<button class="cfkey" onclick="cfKbCh('${val.replace(/'/g,"\\'")}')"> ${disp}</button>`;};
+    rows.innerHTML=`
+    <div class="cf-krow">${r1.map(key).join('')}<button class="cfkey kdel" style="flex:1.6" onclick="cfKbDel()">⌫</button></div>
+    <div class="cf-krow" style="padding:0 2%">${r2.map(key).join('')}</div>
+    <div class="cf-krow" style="padding:0 5%">${r3.map(key).join('')}</div>
+    <div class="cf-krow">
+        <button class="cfkey kshift${_cfKbShift?' on':''}" style="flex:1.8" onclick="cfKbShift()">⇧</button>
+        ${r4.map(key).join('')}
+        <button class="cfkey kshift${_cfKbShift?' on':''}" style="flex:1.8" onclick="cfKbShift()">⇧</button>
+    </div>
+    <div class="cf-krow">
+        <button class="cfkey kgray" onclick="cfKbCh('-')">-</button>
+        <button class="cfkey kgray" onclick="cfKbCh('/')">/ </button>
+        <button class="cfkey kspace" onclick="cfKbCh(' ')">bo'sh joy</button>
+        <button class="cfkey kgray" onclick="cfKbCh('.')">.</button>
+        <button class="cfkey kenter" style="flex:2.5" onclick="cfKbEnter()">OK ↵</button>
+    </div>`;
+}
+function cfKbShift(){ _cfKbShift=!_cfKbShift; cfKbBuild(); }
+function cfKbCh(ch) {
+    if(!_cfKbTarget) return;
+    const inp=_cfKbTarget;
+    if(inp.type==='number'){if(ch==='.'&&inp.value.includes('.'))return;inp.value+=ch;}
+    else{const s=inp.selectionStart??inp.value.length;const e=inp.selectionEnd??inp.value.length;inp.value=inp.value.slice(0,s)+ch+inp.value.slice(e);inp.selectionStart=inp.selectionEnd=s+ch.length;}
+    cfKbSyncDisplay(inp.value);
+    inp.dispatchEvent(new Event('input',{bubbles:true}));
+    inp.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function cfKbDel() {
+    if(!_cfKbTarget) return;
+    const inp=_cfKbTarget;
+    if(inp.type==='number'){inp.value=inp.value.slice(0,-1);}
+    else{const s=inp.selectionStart??inp.value.length;if(s>0){inp.value=inp.value.slice(0,s-1)+inp.value.slice(inp.selectionEnd||s);inp.selectionStart=inp.selectionEnd=s-1;}}
+    cfKbSyncDisplay(inp.value);
+    inp.dispatchEvent(new Event('input',{bubbles:true}));
+    inp.dispatchEvent(new Event('change',{bubbles:true}));
+}
+function cfKbEnter() {
+    if(!_cfKbTarget) return;
+    const all=[...document.querySelectorAll('#cf-layout input:not([type=hidden]),#cf-layout select')];
+    const idx=all.indexOf(_cfKbTarget);
+    if(idx>=0&&idx<all.length-1) all[idx+1].focus();
+}
+</script>
+{% endblock %}

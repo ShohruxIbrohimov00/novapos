@@ -1,0 +1,1328 @@
+{% extends "base.html" %}
+{% block title %}Sotuv tarixi — NovaPOS{% endblock %}
+
+{% block extra_styles %}
+/* app-main scroll o'chiriladi */
+#app-main { overflow: hidden !important; padding: 0 !important; }
+/* ── SPA & OFFLINE READY UTILITIES ── */
+.d-flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-1 { flex: 1; }
+.shrink-0 { flex-shrink: 0; }
+.min-w-0 { min-width: 0; }
+.w-full { width: 100%; }
+.relative { position: relative; }
+.hidden { display: none !important; }
+
+/* Alignment */
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+
+/* Spacing */
+.gap-1 { gap: 4px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.mt-05 { margin-top: 2px; } .mt-1 { margin-top: 4px; } .mt-15 { margin-top: 6px; } .mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+.mb-05 { margin-bottom: 2px; } .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; } .mb-3 { margin-bottom: 12px; } .mb-4 { margin-bottom: 16px; }
+.p-3 { padding: 12px; } .p-4 { padding: 16px; } .p-5 { padding: 20px; }
+.px-1 { padding-left: 4px; padding-right: 4px; } .px-3 { padding-left: 12px; padding-right: 12px; }
+.px-4 { padding-left: 16px; padding-right: 16px; } .py-15 { padding-top: 6px; padding-bottom: 6px; }
+.py-2 { padding-top: 8px; padding-bottom: 8px; } .py-3 { padding-top: 12px; padding-bottom: 12px; }
+.py-4 { padding-top: 16px; padding-bottom: 16px; } .pb-2 { padding-bottom: 8px; } .pb-6 { padding-bottom: 24px; } .pb-8 { padding-bottom: 32px; }
+.pt-2 { padding-top: 8px; } .pr-16 { padding-right: 64px; }
+
+/* Grid */
+.grid { display: grid; }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+/* Typography */
+.font-bold { font-weight: 700; }
+.font-black { font-weight: 900; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uppercase { text-transform: uppercase; }
+.text-xs { font-size: 11px; }
+.text-sm { font-size: 13px; }
+.text-base { font-size: 16px; }
+.text-lg { font-size: 18px; }
+.text-xl { font-size: 20px; }
+.text-2xl { font-size: 24px; }
+.leading-tight { line-height: 1.25; }
+.leading-none { line-height: 1; }
+
+@media (min-width: 640px) {
+    .sm-inline { display: inline !important; }
+}
+#sh-root {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+#sh-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 20;
+    padding-top: max(0px, env(safe-area-inset-top));
+    transition: background .2s, border-color .2s;
+}
+
+#sh-shell {
+    flex: 1; min-height: 0;
+    display: flex; overflow: hidden;
+}
+
+/* ══ DESKTOP / TABLET (≥1024px) ═══════════════════════════ */
+@media (min-width: 1024px) {
+    #sh-list-col {
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: column;
+        overflow: hidden;
+        padding: 0;
+        position: relative;
+    }
+    #sh-list-scroll {
+        flex: 1; min-height: 0;
+        overflow-y: auto;
+        padding: 16px 20px 20px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border2) transparent;
+    }
+    #sh-list-scroll::-webkit-scrollbar { width: 5px; }
+    #sh-list-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 5px; }
+
+    #sh-detail-col {
+        width: 380px; flex-shrink: 0;
+        border-left: 1px solid var(--border);
+        background: var(--surface);
+        display: flex; flex-direction: column;
+        overflow: hidden;
+        height: 100%;
+        transition: background .2s, border-color .2s;
+    }
+    #sh-detail-panel {
+        display: flex !important;
+        flex-direction: column;
+        flex: 1; min-height: 0;
+        overflow: hidden;
+    }
+    #dp-content {
+        overflow-y: auto;
+        flex: 1; min-height: 0;
+    }
+    #sh-kb-toggle { display: flex !important; }
+    #sale-modal { display: none !important; }
+}
+
+/* ══ MOBIL (≤1023px) ══════════════════════════════════════ */
+@media (max-width: 1023px) {
+    #sh-detail-panel  { display: none !important; }
+    #sh-detail-col    { display: none; }
+    #sh-list-col      { flex: 1; overflow-y: auto; padding: 12px 14px 24px; }
+    #sh-list-scroll   { padding: 0; overflow: visible; flex: none; }
+    #sh-kb-toggle     { display: none !important; }
+    #sh-kb-panel      { display: none !important; }
+}
+
+/* ── Sale row ── */
+.sale-row {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px; 
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .08s;
+    display: block; width: 100%;
+}
+.sale-row:last-child { margin-bottom: 0; }
+.sale-row:hover  { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59,130,246,.08); transform: translateY(-1px); }
+.sale-row:active { transform: scale(.98); box-shadow: none; }
+.sale-row.sel    { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); background: var(--primary-s); }
+
+/* ── Pay chip ── */
+.pchip { display:inline-flex; align-items:center; gap:3px; padding:2px 7px;
+         border-radius:6px; font-size:9px; font-weight:800; text-transform:uppercase; }
+.pchip.naqd    { background:#eff6ff; color:#1d4ed8; }
+.pchip.plastik { background:#f5f3ff; color:#6d28d9; }
+.pchip.nasiya  { background:#fff1f2; color:#be123c; }
+[data-theme="dark"] .pchip.naqd    { background:#1e3a5f; color:#93c5fd; }
+[data-theme="dark"] .pchip.plastik { background:#2e1d5e; color:#c4b5fd; }
+[data-theme="dark"] .pchip.nasiya  { background:#4c1027; color:#fda4af; }
+
+/* ── Period/filter buttons ── */
+.prd-btn {
+    padding: 5px 11px; border-radius: 10px; font-size: 11px; font-weight: 800;
+    cursor: pointer; border: none; transition: all .15s;
+    white-space: nowrap;
+    flex-shrink: 0; /* ← MUHIM: siqilmasin */
+}
+.prd-btn.on  { background: var(--primary); color: #fff; }
+.prd-btn.off { background: var(--surface2); color: var(--text2); }
+.prd-btn.on:hover { background: #1d4ed8; }
+
+.pay-btn {
+    padding: 4px 10px; border-radius: 9px; font-size: 10px; font-weight: 800;
+    cursor: pointer; border: 1.5px solid transparent; transition: all .15s;
+    white-space: nowrap;
+    flex-shrink: 0; /* ← MUHIM: siqilmasin */
+}
+.pay-btn.on  { background: var(--text); color: var(--surface); border-color: var(--text); }
+.pay-btn.off { background: var(--surface); color: var(--text2); border-color: var(--border); }
+
+/* ── Horizontal scroll strip (period + payment tugmalari) ── */
+.h-scroll-strip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; /* iOS smooth scroll */
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px; /* scrollbar uchun joy */
+    /* Scrollbar yashirish — lekin scroll ishlaydi */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.h-scroll-strip::-webkit-scrollbar { display: none; }
+
+/* ── Stats strip ── */
+.stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 8px;
+    flex: 1; min-width: 0;
+    text-align: center;
+    transition: background .2s, border-color .2s;
+}
+#stats-strip {
+    display: none;
+    flex-direction: row;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: stretch;
+}
+#stats-strip.show { display: flex; }
+
+/* ── Search box ── */
+.sh-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px; padding: 0 12px;
+    transition: border-color .2s, background .2s;
+}
+.sh-search:focus-within { border-color: var(--primary); background: var(--surface); }
+.sh-search input {
+    flex: 1; height: 38px; background: transparent;
+    border: none; outline: none; font-size: 13px;
+    font-weight: 600; color: var(--text);
+}
+.sh-search input::placeholder { color: var(--text3); }
+.sh-search svg { color: var(--text3); flex-shrink: 0; }
+
+/* ── Returns screen ── */
+#returns-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 400;
+    flex-direction: column;
+    overflow: hidden; /* ← overflow:hidden — klaviatura pastda qotadi */
+    transition: background .2s;
+}
+#returns-screen.open { display: flex; }
+@media (min-width: 768px) { #returns-screen { left: 64px; } }
+
+/* Returns screen scroll area */
+#rs-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0; /* ← flex child uchun muhim */
+}
+
+/* ── Returns klaviatura (faqat desktop) ── */
+#rs-kb-toggle {
+    display: none;
+    padding: 7px 14px;
+    border-top: 1px solid var(--border);
+    align-items: center; gap: 8px;
+    background: var(--surface); flex-shrink: 0;
+    cursor: pointer; user-select: none;
+    transition: background .12s;
+    z-index: 10;
+}
+#rs-kb-toggle:hover { background: var(--surface2); }
+#rs-kb-handle {
+    flex: 1; display: flex; align-items: center; gap: 7px;
+    font-size: 10px; font-weight: 800; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .5px;
+}
+#rs-kb-panel {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s cubic-bezier(.4,0,.2,1);
+}
+#rs-kb-panel.open { max-height: 340px; }
+#rs-kb-display {
+    margin: 8px 10px 5px;
+    background: var(--surface2);
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    padding: 6px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+}
+#rs-kb-typed {
+    flex: 1; font-size: 16px; font-weight: 800; color: var(--text);
+    font-family: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+}
+#rs-kb-typed:empty::before { content: 'Yozing...'; color: var(--text3); font-weight: 500; font-size: 13px; }
+#rs-kb-hint {
+    font-size: 10px; font-weight: 700; color: var(--text3); white-space: nowrap; flex-shrink: 0;
+}
+#rs-kb-rows { padding: 3px 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+@media (min-width: 1024px) {
+    #rs-kb-toggle { display: flex !important; }
+    /* Mobilda returns klaviaturasi yo'q */
+}
+@media (max-width: 1023px) {
+    #rs-kb-toggle { display: none !important; }
+    #rs-kb-panel  { display: none !important; }
+}
+
+/* ── Returns row ── */
+.ret-row {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px; 
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: background .2s, border-color .2s;
+}
+.ret-row:last-child { margin-bottom: 0; }
+[data-theme="dark"] .ret-row { border-color: #4c1027; }
+
+/* ── Detail item card ── */
+.detail-item-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px; 
+    padding: 12px;
+    margin-bottom: 8px;
+    transition: background .2s, border-color .2s;
+}
+.detail-item-card:last-child { margin-bottom: 0; }
+
+/* ══ KEYBOARD ══ */
+#sh-kb-toggle {
+    display: none;
+    padding: 7px 14px;
+    border-top: 1px solid var(--border);
+    align-items: center; gap: 8px;
+    background: var(--surface); flex-shrink: 0;
+    cursor: pointer; user-select: none;
+    transition: background .12s;
+    z-index: 10;
+}
+#sh-kb-toggle:hover { background: var(--surface2); }
+#sh-kb-handle {
+    flex: 1; display: flex; align-items: center; gap: 7px;
+    font-size: 10px; font-weight: 800; color: var(--text3);
+    text-transform: uppercase; letter-spacing: .5px;
+}
+#sh-kb-panel {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s cubic-bezier(.4,0,.2,1);
+}
+#sh-kb-panel.open { max-height: 340px; }
+#sh-kb-display {
+    margin: 8px 10px 5px;
+    background: var(--surface2);
+    border: 2px solid var(--primary);
+    border-radius: 10px;
+    padding: 6px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+}
+#sh-kb-typed {
+    flex: 1; font-size: 16px; font-weight: 800; color: var(--text);
+    font-family: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
+}
+#sh-kb-typed:empty::before { content: 'Yozing...'; color: var(--text3); font-weight: 500; font-size: 13px; }
+#sh-kb-hint {
+    font-size: 10px; font-weight: 700; color: var(--text3); white-space: nowrap; flex-shrink: 0;
+}
+#sh-kb-rows { padding: 3px 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+.sh-kb-row  { display: flex; gap: 3px; justify-content: center; }
+
+.shkey {
+    height: 36px; min-width: 28px; flex: 1;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; transition: all .07s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; user-select: none;
+    box-shadow: 0 1px 2px var(--shadow);
+}
+.shkey:hover  { background: var(--primary-s); border-color: var(--primary); color: var(--primary); }
+.shkey:active { transform: scale(.85) translateY(1px); box-shadow: none; }
+.shkey.kdel   { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
+.shkey.kdel:hover { background: #fca5a5; }
+[data-theme="dark"] .shkey.kdel { background: #4c0519; color: #f87171; border-color: #7f1d1d; }
+.shkey.kenter {
+    flex: 2; background: var(--primary); color: #fff;
+    border-color: var(--primary); font-size: 11px; font-weight: 900;
+    box-shadow: 0 2px 8px rgba(37,99,235,.3);
+}
+.shkey.kenter:hover  { background: #1d4ed8; }
+.shkey.kshift { background: var(--surface2); font-size: 12px; flex: 1.6; }
+.shkey.kshift.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.shkey.kgray  { background: var(--surface2); font-size: 11px; color: var(--text2); }
+.shkey.kspace { flex: 5; font-size: 11px; color: var(--text3); }
+{% endblock %}
+
+{% block content %}
+<div id="sh-root">
+
+<!-- ── HEADER ── -->
+<div id="sh-header">
+    <div class="px-4 py-3">
+        <div class="d-flex items-center gap-2 mb-3">
+            <h1 class="text-lg font-black leading-tight flex-1">Sotuv tarixi</h1>
+            <div id="idb-chip" class="hidden badge badge-amber text-xs">
+                <i class="fa-solid fa-database"></i> KESH
+            </div>
+            <button onclick="openReturnsScreen()"
+                class="d-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition active:scale-95"
+                style="background:var(--surface2); color:var(--danger); border:1px solid var(--border); border-radius: 12px;">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span class="hidden sm-inline">Qaytarishlar</span>
+            </button>
+        </div>
+
+        <!-- Search -->
+        <div class="sh-search mb-3">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="sh-search" type="search" placeholder="Chek raqam yoki mahsulot nomi..."
+                   oninput="shFilterInput(this.value)"
+                   onfocus="shOpenKbIfNeeded()"
+                   onclick="shOpenKbIfNeeded()"
+                   autocomplete="off">
+            <button id="sh-search-clr" onclick="clearSearch()"
+                class="hidden transition" style="color:var(--text3); background:none; border:none; cursor:pointer">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Stats -->
+        <div id="stats-strip">
+            <div class="stat-box">
+                <p class="text-xs font-black uppercase leading-none mb-05" style="font-size: 8px;">Sotuvlar</p>
+                <p id="st-count" class="text-sm font-black leading-none">—</p>
+            </div>
+            <div class="stat-box">
+                <p class="text-xs font-black uppercase leading-none mb-05" style="font-size: 8px;">Jami</p>
+                <p id="st-total" class="text-xs font-black leading-none truncate" style="color:var(--success)">—</p>
+            </div>
+            <div class="stat-box">
+                <p class="text-xs font-black uppercase leading-none mb-05" style="font-size: 8px;">O'rtacha</p>
+                <p id="st-avg" class="text-xs font-black leading-none truncate" style="color:var(--primary)">—</p>
+            </div>
+        </div>
+
+        <!-- Period chips -->
+        <div class="h-scroll-strip mb-2">
+            <button id="pb-today" onclick="setPeriod('today',this)" class="prd-btn on">Bugun</button>
+            <button id="pb-week"  onclick="setPeriod('week',this)"  class="prd-btn off">Hafta</button>
+            <button id="pb-month" onclick="setPeriod('month',this)" class="prd-btn off">Shu oy</button>
+            <div class="relative shrink-0">
+                <button id="pb-day" onclick="document.getElementById('dp-day').showPicker()"
+                    class="prd-btn off d-flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-day"></i>
+                    <span id="day-lbl">Kun</span>
+                </button>
+                <input type="date" id="dp-day" onchange="setDay(this.value)"
+                    class="absolute hidden w-0 h-0" style="opacity: 0;">
+            </div>
+            <div class="relative shrink-0">
+                <button id="pb-mth" onclick="document.getElementById('dp-mth').showPicker()"
+                    class="prd-btn off d-flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span id="mth-lbl">Oy</span>
+                </button>
+                <input type="month" id="dp-mth" onchange="setMonthPicker(this.value)"
+                    class="absolute hidden w-0 h-0" style="opacity: 0;">
+            </div>
+        </div>
+
+        <!-- Payment filter -->
+        <div class="h-scroll-strip pt-2" style="border-top:1px solid var(--border)">
+            <button onclick="setPayment('',this)"        class="pay-btn on">Hammasi</button>
+            <button onclick="setPayment('naqd',this)"    class="pay-btn off">Naqd</button>
+            <button onclick="setPayment('plastik',this)" class="pay-btn off">Plastik</button>
+            <button onclick="setPayment('nasiya',this)"  class="pay-btn off">Nasiya</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── SHELL ── -->
+<div id="sh-shell">
+    <div id="sh-list-col">
+        <div id="sh-loading" class="flex-1 d-flex flex-col items-center justify-center py-4">
+            <div class="spinner"></div>
+        </div>
+        <div id="sh-list-scroll">
+            <div id="sh-list"></div>
+        </div>
+        <div id="sh-empty" class="flex-1 d-flex flex-col items-center justify-center py-4">
+            <i class="fa-solid fa-receipt text-2xl mb-3" style="font-size: 48px; opacity: 0.2;"></i>
+            <p class="font-bold text-sm" style="color:var(--text3)">Sotuvlar topilmadi</p>
+        </div>
+        <!-- Keyboard Desktop -->
+        <div id="sh-kb-toggle">
+            <div id="sh-kb-handle">
+                <svg id="sh-kb-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 15l-6-6-6 6"/></svg>
+                EKRAN KLAVIATURASI
+            </div>
+        </div>
+        <div id="sh-kb-panel">
+            <div id="sh-kb-display">
+                <span id="sh-kb-typed"></span>
+                <span id="sh-kb-hint">Enter → qidirish</span>
+            </div>
+            <div id="sh-kb-rows"></div>
+        </div>
+    </div>
+
+    <div id="sh-detail-col">
+        <div id="sh-detail-panel">
+            <div id="dp-empty" class="d-flex flex-col items-center justify-center flex-1" style="color:var(--text3); padding: 40px 0;">
+                <i class="fa-solid fa-receipt" style="font-size: 48px; margin-bottom: 12px; opacity: 0.3;"></i>
+                <p class="text-sm font-bold">Sotuvni tanlang</p>
+            </div>
+            <div id="dp-content" class="hidden p-5 flex-1"></div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- SALE DETAIL MODAL (mobile) -->
+<div id="sale-modal" class="modal-overlay hidden">
+    <div class="modal-sheet">
+        <div class="shrink-0" style="padding: 12px 0;" onclick="closeDetail()">
+            <div style="width: 40px; height: 4px; background: var(--border2); margin: 0 auto; border-radius: 10px;"></div>
+        </div>
+        <div class="modal-body px-4 pb-6" id="modal-inner"></div>
+    </div>
+</div>
+
+<!-- RETURN MODAL -->
+<div id="ret-modal" class="modal-overlay centered hidden">
+    <div class="modal-sheet center-mode" style="max-width:400px">
+        <div class="p-5">
+            <div class="d-flex items-center justify-between mb-4">
+                <h2 class="text-base font-black">Qaytarish</h2>
+                <button onclick="closeRetModal()" class="icon-btn" style="background:var(--surface2); width:32px; height:32px; border-radius:10px;">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <!-- Product Info -->
+            <div class="p-3 d-flex items-center gap-3 mb-4" style="background:var(--primary-s); border:1px solid var(--border); border-radius:12px;">
+                <div class="icon-box ib-blue shrink-0"><i class="fa-solid fa-box"></i></div>
+                <div class="flex-1 min-w-0">
+                    <h3 id="rp-name" class="font-black text-sm truncate"></h3>
+                    <div class="d-flex gap-3 mt-05">
+                        <span class="text-xs font-bold" style="font-size: 10px;">Sotilgan: <span id="rp-qty"></span></span>
+                        <span class="text-xs font-bold" style="font-size: 10px;">Narxi: <span id="rp-price"></span></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Return Input -->
+            <div class="mb-4">
+                <label class="text-xs font-black uppercase mb-2 d-flex">Qaytariladigan miqdor</label>
+                <div class="d-flex items-center gap-2">
+                    <button onclick="adjQty(-1)" class="s-btn s-btn-surface" style="width:50px; height:50px;">-</button>
+                    <input type="number" id="rp-input" class="s-input flex-1 text-center text-xl font-black" style="height:50px; color:var(--danger)">
+                    <button onclick="adjQty(1)" class="s-btn s-btn-surface" style="width:50px; height:50px;">+</button>
+                </div>
+                <div class="d-flex justify-between mt-2">
+                    <span id="rp-max" class="text-xs" style="color:var(--text3)"></span>
+                    <button onclick="setMaxQty()" class="text-xs font-black uppercase" style="color:var(--primary); background:none; border:none; cursor:pointer;">Hammasi</button>
+                </div>
+            </div>
+            <!-- Summa -->
+            <div class="p-3 text-center mb-4" style="background:var(--surface2); border:1px solid var(--border); border-radius:12px;">
+                <p class="text-xs font-black uppercase mb-1" style="color:var(--danger); font-size:9px;">Qaytariladigan summa</p>
+                <h3 id="rp-amt" class="text-xl font-black" style="color:var(--danger)">0 so'm</h3>
+            </div>
+            <textarea id="rp-reason" rows="2" placeholder="Sabab (ixtiyoriy)" class="field mb-4" style="height:auto; padding:12px;"></textarea>
+            <button onclick="submitReturn()" id="rp-btn" class="btn btn-danger btn-w py-4">TASDIQLASH</button>
+        </div>
+    </div>
+</div>
+
+<!-- RETURNS HISTORY SCREEN -->
+<div id="returns-screen">
+    <div class="shrink-0" style="background:var(--surface); border-bottom:1px solid var(--border);">
+        <div class="px-4 py-3">
+            <div class="d-flex items-center gap-3 mb-3">
+                <button onclick="closeReturnsScreen()" class="icon-btn" style="background:var(--surface2); border-radius:12px;">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-base font-black">Qaytarishlar</h1>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="stat-box py-1 px-3">
+                        <p style="font-size:8px;" class="font-black uppercase">Soni</p>
+                        <h3 id="rs-count" class="text-sm font-black" style="color:var(--danger)">—</h3>
+                    </div>
+                    <div class="stat-box py-1 px-3">
+                        <p style="font-size:8px;" class="font-black uppercase">Jami</p>
+                        <h3 id="rs-total" class="text-sm font-black" style="color:var(--warning)">—</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sh-search mb-3">
+                <i class="fa-solid fa-magnifying-glass" style="font-size:12px; color:var(--text3)"></i>
+                <input id="rs-search" type="search" placeholder="Qidirish..." oninput="rsFilterInput(this.value)">
+            </div>
+
+            <div class="h-scroll-strip">
+                <button id="rp-today" onclick="setRetPeriod('today',this)" class="prd-btn on">Bugun</button>
+                <button id="rp-week"  onclick="setRetPeriod('week',this)"  class="prd-btn off">Hafta</button>
+                <button id="rp-month" onclick="setRetPeriod('month',this)" class="prd-btn off">Shu oy</button>
+                <button id="rp-all"   onclick="setRetPeriod('all',this)"   class="prd-btn off">Barchasi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rs-scroll-area" class="p-4">
+        <div style="max-width:600px; margin:0 auto">
+            <div id="rs-loading" class="d-flex justify-center py-4"><div class="spinner"></div></div>
+            <div id="rs-list" class="hidden"></div>
+            <div id="rs-empty" class="hidden text-center py-4">
+                <p class="font-bold text-sm">Qaytarishlar topilmadi</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ════════════════════════════════════════════════════════════
+//  sales_history v4.5
+// ════════════════════════════════════════════════════════════
+
+let _period    = 'today';
+let _dateFrom  = null;
+let _dateTo    = null;
+let _payFilter = '';
+let _curSale   = null;
+let _retItem   = null;
+let _retPeriod = 'today';
+let _retDateFrom = null;
+let _retDateTo   = null;
+let _allSales    = [];
+let _allReturns  = [];
+let _searchQ     = '';
+let _retSearchQ  = '';
+
+// Klaviatura state — asosiy qidiruv
+let _shKbOpen  = false;
+let _shKbShift = false;
+// Klaviatura state — qaytarishlar
+let _rsKbOpen  = false;
+let _rsKbShift = false;
+
+const MTHS = ['Yanvar','Fevral','Mart','Aprel','May','Iyun',
+              'Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+const PM_COLOR = { naqd:'naqd', plastik:'plastik', nasiya:'nasiya' };
+const PM_ICON  = { naqd:'fa-money-bill-wave', plastik:'fa-credit-card', nasiya:'fa-user-clock' };
+const PM_LABEL = { naqd:'Naqd pul', plastik:'Plastik karta', nasiya:'Nasiya' };
+
+const isDesk = () => window.innerWidth >= 1024;
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    loadSales();
+    document.addEventListener('novapos:sale-created', () => loadSales(true));
+    try {
+        new BroadcastChannel('pos_data_sync').onmessage = e => {
+            if (e.data?.type === 'UPDATE_DATA') loadSales(true);
+        };
+    } catch {}
+});
+
+// ════════════════════════════════════════════════════════════
+//  ASOSIY QIDIRUV KLAVIATURASI
+// ════════════════════════════════════════════════════════════
+
+function shOpenKbIfNeeded() {
+    if (!isDesk()) return;
+    if (!_shKbOpen) shToggleKb();
+}
+
+function shToggleKb() {
+    _shKbOpen = !_shKbOpen;
+    const panel = document.getElementById('sh-kb-panel');
+    const arrow = document.getElementById('sh-kb-arrow');
+    if (panel) panel.classList.toggle('open', _shKbOpen);
+    if (arrow) arrow.style.transform = _shKbOpen ? 'rotate(180deg)' : '';
+    if (_shKbOpen) _buildKb('sh-kb-rows', 'shKbChar', 'shKbDel', 'shKbShift', 'shKbEnter', _shKbShift);
+}
+
+function shKbShift() {
+    _shKbShift = !_shKbShift;
+    _buildKb('sh-kb-rows', 'shKbChar', 'shKbDel', 'shKbShift', 'shKbEnter', _shKbShift);
+}
+
+function shKbChar(ch) {
+    const inp = document.getElementById('sh-search');
+    if (!inp) return;
+    inp.value += ch;
+    _shSyncKbDisplay(inp.value);
+    filterSales(inp.value);
+}
+
+function shKbDel() {
+    const inp = document.getElementById('sh-search');
+    if (!inp) return;
+    inp.value = inp.value.slice(0, -1);
+    _shSyncKbDisplay(inp.value);
+    filterSales(inp.value);
+}
+
+function shKbEnter() {
+    const first = document.querySelector('.sale-row');
+    if (first) first.click();
+}
+
+function _shSyncKbDisplay(val) {
+    const typed = document.getElementById('sh-kb-typed');
+    const hint  = document.getElementById('sh-kb-hint');
+    if (typed) typed.textContent = val;
+    if (hint) {
+        if (!val) {
+            hint.textContent = 'Enter → birinchi natija';
+            hint.style.color = '';
+        } else {
+            const cnt = _allSales.filter(s =>
+                String(s.receipt_number || '').toLowerCase().includes(val.toLowerCase()) ||
+                (s.items || []).some(i => (i.product_name || '').toLowerCase().includes(val.toLowerCase())) ||
+                (s.customer_name || '').toLowerCase().includes(val.toLowerCase())
+            ).length;
+            hint.textContent = cnt ? `${cnt} ta topildi` : 'Topilmadi';
+            hint.style.color = cnt ? 'var(--success)' : 'var(--danger)';
+        }
+    }
+}
+
+function shFilterInput(val) {
+    _searchQ = val.trim();
+    document.getElementById('sh-search-clr')?.classList.toggle('hidden', !_searchQ);
+    _shSyncKbDisplay(val);
+    _applyAndRender();
+}
+
+function filterSales(val) {
+    _searchQ = val.trim();
+    document.getElementById('sh-search-clr')?.classList.toggle('hidden', !_searchQ);
+    _applyAndRender();
+}
+
+// ════════════════════════════════════════════════════════════
+//  QAYTARISHLAR KLAVIATURASI
+// ════════════════════════════════════════════════════════════
+
+function rsOpenKbIfNeeded() {
+    if (!isDesk()) return;
+    if (!_rsKbOpen) rsToggleKb();
+}
+
+function rsToggleKb() {
+    _rsKbOpen = !_rsKbOpen;
+    const panel = document.getElementById('rs-kb-panel');
+    const arrow = document.getElementById('rs-kb-arrow');
+    if (panel) panel.classList.toggle('open', _rsKbOpen);
+    if (arrow) arrow.style.transform = _rsKbOpen ? 'rotate(180deg)' : '';
+    if (_rsKbOpen) _buildKb('rs-kb-rows', 'rsKbChar', 'rsKbDel', 'rsKbShift', 'rsKbEnter', _rsKbShift);
+}
+
+function rsKbShift() {
+    _rsKbShift = !_rsKbShift;
+    _buildKb('rs-kb-rows', 'rsKbChar', 'rsKbDel', 'rsKbShift', 'rsKbEnter', _rsKbShift);
+}
+
+function rsKbChar(ch) {
+    const inp = document.getElementById('rs-search');
+    if (!inp) return;
+    inp.value += ch;
+    _rsSyncKbDisplay(inp.value);
+    filterReturns(inp.value);
+}
+
+function rsKbDel() {
+    const inp = document.getElementById('rs-search');
+    if (!inp) return;
+    inp.value = inp.value.slice(0, -1);
+    _rsSyncKbDisplay(inp.value);
+    filterReturns(inp.value);
+}
+
+function rsKbEnter() {
+    const first = document.querySelector('#rs-list .ret-row');
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function _rsSyncKbDisplay(val) {
+    const typed = document.getElementById('rs-kb-typed');
+    const hint  = document.getElementById('rs-kb-hint');
+    if (typed) typed.textContent = val;
+    if (hint) {
+        if (!val) {
+            hint.textContent = 'Enter → birinchi natija';
+            hint.style.color = '';
+        } else {
+            const cnt = _allReturns.filter(r =>
+                (r.product_name || '').toLowerCase().includes(val.toLowerCase()) ||
+                String(r.receipt_number || '').toLowerCase().includes(val.toLowerCase()) ||
+                (r.employee_name || '').toLowerCase().includes(val.toLowerCase())
+            ).length;
+            hint.textContent = cnt ? `${cnt} ta topildi` : 'Topilmadi';
+            hint.style.color = cnt ? 'var(--success)' : 'var(--danger)';
+        }
+    }
+}
+
+function rsFilterInput(val) {
+    _retSearchQ = val.trim();
+    document.getElementById('rs-search-clr')?.classList.toggle('hidden', !_retSearchQ);
+    _rsSyncKbDisplay(val);
+    _renderReturns(_allReturns);
+}
+
+// ════════════════════════════════════════════════════════════
+//  UMUMIY KLAVIATURA BUILDER (ikkalasi uchun qayta ishlatiladi)
+// ════════════════════════════════════════════════════════════
+
+function _buildKb(rowsId, charFn, delFn, shiftFn, enterFn, isShift) {
+    const rows = document.getElementById(rowsId);
+    if (!rows) return;
+    const S  = s => isShift ? s.toUpperCase() : s;
+    const r1 = ['1','2','3','4','5','6','7','8','9','0','-','='];
+    const r2 = ['q','w','e','r','t','y','u','i','o','p'];
+    const r3 = ['a','s','d','f','g','h','j','k','l'];
+    const r4 = ['z','x','c','v','b','n','m',',','.'];
+    const key = k => {
+        const disp = /^[a-z]$/.test(k) ? S(k) : k;
+        const val  = /^[a-z]$/.test(k) ? S(k) : k;
+        const safe = val.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        return `<button class="shkey" onclick="${charFn}('${safe}')">${disp}</button>`;
+    };
+    rows.innerHTML = `
+    <div class="sh-kb-row">
+        ${r1.map(key).join('')}
+        <button class="shkey kdel" style="flex:1.8" onclick="${delFn}()">⌫</button>
+    </div>
+    <div class="sh-kb-row" style="padding:0 2%">${r2.map(key).join('')}</div>
+    <div class="sh-kb-row" style="padding:0 5.5%">${r3.map(key).join('')}</div>
+    <div class="sh-kb-row">
+        <button class="shkey kshift${isShift?' on':''}" style="flex:1.8" onclick="${shiftFn}()">⇧</button>
+        ${r4.map(key).join('')}
+        <button class="shkey kshift${isShift?' on':''}" style="flex:1.8" onclick="${shiftFn}()">⇧</button>
+    </div>
+    <div class="sh-kb-row">
+        <button class="shkey kgray" onclick="${charFn}('@')">@</button>
+        <button class="shkey kgray" onclick="${charFn}('/')">/ </button>
+        <button class="shkey kgray" onclick="${charFn}('.')">.</button>
+        <button class="shkey kspace" onclick="${charFn}(' ')">bo'sh joy</button>
+        <button class="shkey kgray" onclick="${charFn}('+')">+</button>
+        <button class="shkey kenter" style="flex:3.2" onclick="${enterFn}()">↵ ENTER</button>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  SOTUV TARIXI
+// ════════════════════════════════════════════════════════════
+
+async function loadSales(force = false) {
+    _showState('loading');
+    try {
+        const data = await apiRequest(_buildUrl());
+        _allSales = data || [];
+        _applyAndRender();
+        document.getElementById('idb-chip').classList.add('hidden');
+    } catch (e) {
+        _showState('empty');
+        if (!navigator.onLine) showToast('Offline rejim', 'warning');
+        else showToast('Yuklanmadi: ' + (e.message || ''), 'error');
+    }
+}
+
+function _buildUrl() {
+    const t = new Date();
+    let url = '/api/sales/history?limit=200';
+    if (_period === 'today') {
+        const d = _toDateStr(t); url += `&start_date=${d}&end_date=${d}`;
+    } else if (_period === 'week') {
+        url += `&start_date=${_toDateStr(new Date(t - 7 * 864e5))}`;
+    } else if (_period === 'month') {
+        url += `&start_date=${_toDateStr(new Date(t.getFullYear(), t.getMonth(), 1))}`;
+    } else if (_period === 'custom' && _dateFrom) {
+        url += `&start_date=${_dateFrom}`;
+        if (_dateTo) url += `&end_date=${_dateTo}`;
+    }
+    if (_payFilter) url += `&payment_method=${_payFilter}`;
+    return url;
+}
+
+function _applyAndRender() {
+    let shown = _allSales;
+    if (_payFilter) shown = shown.filter(s => s.payment_method === _payFilter);
+    if (_searchQ) {
+        const q = _searchQ.toLowerCase();
+        shown = shown.filter(s =>
+            String(s.receipt_number || '').toLowerCase().includes(q) ||
+            (s.items || []).some(i => (i.product_name || '').toLowerCase().includes(q)) ||
+            (s.customer_name || '').toLowerCase().includes(q) ||
+            (s.employee_name || '').toLowerCase().includes(q)
+        );
+    }
+    _updateStats(shown);
+    _renderList(shown);
+}
+
+function clearSearch() {
+    _searchQ = '';
+    document.getElementById('sh-search').value = '';
+    document.getElementById('sh-search-clr').classList.add('hidden');
+    _shSyncKbDisplay('');
+    _applyAndRender();
+}
+
+function _updateStats(list) {
+    const strip = document.getElementById('stats-strip');
+    if (!list.length) { strip.classList.remove('show'); return; }
+    const total = list.reduce((s, x) => s + (x.total_amount || 0), 0);
+    strip.classList.add('show');
+    document.getElementById('st-count').textContent = list.length;
+    document.getElementById('st-total').textContent = fmtM(total);
+    document.getElementById('st-avg').textContent   = fmtM(total / list.length);
+}
+
+function _renderList(shown) {
+    if (!shown.length) { _showState('empty'); return; }
+    _showState('list');
+    document.getElementById('sh-list').innerHTML = shown.map(s => `
+        <div onclick="openDetail(${s.id})" class="sale-row" id="row-${s.id}">
+            <div class="d-flex justify-between items-start gap-2">
+                <div class="flex-1 min-w-0">
+                    <div class="d-flex items-center gap-2 flex-wrap mb-05">
+                        <span class="font-black text-sm" style="color:var(--text)">Chek #${s.receipt_number}</span>
+                        <span class="pchip ${PM_COLOR[s.payment_method] || ''}">
+                            <i class="fa-solid ${PM_ICON[s.payment_method] || 'fa-circle'}" style="font-size:8px;"></i>
+                            ${s.payment_method}
+                        </span>
+                        ${s.is_cancelled ? `<span class="pchip" style="background:var(--surface2);color:var(--danger)">bekor</span>` : ''}
+                    </div>
+                    <div class="d-flex items-center gap-2 flex-wrap mt-1">
+                        <span class="text-xs" style="color:var(--text3); font-size:10px;">${fmtDT(s.created_at)}</span>
+                        ${s.employee_name ? `<span class="text-xs font-bold" style="color:#818cf8; font-size:10px;"><i class="fa-solid fa-user" style="font-size:8px;"></i> ${s.employee_name}</span>` : ''}
+                        ${s.customer_name ? `<span class="text-xs font-bold" style="color:var(--warning); font-size:10px;"><i class="fa-solid fa-user-tag" style="font-size:8px;"></i> ${s.customer_name}</span>` : ''}
+                    </div>
+                </div>
+                <div class="text-right shrink-0">
+                    <p class="font-black text-sm" style="color:var(--success)">${fmtM(s.total_amount)}</p>
+                    <p class="text-xs mt-1" style="color:var(--text3); font-size:10px;">${(s.items||[]).length} mahsulot</p>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+// ── Detail ────────────────────────────────────────────────────
+async function openDetail(id) {
+    try {
+        const sale = await apiRequest(`/api/sales/${id}`);
+        if (sale) _showDetail(sale);
+    } catch (e) {
+        const cached = _allSales.find(x => x.id === id);
+        if (cached) _showDetail(cached);
+        else showToast('Xatolik: ' + (e.message || ''), 'error');
+    }
+}
+
+function _showDetail(sale) {
+    _curSale = sale;
+    document.querySelectorAll('.sale-row').forEach(r => r.classList.remove('sel'));
+    document.getElementById(`row-${sale.id}`)?.classList.add('sel');
+    const html = _detailHtml(sale);
+    if (isDesk()) {
+        document.getElementById('dp-empty').classList.add('hidden');
+        const c = document.getElementById('dp-content');
+        c.innerHTML = html; c.classList.remove('hidden');
+        c.scrollTop = 0;
+    } else {
+        document.getElementById('modal-inner').innerHTML = html;
+        document.getElementById('sale-modal').classList.remove('hidden');
+    }
+}
+
+function _detailHtml(sale) {
+    const items = (sale.items || []).map(item => {
+        const sn = (item.product_name || '').replace(/'/g, "\\'");
+        const retFn = item.quantity === 1
+            ? `quickReturn(${item.product_id}, 1, event)`
+            : `openRetModal(${item.product_id}, '${sn}', ${item.quantity}, ${item.unit_price})`;
+        return `
+        <div class="detail-item-card">
+            <div class="d-flex justify-between items-start mb-1">
+                <div class="flex-1 min-w-0" style="margin-right:8px;">
+                    <h4 class="font-bold text-xs truncate" style="color:var(--text)">${item.product_name || '—'}</h4>
+                    <p class="text-xs" style="color:var(--text3); font-size:10px;">${item.quantity} × ${fmtM(item.unit_price)}</p>
+                </div>
+                <span class="font-black text-xs shrink-0" style="color:var(--primary)">${fmtM(item.quantity * item.unit_price)}</span>
+            </div>
+            ${!sale.is_cancelled ? `
+            <button onclick="${retFn}; event.stopPropagation()"
+                class="s-btn s-btn-danger w-full mt-1"
+                style="padding:6px; font-size:11px; border-radius:8px;">
+                <i class="fa-solid fa-rotate-left" style="font-size:9px;"></i> Qaytarish
+            </button>` : ''}
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="d-flex items-start justify-between gap-2 mb-4">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-lg font-black leading-tight">Chek #${sale.receipt_number}</h2>
+            <p class="text-xs mt-05" style="color:var(--text3); font-size:10px;">${fmtDT(sale.created_at)}</p>
+        </div>
+        <button onclick="closeDetail()" class="icon-btn" style="background:var(--surface2); width:32px; height:32px; border-radius:10px;">
+            <i class="fa-solid fa-times"></i>
+        </button>
+    </div>
+    <div class="grid grid-2 gap-2 mb-4">
+        <div class="p-3" style="background:var(--primary-s); border-radius:12px;">
+            <p class="text-xs font-bold uppercase" style="color:var(--primary); font-size:9px;">To'lov</p>
+            <h3 class="text-sm font-black mt-05" style="color:var(--primary)">${PM_LABEL[sale.payment_method] || sale.payment_method}</h3>
+        </div>
+        <div class="p-3" style="background:var(--surface2); border-radius:12px;">
+            <p class="text-xs font-bold uppercase" style="color:var(--success); font-size:9px;">Jami</p>
+            <h3 class="text-sm font-black mt-05" style="color:var(--success)">${fmtM(sale.total_amount)}</h3>
+        </div>
+    </div>
+    <p class="text-xs font-black uppercase tracking-widest mb-2" style="color:var(--text3); font-size:10px;">Mahsulotlar</p>
+    <div class="d-flex flex-col gap-2">${items}</div>
+    <button onclick="printReceipt()" class="s-btn s-btn-surface w-full mt-4">
+        <i class="fa-solid fa-print"></i> Chek chiqarish
+    </button>`;
+}
+
+function closeDetail() {
+    document.getElementById('sale-modal')?.classList.add('hidden');
+    if (isDesk()) {
+        document.querySelectorAll('.sale-row').forEach(r => r.classList.remove('sel'));
+        document.getElementById('dp-content').classList.add('hidden');
+        document.getElementById('dp-empty').classList.remove('hidden');
+    }
+    _curSale = null;
+}
+
+// ── Quick return ──────────────────────────────────────────────
+async function quickReturn(pid, qty, event) {
+    if (!navigator.onLine) { showToast('Offline — qaytarish mumkin emas', 'error'); return; }
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-[11px]"></i> Qaytarilmoqda...';
+    try {
+        const r = await apiRequest(`/api/sales/${_curSale.id}/return`, 'POST', {
+            product_id: pid, quantity: qty, reason: 'Tezkor qaytarish',
+        });
+        showToast(r.message || 'Qaytarildi ✓', 'success');
+        await openDetail(_curSale.id);
+        loadSales(true);
+    } catch (e) {
+        showToast(e.message || 'Xatolik', 'error');
+        btn.disabled = false; btn.innerHTML = orig;
+    }
+}
+
+// ── Return modal ──────────────────────────────────────────────
+function openRetModal(pid, name, soldQty, unitPrice) {
+    _retItem = { pid, name, soldQty, unitPrice };
+    document.getElementById('rp-name').textContent  = name;
+    document.getElementById('rp-qty').textContent   = soldQty + ' dona';
+    document.getElementById('rp-price').textContent = fmtM(unitPrice);
+    document.getElementById('rp-max').textContent   = `Maks: ${soldQty} dona`;
+    const inp = document.getElementById('rp-input');
+    inp.value = 1; inp.max = soldQty;
+    document.getElementById('rp-reason').value = '';
+    updRetAmt();
+    document.getElementById('ret-modal').classList.remove('hidden');
+}
+function closeRetModal() {
+    document.getElementById('ret-modal').classList.add('hidden');
+    _retItem = null;
+}
+function adjQty(d) {
+    const i = document.getElementById('rp-input');
+    i.value = Math.min(Math.max((parseInt(i.value) || 0) + d, 1), parseInt(i.max));
+    updRetAmt();
+}
+function setMaxQty() {
+    document.getElementById('rp-input').value = _retItem.soldQty;
+    updRetAmt();
+}
+function updRetAmt() {
+    const q = parseFloat(document.getElementById('rp-input').value) || 0;
+    document.getElementById('rp-amt').textContent = fmtM(q * (_retItem?.unitPrice || 0));
+}
+async function submitReturn() {
+    if (!navigator.onLine) { showToast('Offline — qaytarish mumkin emas', 'error'); return; }
+    const qty    = parseFloat(document.getElementById('rp-input').value);
+    const reason = document.getElementById('rp-reason').value.trim();
+    if (!qty || qty <= 0) return showToast("Miqdorni kiriting", 'error');
+    if (qty > _retItem.soldQty) return showToast(`Maks ${_retItem.soldQty} ta`, 'error');
+    const btn = document.getElementById('rp-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i>Qaytarilmoqda...';
+    try {
+        const r = await apiRequest(`/api/sales/${_curSale.id}/return`, 'POST', {
+            product_id: _retItem.pid, quantity: qty, reason: reason || null,
+        });
+        showToast(r.message || 'Qaytarildi! ✓', 'success');
+        closeRetModal();
+        await openDetail(_curSale.id);
+        loadSales(true);
+    } catch (e) {
+        showToast(e.message || 'Xatolik', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-rotate-left mr-1.5"></i>Qaytarishni tasdiqlash';
+    }
+}
+
+// ════════════════════════════════════════════════════════════
+//  QAYTARISHLAR TARIXI
+// ════════════════════════════════════════════════════════════
+function openReturnsScreen() {
+    document.getElementById('returns-screen').classList.add('open');
+    if (!_allReturns.length) loadReturnsHistory();
+}
+function closeReturnsScreen() {
+    document.getElementById('returns-screen').classList.remove('open');
+    // Klaviaturani yopish
+    if (_rsKbOpen) {
+        _rsKbOpen = false;
+        document.getElementById('rs-kb-panel')?.classList.remove('open');
+        const arrow = document.getElementById('rs-kb-arrow');
+        if (arrow) arrow.style.transform = '';
+    }
+}
+function setRetPeriod(p, btn) {
+    _retPeriod = p; _retDateFrom = _retDateTo = null;
+    _resetRetBtns();
+    btn.classList.remove('off'); btn.classList.add('on');
+    loadReturnsHistory();
+}
+function setRetDay(val) {
+    if (!val) return;
+    _retPeriod = 'custom'; _retDateFrom = _retDateTo = val;
+    const [, m, d] = val.split('-');
+    document.getElementById('rday-lbl').textContent = `${d}.${m}`;
+    _resetRetBtns();
+    document.getElementById('rp-day').classList.replace('off','on');
+    loadReturnsHistory();
+}
+function setRetMonth(val) {
+    if (!val) return;
+    const [y, m] = val.split('-');
+    _retPeriod = 'custom';
+    _retDateFrom = `${val}-01`;
+    _retDateTo   = `${val}-${new Date(+y, +m, 0).getDate()}`;
+    document.getElementById('rmth-lbl').textContent = `${MTHS[+m - 1].slice(0,3)} ${y}`;
+    _resetRetBtns();
+    document.getElementById('rp-mth').classList.replace('off','on');
+    loadReturnsHistory();
+}
+function _resetRetBtns() {
+    ['rp-today','rp-week','rp-month','rp-all','rp-day','rp-mth'].forEach(id => {
+        const b = document.getElementById(id); if (!b) return;
+        b.classList.remove('on'); b.classList.add('off');
+    });
+}
+function filterReturns(q) {
+    _retSearchQ = q.trim();
+    document.getElementById('rs-search-clr')?.classList.toggle('hidden', !_retSearchQ);
+    _renderReturns(_allReturns);
+}
+function clearRetSearch() {
+    _retSearchQ = '';
+    document.getElementById('rs-search').value = '';
+    document.getElementById('rs-search-clr').classList.add('hidden');
+    _rsSyncKbDisplay('');
+    _renderReturns(_allReturns);
+}
+async function loadReturnsHistory() {
+    const ld = document.getElementById('rs-loading');
+    const li = document.getElementById('rs-list');
+    const em = document.getElementById('rs-empty');
+    ld.classList.remove('hidden'); li.classList.add('hidden'); em.classList.add('hidden');
+    document.getElementById('rs-count').textContent = '—';
+    document.getElementById('rs-total').textContent = '—';
+    if (!navigator.onLine) {
+        ld.classList.add('hidden'); em.classList.remove('hidden');
+        showToast('Offline', 'warning'); return;
+    }
+    try {
+        const t = new Date();
+        let url = '/api/sales/returns?limit=500';
+        if (_retPeriod === 'today') {
+            const d = _toDateStr(t); url += `&start_date=${d}&end_date=${d}`;
+        } else if (_retPeriod === 'week') {
+            url += `&start_date=${_toDateStr(new Date(t - 7 * 864e5))}`;
+        } else if (_retPeriod === 'month') {
+            url += `&start_date=${_toDateStr(new Date(t.getFullYear(), t.getMonth(), 1))}`;
+        } else if (_retPeriod === 'custom' && _retDateFrom) {
+            url += `&start_date=${_retDateFrom}`;
+            if (_retDateTo) url += `&end_date=${_retDateTo}`;
+        }
+        const returns = await apiRequest(url);
+        ld.classList.add('hidden');
+        _allReturns = returns || [];
+        _renderReturns(_allReturns);
+    } catch (e) {
+        ld.classList.add('hidden'); em.classList.remove('hidden');
+        showToast('Yuklanmadi: ' + (e.message || ''), 'error');
+    }
+}
+function _renderReturns(all) {
+    const li = document.getElementById('rs-list');
+    const em = document.getElementById('rs-empty');
+    let shown = all;
+    if (_retSearchQ) {
+        const q = _retSearchQ.toLowerCase();
+        shown = all.filter(r => (r.product_name || '').toLowerCase().includes(q) || String(r.receipt_number || '').toLowerCase().includes(q));
+    }
+    document.getElementById('rs-count').textContent = shown.length;
+    document.getElementById('rs-total').textContent = fmtM(shown.reduce((s, r) => s + (r.refund_amount || 0), 0));
+    
+    if (!shown.length) { em.classList.remove('hidden'); li.classList.add('hidden'); return; }
+    
+    li.innerHTML = shown.map(r => `
+        <div class="ret-row">
+            <div class="d-flex items-start gap-3">
+                <div class="icon-box ib-rose shrink-0 mt-1" style="width:32px; height:32px; font-size:12px;">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="d-flex justify-between items-start gap-2">
+                        <h4 class="font-black text-sm truncate flex-1">${r.product_name}</h4>
+                        <span class="font-black text-sm shrink-0" style="color:var(--danger)">${fmtM(r.refund_amount)}</span>
+                    </div>
+                    <div class="d-flex items-center gap-2 mt-1">
+                        <span class="badge badge-gray" style="font-size:9px;">${r.quantity} dona</span>
+                        <span class="badge badge-blue" style="font-size:9px;">Chek #${r.receipt_number}</span>
+                    </div>
+                    <div class="d-flex justify-between items-center mt-3 pt-2" style="border-top:1px solid var(--border)">
+                        <span class="text-xs" style="color:var(--text3); font-size:10px;">${fmtDT(r.created_at)}</span>
+                        <span class="text-xs font-bold" style="color:#818cf8; font-size:10px;">@${r.employee_name}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`).join('');
+    li.classList.remove('hidden'); em.classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════════════════
+//  FILTERLAR
+// ════════════════════════════════════════════════════════════
+function setPeriod(p, btn) {
+    _period = p; _dateFrom = _dateTo = null;
+    _resetPrdBtns();
+    btn.classList.replace('off','on');
+    loadSales(true);
+}
+function setDay(val) {
+    if (!val) return;
+    _period = 'custom'; _dateFrom = _dateTo = val;
+    const [, m, d] = val.split('-');
+    document.getElementById('day-lbl').textContent = `${d}.${m}`;
+    _resetPrdBtns();
+    document.getElementById('pb-day').classList.replace('off','on');
+    loadSales(true);
+}
+function setMonthPicker(val) {
+    if (!val) return;
+    const [y, m] = val.split('-');
+    _period = 'custom';
+    _dateFrom = `${val}-01`;
+    _dateTo   = `${val}-${new Date(+y, +m, 0).getDate()}`;
+    document.getElementById('mth-lbl').textContent = `${MTHS[+m - 1].slice(0,3)} ${y}`;
+    _resetPrdBtns();
+    document.getElementById('pb-mth').classList.replace('off','on');
+    loadSales(true);
+}
+function _resetPrdBtns() {
+    ['pb-today','pb-week','pb-month','pb-day','pb-mth'].forEach(id => {
+        const b = document.getElementById(id); if (!b) return;
+        b.classList.remove('on'); b.classList.add('off');
+    });
+}
+function setPayment(method, btn) {
+    _payFilter = method;
+    document.querySelectorAll('.pay-btn').forEach(b => { b.classList.remove('on'); b.classList.add('off'); });
+    btn.classList.replace('off','on');
+    _applyAndRender();
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function _showState(state) {
+    const loading = document.getElementById('sh-loading');
+    const scroll  = document.getElementById('sh-list-scroll');
+    const empty   = document.getElementById('sh-empty');
+    loading.style.display = state === 'loading' ? 'flex' : 'none';
+    empty.style.display   = state === 'empty'   ? 'flex' : 'none';
+    scroll.style.display  = state === 'list'     ? 'block' : 'none';
+    if (isDesk() && (state === 'loading' || state === 'empty')) {
+        loading.style.padding = '60px 20px';
+        empty.style.padding   = '60px 20px';
+    }
+}
+
+function printReceipt() { showToast("Chop qilish funksiyasi tez orada", 'info'); }
+function _toDateStr(d) { return d.toISOString().split('T')[0]; }
+function fmtM(v) { return Math.round(v || 0).toLocaleString('ru-RU') + " so'm"; }
+function fmtDT(str) {
+    if (!str) return '—';
+    const d = new Date(str);
+    const p = n => String(n).padStart(2, '0');
+    return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+</script>
+{% endblock %}

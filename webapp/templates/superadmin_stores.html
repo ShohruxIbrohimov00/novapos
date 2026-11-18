@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% block title %}Do'konlar — SuperAdmin{% endblock %}
+
+{% block extra_styles %}
+/* ══════════════════════════════════════════════════════════
+   SUPERADMIN STORES — VANILLA CSS v1.0
+   ══════════════════════════════════════════════════════════ */
+
+.page-wrapper {
+    padding: 1.5rem;
+    background: var(--bg);
+    min-height: 100vh;
+    padding-bottom: 6rem;
+}
+
+/* ── Header ── */
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.back-btn {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    cursor: pointer; transition: 0.2s;
+}
+.back-btn:active { transform: scale(0.9); }
+
+/* ── Search ── */
+.search-wrap {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+.search-icon {
+    position: absolute; left: 1rem; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    pointer-events: none;
+}
+.search-input {
+    width: 100%; padding: 1rem 1rem 1rem 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    outline: none; font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    transition: 0.2s;
+}
+.search-input:focus { border-color: var(--primary); box-shadow: var(--shadow-md); }
+
+/* ── Store Cards ── */
+.stores-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.store-card {
+    background: var(--surface);
+    border-radius: 2rem;
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-sm);
+    transition: 0.3s;
+}
+.store-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.status-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.dot-blocked { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.stat-box {
+    background: var(--surface2);
+    padding: 0.65rem;
+    border-radius: 1rem;
+    text-align: center;
+}
+.stat-box p:first-child { font-size: 9px; font-weight: 900; color: var(--text3); text-transform: uppercase; margin-bottom: 2px; }
+.stat-box p:last-child { font-size: 14px; font-weight: 900; color: var(--text); }
+
+/* ── Modal ── */
+.modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: flex-end; justify-content: center;
+}
+@media (min-width: 640px) { .modal-overlay { align-items: center; padding: 1rem; } }
+
+.modal-sheet {
+    background: var(--surface);
+    width: 100%;
+    max-width: 36rem;
+    border-radius: 2rem 2rem 0 0;
+    max-height: 92dvh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+@media (min-width: 640px) { .modal-sheet { border-radius: 2rem; } }
+
+.modal-header {
+    position: sticky; top: 0; background: var(--surface);
+    padding: 1.25rem; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    z-index: 10;
+}
+
+.modal-body { padding: 1.25rem; }
+
+.info-banner {
+    background: linear-gradient(135deg, #eff6ff, #eef2ff);
+    border: 1px solid #dbeafe;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* ── Subscription Extension ── */
+.extension-box {
+    background: var(--surface2);
+    padding: 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
+.ext-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+.ext-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.75rem 0.25rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.ext-btn:active { transform: scale(0.95); }
+.ext-btn.special { background: var(--success); color: white; border: none; }
+
+/* ── Employee Items ── */
+.emp-item {
+    background: var(--surface2);
+    padding: 0.85rem 1rem;
+    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.emp-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 14px;
+}
+
+/* ── Actions ── */
+.action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.btn-large { padding: 1rem; border-radius: 1.25rem; font-weight: 900; font-size: 13px; text-transform: uppercase; }
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    
+    <div class="header-row">
+        <button onclick="location.href='/superadmin'" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <h1 class="text-base font-black" style="font-size: 24px;">Barcha Do'konlar</h1>
+    </div>
+
+    <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="store-search" oninput="searchStores(this.value)" 
+               class="search-input" placeholder="Do'kon nomi yoki telefon...">
+    </div>
+
+    <div id="all-stores-list" class="stores-list">
+        <div class="text-center" style="padding: 3rem 0; color: var(--text3);">
+            <div class="spinner" style="margin: 0 auto 1rem;"></div>
+            <p class="font-bold">Yuklanmoqda...</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- DO'KON TAFSILOTLARI MODALI -->
+<div id="store-detail-modal" class="modal-overlay hidden">
+    <div class="modal-sheet">
+        
+        <div class="modal-header">
+            <h2 class="font-black" style="font-size: 20px;">Do'kon tafsilotlari</h2>
+            <button onclick="closeStoreModal()" class="back-btn" style="width: 34px; height: 34px;">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            
+            <div class="info-banner">
+                <div class="d-flex justify-between items-start" style="margin-bottom: 12px;">
+                    <div>
+                        <p style="font-size: 9px; font-weight: 900; color: var(--primary); text-transform: uppercase; margin-bottom: 4px;">
+                            Do'kon #<span id="modal-store-id"></span>
+                        </p>
+                        <h3 class="font-black" style="font-size: 18px; color: var(--text);" id="modal-store-name"></h3>
+                    </div>
+                    <div id="modal-status-badge" class="badge" style="padding: 4px 12px; font-size: 10px;"></div>
+                </div>
+                
+                <div style="font-size: 13px; color: var(--text2); line-height: 1.8;">
+                    <p><i class="fa-solid fa-phone" style="width: 20px; color: var(--text3);"></i> <span id="modal-store-phone"></span></p>
+                    <p><i class="fa-solid fa-location-dot" style="width: 20px; color: var(--text3);"></i> <span id="modal-store-address"></span></p>
+                </div>
+
+                <div class="stats-grid" style="margin-top: 16px;">
+                    <div class="stat-box" style="background: white;">
+                        <p>Xodimlar</p>
+                        <p id="modal-emp-count">0</p>
+                    </div>
+                    <div class="stat-box" style="background: white;">
+                        <p>Obuna</p>
+                        <p id="modal-days-left" style="font-size: 12px;">—</p>
+                    </div>
+                    <div class="stat-box" style="background: white;">
+                        <p>Status</p>
+                        <p id="modal-payment-status" style="font-size: 10px;">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h4 style="font-size: 11px; font-weight: 900; color: var(--text3); text-transform: uppercase; margin-bottom: 8px;">Xodimlar</h4>
+                <div id="modal-employees-list"></div>
+            </div>
+
+            <div class="extension-box">
+                <h4 style="font-size: 11px; font-weight: 900; color: var(--text3); text-transform: uppercase; margin-bottom: 12px;">Obunani uzaytirish</h4>
+                <div class="ext-grid">
+                    <button onclick="extendSubscription(1)" class="ext-btn">1 oy</button>
+                    <button onclick="extendSubscription(3)" class="ext-btn">3 oy</button>
+                    <button onclick="extendSubscription(6)" class="ext-btn">6 oy</button>
+                    <button onclick="extendSubscription(12)" class="ext-btn special">1 yil</button>
+                </div>
+            </div>
+
+            <div class="action-grid">
+                <button onclick="toggleStoreStatus()" id="toggle-store-btn" class="btn btn-large">
+                    <i class="fa-solid fa-power-off" style="margin-right: 8px;"></i>
+                    <span id="toggle-store-text">BLOKLASH</span>
+                </button>
+                <button onclick="loginAsStore()" class="btn btn-primary btn-large">
+                    <i class="fa-solid fa-right-to-bracket" style="margin-right: 8px;"></i> KIRISH
+                </button>
+            </div>
+
+            <button onclick="deleteStore()" class="btn btn-w" style="background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; padding: 1rem; border-radius: 1.25rem; font-weight: 900; font-size: 12px;">
+                <i class="fa-solid fa-trash" style="margin-right: 8px;"></i> DO'KONNI O'CHIRISH
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let allStores = [];
+let selectedStoreId = null;
+let selectedStoreData = null;
+
+document.addEventListener('DOMContentLoaded', loadAllStores);
+
+async function loadAllStores() {
+    try {
+        allStores = await apiRequest('/api/superadmin/stores');
+        renderStores(allStores);
+    } catch (e) { 
+        document.getElementById('all-stores-list').innerHTML = 
+            '<p class="text-center font-bold" style="color:var(--danger); padding:2rem;">Yuklanmadi: ' + e.message + '</p>';
+    }
+}
+
+function renderStores(list) {
+    const container = document.getElementById('all-stores-list');
+    if (!list || list.length === 0) {
+        container.innerHTML = `<div class="store-card text-center" style="padding:4rem; border-style:dashed;">
+            <i class="fa-solid fa-store" style="font-size:3rem; color:var(--border2); margin-bottom:1rem; display:block;"></i>
+            <p style="color:var(--text3); font-weight:800;">Do'konlar topilmadi</p>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = list.map(s => {
+        let daysText = '—';
+        if (s.days_left !== null && s.days_left !== undefined) {
+            if (s.days_left <= 0) daysText = '<span style="color:var(--danger)">Tugagan</span>';
+            else if (s.days_left <= 7) daysText = `<span style="color:var(--warning)">${s.days_left} kun</span>`;
+            else daysText = `<span style="color:var(--success)">${s.days_left} kun</span>`;
+        }
+        const statusClass = s.is_active ? 'dot-active' : 'dot-blocked';
+        const badgeClass = s.is_active ? 'badge-green' : 'badge-red';
+
+        return `
+        <div class="store-card">
+            <div class="card-header">
+                <div class="d-flex items-center gap-3 min-w-0 flex-1">
+                    <span class="status-dot ${statusClass}"></span>
+                    <div class="min-w-0 flex-1">
+                        <h4 class="font-black truncate" style="font-size:15px; color:var(--text);">${s.name}</h4>
+                        <p style="font-size:10px; font-weight:800; color:var(--text3);">${s.phone || 'Tel: —'}</p>
+                    </div>
+                </div>
+                <span class="badge ${badgeClass}" style="font-size:9px;">${s.is_active ? 'FAOL' : 'BLOK'}</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <p>Xodimlar</p>
+                    <p>${s.emp_count || 0}</p>
+                </div>
+                <div class="stat-box">
+                    <p>Obuna</p>
+                    <p>${daysText}</p>
+                </div>
+                <div class="stat-box">
+                    <p>Status</p>
+                    <p style="font-size:10px;">${s.payment_status || '—'}</p>
+                </div>
+            </div>
+            <button onclick="openStoreDetail(${s.id})" class="btn btn-primary btn-w" style="padding:0.75rem; font-size:11px;">
+                <i class="fa-solid fa-eye" style="margin-right:6px;"></i> BATAFSIL
+            </button>
+        </div>`;
+    }).join('');
+}
+
+async function openStoreDetail(storeId) {
+    selectedStoreId = storeId;
+    selectedStoreData = allStores.find(s => s.id === storeId);
+    if (!selectedStoreData) return;
+
+    document.getElementById('modal-store-id').innerText = selectedStoreData.id;
+    document.getElementById('modal-store-name').innerText = selectedStoreData.name;
+    document.getElementById('modal-store-phone').innerText = selectedStoreData.phone || 'Kiritilmagan';
+    document.getElementById('modal-store-address').innerText = selectedStoreData.address || 'Kiritilmagan';
+    document.getElementById('modal-emp-count').innerText = selectedStoreData.emp_count || 0;
+    document.getElementById('modal-payment-status').innerText = selectedStoreData.payment_status || '—';
+
+    const badge = document.getElementById('modal-status-badge');
+    badge.className = `badge ${selectedStoreData.is_active ? 'badge-green' : 'badge-red'}`;
+    badge.innerText = selectedStoreData.is_active ? 'FAOL' : 'BLOKLANGAN';
+
+    let daysText = '—';
+    if (selectedStoreData.days_left <= 0) daysText = '<span style="color:var(--danger)">Tugagan</span>';
+    else daysText = `<span style="color:var(--success)">${selectedStoreData.days_left} kun</span>`;
+    document.getElementById('modal-days-left').innerHTML = daysText;
+
+    const toggleBtn = document.getElementById('toggle-store-btn');
+    const toggleText = document.getElementById('toggle-store-text');
+    if (selectedStoreData.is_active) {
+        toggleBtn.className = 'btn btn-large';
+        toggleBtn.style.background = '#fff1f2'; toggleBtn.style.color = '#e11d48';
+        toggleText.innerText = 'BLOKLASH';
+    } else {
+        toggleBtn.className = 'btn btn-large';
+        toggleBtn.style.background = '#f0fdf4'; toggleBtn.style.color = '#16a34a';
+        toggleText.innerText = 'FAOLLASHTIRISH';
+    }
+
+    document.getElementById('store-detail-modal').classList.remove('hidden');
+
+    try {
+        const employees = await apiRequest(`/api/superadmin/stores/${storeId}/employees`);
+        renderEmployees(employees);
+    } catch (e) {
+        document.getElementById('modal-employees-list').innerHTML = '<p class="text-center text-xs" style="color:var(--danger)">Xodimlar yuklanmadi</p>';
+    }
+}
+
+function renderEmployees(employees) {
+    const container = document.getElementById('modal-employees-list');
+    if (!employees || employees.length === 0) {
+        container.innerHTML = '<p class="text-center text-xs" style="color:var(--text3); padding:1rem;">Xodimlar yo\'q</p>';
+        return;
+    }
+
+    container.innerHTML = employees.map(emp => {
+        const isAdmin = emp.role === 'admin';
+        const roleColor = isAdmin ? 'var(--primary)' : 'var(--text2)';
+        const roleBg = isAdmin ? 'var(--primary-s)' : 'var(--surface)';
+        
+        return `
+        <div class="emp-item">
+            <div class="emp-avatar" style="background:${roleBg}; color:${roleColor}; border:1px solid var(--border);">
+                ${emp.full_name.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-1 min-w-0">
+                <h5 class="font-black truncate" style="font-size:13px; color:var(--text);">${emp.full_name}</h5>
+                <p style="font-size:10px; font-weight:700; color:var(--text3);">@${emp.username}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <span class="badge ${isAdmin ? 'badge-blue' : 'badge-gray'}" style="font-size:8px;">${isAdmin?'Admin':'Sotuvchi'}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function closeStoreModal() {
+    document.getElementById('store-detail-modal').classList.add('hidden');
+}
+
+async function toggleStoreStatus() {
+    if (!selectedStoreId) return;
+    try {
+        await apiRequest(`/api/superadmin/stores/${selectedStoreId}/toggle`, 'PATCH');
+        showToast("Holat o'zgardi", "success");
+        closeStoreModal();
+        loadAllStores();
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+async function extendSubscription(months) {
+    if (!selectedStoreId) return;
+    try {
+        await apiRequest(`/api/superadmin/stores/${selectedStoreId}/extend`, 'POST', { months });
+        showToast("Obuna uzaytirildi", "success");
+        closeStoreModal();
+        loadAllStores();
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+async function loginAsStore() {
+    if (!selectedStoreId) return;
+    try {
+        const res = await apiRequest(`/api/superadmin/login-as-store/${selectedStoreId}`, 'POST');
+        localStorage.setItem("super_token", localStorage.getItem("access_token"));
+        localStorage.setItem("access_token", res.access_token);
+        if (res.user_info) localStorage.setItem("user_info", JSON.stringify(res.user_info));
+        window.location.href = "/pos";
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+async function deleteStore() {
+    if (!selectedStoreId || !confirm("Do'konni butunlay o'chirishni tasdiqlaysizmi?")) return;
+    try {
+        await apiRequest(`/api/superadmin/stores/${selectedStoreId}`, 'DELETE');
+        showToast("Do'kon o'chirildi", "success");
+        closeStoreModal();
+        loadAllStores();
+    } catch (e) { showToast(e.message, "error"); }
+}
+
+function searchStores(q) {
+    const lower = q.toLowerCase();
+    const filtered = allStores.filter(s => s.name.toLowerCase().includes(lower) || (s.phone && s.phone.includes(q)));
+    renderStores(filtered);
+}
+</script>
+{% endblock %}

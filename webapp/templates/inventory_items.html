@@ -1,0 +1,28 @@
+<!-- webapp/templates/inventory_items.html -->
+{% for p in products %}
+<div class="prod-card {% if p.quantity <= p.min_stock_limit %}card-low-stock{% endif %}" 
+     data-product-id="{{ p.id }}" 
+     onclick="window.location.href = '/products/edit/{{ p.id }}'">
+    <div class="prod-card-inner">
+        <div class="prod-info">
+            <div class="prod-name">{{ p.name }}</div>
+            <div class="prod-badges">
+                <span class="badge badge-gray" style="font-size:9px">{{ p.category_name or 'Boshqa' }}</span>
+                {% if p.short_code %}
+                <span class="badge badge-blue" style="font-size:9px;font-family:monospace">PLU: {{ p.short_code }}</span>
+                {% endif %}
+            </div>
+            <div class="prod-price">{{ "{:,.0f}".format(p.price_out).replace(',', ' ') }} so'm</div>
+        </div>
+        <div class="prod-qty-block">
+            <div class="qty-display" style="color: {% if p.quantity <= p.min_stock_limit %}var(--danger){% else %}var(--text){% endif %}">
+                {{ p.quantity|round(2) }}
+            </div>
+            <div class="prod-unit">{{ p.unit_type or 'dona' }}</div>
+            {% if p.quantity <= p.min_stock_limit %}
+            <div class="low-badge">Kam qoldi!</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
