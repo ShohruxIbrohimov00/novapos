@@ -163,6 +163,10 @@ app = FastAPI(
     redoc_url   = None if IS_PRODUCTION else "/redoc",
 )
 
+# ─── Kiruvchi matnni tozalash (XSS) ───────────────────────────
+from app.sanitize import SanitizeJSONMiddleware
+app.add_middleware(SanitizeJSONMiddleware)
+
 # ─── Rate Limiter ─────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)

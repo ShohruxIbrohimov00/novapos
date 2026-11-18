@@ -814,7 +814,7 @@
                 </div>
 
                 <!-- IP Printer -->
-                <div class="printer-card" data-method="ip" onclick="selectPrinterMethod('ip')">
+                <div class="printer-card" data-method="ip" onclick="selectPrinterMethod('ip')" style="display:none">
                   <div class="pcheck"></div>
                   <div class="icon-box ib-amber shrink-0"><i class="fa-solid fa-network-wired"></i></div>
                   <div class="flex-1 min-w-0">
@@ -1555,7 +1555,7 @@ function _patchStoreCacheAndUI(name, phone, address) {
 function _loadPrinterSettings() {
   try {
     const s = JSON.parse(localStorage.getItem('printer_settings') || '{}');
-    _printerMethod = s.method || 'rawbt';
+    _printerMethod = (s.method && s.method !== 'ip') ? s.method : 'rawbt';
     _paperWidth    = s.paper_width || 32;
     if (s.bt_device_name) {
       document.getElementById('bt-device-name').textContent = s.bt_device_name;

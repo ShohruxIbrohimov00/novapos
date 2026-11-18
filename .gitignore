@@ -17,3 +17,6 @@ venv/
 
 # Foydalanuvchi yuklagan fayllar
 webapp/static/uploads/
+
+# Zaxira nusxalar
+backups/

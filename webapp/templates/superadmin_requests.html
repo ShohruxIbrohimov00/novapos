@@ -173,7 +173,7 @@
         <button onclick="closeImageViewer()" class="close-viewer">
             <i class="fa-solid fa-times"></i>
         </button>
-        <img id="view-img" src="" class="viewer-img" onerror="handleImageError(this)">
+        <img id="view-img" class="viewer-img" onerror="if (this.getAttribute('src')) handleImageError(this)">
         <p class="text-center" style="color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 800; margin-top: 1rem; text-transform: uppercase;">
             Yopish uchun tashqariga bosing
         </p>
@@ -277,7 +277,7 @@ function renderRequests(status) {
 
 function openImg(url) {
     if (!url || url === 'null') return showToast("Rasm topilmadi", "error");
-    document.getElementById('view-img').src = url;
+    const vi = document.getElementById('view-img'); vi.style.display = ''; vi.src = url;
     document.getElementById('img-viewer').classList.remove('hidden');
 }
 

@@ -139,7 +139,8 @@ class ReceiptPrinter {
             rawbt    : () => this.printRawBT(text),
             bluetooth: () => this.printBluetooth(text),
             qztray   : () => this.printQZTray(text),
-            ip       : () => this.printIP(text),
+            // IP/LAN printer bulutdagi serverdan ishlamaydi (server do'kon tarmog'ini ko'rmaydi)
+            ip       : () => this.printBrowser(text),
             browser  : () => this.printBrowser(text),
             share    : () => this.share(text),
             clipboard: () => this.copyToClipboard(text),
@@ -168,9 +169,6 @@ class ReceiptPrinter {
         if (isDesktop) {
             const qzAvail = await this._checkQZTray();
             if (qzAvail) return this.printQZTray(text);
-
-            // 2. IP printer sozlangan bo'lsa
-            if (this._ipPrinter?.host) return this.printIP(text);
 
             // 3. Browser print dialog
             return this.printBrowser(text);

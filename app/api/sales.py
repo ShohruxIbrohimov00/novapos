@@ -21,6 +21,7 @@ from app import schemas, models, crud
 from app.database import get_db
 from app.dependencies import get_current_employee
 from app.websocket_manager import ws_manager
+from app.timezone_utils import now_tashkent
 
 router = APIRouter(tags=["Sales"])
 
@@ -334,6 +335,11 @@ async def return_item(
     sale = crud.get_sale(db, sale_id)
     if not sale or sale.store_id != employee.store_id:
         raise HTTPException(404, "Sotuv topilmadi")
+
+    # ✅ Kassir faqat bugungi chekdan qaytara oladi; eski cheklar — faqat admin
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin") and sale.created_at.date() != now_tashkent().date():
+        raise HTTPException(403, "Eski chekdan qaytarishni faqat admin qila oladi")
 
     try:
         ret = crud.return_sale_item(
