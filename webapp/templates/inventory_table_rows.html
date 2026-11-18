@@ -8,7 +8,7 @@
     <td class="font-mono text-right">{{ "{:,.0f}".format(p.price_out).replace(',', ' ') }}</td>
     <td class="text-center">
         <span class="stock-tag {% if p.quantity <= p.min_stock_limit %}low-stock{% endif %}">
-            {{ p.quantity }} {{ p.unit_type }}
+            {{ '%g' % (p.quantity|round(3)) }} {{ p.unit_type.value if p.unit_type and p.unit_type.value is defined else (p.unit_type or 'dona') }}
         </span>
     </td>
     <td class="text-right">

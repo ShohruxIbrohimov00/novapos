@@ -13,7 +13,7 @@
 /* ── Asosiy sahifa ── */
 #ap-page {
     background: var(--bg);
-    min-height: 100vh;
+    min-height: var(--app-h);
     transition: background .2s;
 }
 
@@ -127,7 +127,7 @@
     #ap-page {
         display: flex;
         flex-direction: column;
-        height: 100vh;
+        height: var(--app-h);
         overflow: hidden;
     }
     #ap-shell {
@@ -888,7 +888,7 @@
 #ap-kb-bar {
     position: fixed;
     bottom: 0;
-    left: 64px;
+    left: var(--sidebar-w);
     right: 0;
     background: var(--surface);
     border-top: 1px solid var(--border);

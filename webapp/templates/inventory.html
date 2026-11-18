@@ -15,7 +15,7 @@
 #inv-root {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background: var(--bg);
     overflow: hidden;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -241,9 +241,9 @@
     grid-template-columns: 1fr;
     gap: 10px;
 }
-@media (min-width: 640px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1280px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+/* ✅ Ustunlar konteyner kengligiga qarab (yon menyu kengligi har xil — ekran kengligiga emas) */
+@media (min-width: 560px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); } }
+.product-grid > * { min-width: 0; }
 
 .max-w-screen-2xl { max-width: 1536px; margin: 0 auto; }
 
@@ -802,6 +802,15 @@ async function initInventoryPage() {
     // Klaviatura holatini tozalash
     _invKbOpen = false;
     document.getElementById('inv-kb-panel').classList.remove('open');
+
+    // ✅ Filtrlar, son va minimal limitlar uchun mahsulotlar ro'yxati
+    // (avval umuman yuklanmasdi — "0 ta", bo'sh filtr va abadiy skeleton)
+    try {
+        const list = await apiRequest('/api/products/', 'GET', null, true);
+        allProducts = Array.isArray(list) ? list : [];
+    } catch { allProducts = []; }
+    _refreshUI();
+    _updateCounters();
 }
 
 // Sahifa yuklanganda ishga tushirish

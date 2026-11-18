@@ -57,7 +57,7 @@
 #sh-root {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background: var(--bg);
     overflow: hidden;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -237,7 +237,7 @@
     transition: background .2s;
 }
 #returns-screen.open { display: flex; }
-@media (min-width: 768px) { #returns-screen { left: 64px; } }
+@media (min-width: 768px) { #returns-screen { left: var(--sidebar-w); } }
 
 /* Returns screen scroll area */
 #rs-scroll-area {

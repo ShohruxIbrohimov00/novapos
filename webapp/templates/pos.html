@@ -138,7 +138,8 @@
     flex: 1;
     min-height: 0;
 }
-@media (min-width: 1024px) {
+/* ✅ Planshet (tik holatda ham) — mahsulotlar to'ri + savat yonma-yon */
+@media (min-width: 768px) {
     #desk-view { display: flex; flex: 1; min-height: 0; }
     #mob-view  { display: none; }
 }
@@ -189,14 +190,15 @@
 .cat-label:first-child { padding-top: 2px; }
 .plu-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 7px; margin-bottom: 4px;
+    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    gap: 8px; margin-bottom: 4px;
 }
+@media (min-width: 1440px) { .plu-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; } }
 
 .pcard {
     background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: 12px; padding: 8px 9px;
-    cursor: pointer; min-height: 62px;
+    border-radius: 12px; padding: 10px 11px;
+    cursor: pointer; min-height: 76px;
     display: flex; flex-direction: column; justify-content: space-between;
     position: relative; overflow: hidden;
     transition: border-color .12s, transform .1s;
@@ -209,7 +211,7 @@
 
 .pcard-qty {
     position: absolute; top: 5px; right: 5px;
-    font-size: 8px; font-weight: 900; padding: 1px 5px;
+    font-size: 10px; font-weight: 900; padding: 1px 6px;
     border-radius: 5px; background: var(--surface2); color: var(--text3);
 }
 .pcard.low .pcard-qty { background: #fef3c7; color: #92400e; }
@@ -222,11 +224,12 @@
     border-radius: 4px; background: var(--primary); color: #fff; text-transform: uppercase;
 }
 .pcard-name {
-    font-size: 11px; font-weight: 800; color: var(--text); line-height: 1.2;
+    font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     margin-right: 22px;
 }
-.pcard-price { font-size: 11px; font-weight: 900; color: var(--primary); margin-top: 3px; }
+.pcard-price { font-size: 13px; font-weight: 900; color: var(--primary); margin-top: 4px; }
+@media (min-width: 1440px) { .pcard { min-height: 88px; } .pcard-name, .pcard-price { font-size: 14px; } }
 
 .area-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px; font-weight: 700; }
 
@@ -285,7 +288,7 @@
 
 
 #desk-right {
-    width: 300px; flex-shrink: 0;
+    width: clamp(270px, 30vw, 380px); flex-shrink: 0;
     display: flex; flex-direction: column;
     background: var(--surface);
 }
@@ -365,6 +368,27 @@
 
 
 
+
+
+/* ══ Savat — barmoq bilan qulay o'lchamlar (planshet/kompyuter) ══ */
+#cart-head h2 { font-size: 15px; }
+.cbadge { font-size: 11px; }
+.clr-btn { width: 34px; height: 34px; border-radius: 10px; }
+#cart-list { padding: 8px 10px; }
+.citem { padding: 10px 12px; margin-bottom: 8px; }
+.ci-name { font-size: 13px; }
+.qty-ctrl { border-radius: 10px; }
+.qbtn { width: 36px; height: 36px; font-size: 16px; }
+.qval { min-width: 34px; font-size: 14px; }
+.ci-price { font-size: 11px; }
+.ci-sub { font-size: 14px; }
+.ci-weight-info { font-size: 12px; }
+.ci-weight-edit { height: 32px; font-size: 11px; padding: 0 10px; }
+#cart-total { padding: 12px 14px 8px; }
+.total-lbl { font-size: 11px; }
+#total-val { font-size: 24px; }
+#checkout-btn { height: 56px; font-size: 15px; margin: 8px 10px 10px; border-radius: 14px; }
+@media (min-width: 1440px) { .ci-name { font-size: 14px; } #total-val { font-size: 28px; } }
 
 #mob-quick-wrap {
     padding: 7px 11px 5px; border-bottom: 1px solid var(--border);
@@ -783,12 +807,7 @@
             </div>
 
             <div id="plu-area">
-                <div id="plu-grid-wrap" 
-                    hx-get="/api/products/pos/products-fragment" 
-                    hx-trigger="load delay:50ms" 
-                    hx-target="this" 
-                    hx-swap="innerHTML">
-                </div>
+                <div id="plu-grid-wrap"></div>
             </div>
 
             <div id="kb-toggle-bar" onclick="toggleKb()">
@@ -1205,12 +1224,13 @@ async function initPosPage() {
 
     // 4. Mahsulotlarni yuklash
     try {
-        await _loadProds();
-        _renderProds(); // Eski PLU chizish
-        _renderFreeProducts(); // Yangi qo'shilgan barcode'sizlar uchun
+        await _loadProds();          // 1) keshdan — darhol
+        _renderProds();
+        _renderFreeProducts();
     } catch(err) {
         console.warn("[POS] Load error:", err);
     }
+    _refreshProdsFromServer();       // 2) serverdan yangilash (yangi qurilmada kesh bo'sh bo'ladi)
 
     // 5. Interaktiv qismlar
     if (typeof _initSearch === 'function') _initSearch();
@@ -1275,14 +1295,31 @@ document.body.addEventListener('htmx:beforeCleanup', () => {
 });
 
 /* HTMX bilan ishlash */
-document.body.addEventListener('htmx:afterOnLoad', function() {
-    if (window.location.pathname === '/pos' || document.getElementById('pos-root')) initPosPage();
-});
+// ✅ Sahifa yuklanganda ishga tushadi (avval faqat htmx fragmenti yuklanganda ishlardi)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPosPage);
+else initPosPage();
 
 function _loadSettings() {
     const ui = JSON.parse(localStorage.getItem('user_info') || '{}');
     _storeName  = localStorage.getItem('receipt_store_name') || ui.store?.name || ui.store_name || 'NovaPOS';
     _footerTxt  = localStorage.getItem('receipt_footer') || 'Rahmat! Qaytib keling!';
+}
+
+/* Serverdan yangi ro'yxat — faqat o'zgargan bo'lsa qayta chiziladi (lip etmasligi uchun) */
+let _prodsSynced = false;
+async function _refreshProdsFromServer() {
+    if (!navigator.onLine) return;
+    try {
+        const list = await apiRequest('/api/products/', 'GET', null, true);
+        if (!Array.isArray(list)) return;
+        const first = !_prodsSynced; _prodsSynced = true;
+        const sig = l => l.map(p => [p.id, p.name, p.quantity, p.price_out, p.barcode, p.short_code, p.is_deleted].join('|')).join(';');
+        if (first || sig(list) !== sig(_prods || [])) {
+            _prods = list;
+            _renderProds();
+            _renderFreeProducts();
+        }
+    } catch (e) { /* oflayn — keshdagi ro'yxat qoladi */ }
 }
 
 async function _loadProds() {
@@ -1318,7 +1355,10 @@ function _renderProds() {
     /* PLU grid */
     const wrap = document.getElementById('plu-grid-wrap');
     if (wrap) {
-        if (!plu.length) {
+        if (!plu.length && !_prodsSynced && navigator.onLine) {
+            // Server javobi kelguncha — skelet (bo'sh "topilmadi" yozuvi lip etmasin)
+            wrap.innerHTML = `<div class="plu-grid">${'<div class="pcard skeleton" style="pointer-events:none"></div>'.repeat(8)}</div>`;
+        } else if (!plu.length) {
             wrap.innerHTML = `<div class="area-empty">Mahsulotlar topilmadi</div>`;
         } else {
             const cats = {};
@@ -1331,7 +1371,7 @@ function _renderProds() {
                             <span class="pcard-qty">${p.quantity}</span>
                             ${_isWeight(p.unit_type)?`<span class="pcard-unit">${p.unit_type}</span>`:''}
                             <span class="pcard-name">${p.name}</span>
-                            <div class="pcard-price">${Number(p.price_out).toLocaleString()}${p.short_code?`<small style="display:block;font-size:9px;opacity:.6">PLU:${p.short_code}</small>`:''}</div>
+                            <div class="pcard-price">${Number(p.price_out).toLocaleString('ru-RU')}${p.short_code?`<small style="display:block;font-size:9px;opacity:.6">PLU:${p.short_code}</small>`:''}</div>
                         </div>`).join('')}
                 </div>`).join('');
         }

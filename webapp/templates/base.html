@@ -21,15 +21,67 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css">
 
-    <!-- Google Fonts -->
+    <!-- Shriftlar (lokal) — eng ko'p ishlatiladiganlari oldindan yuklanadi: ikonka/matn "sakramaydi" -->
+    <link rel="preload" href="/static/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/vendor/fonts/plus-jakarta-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/vendor/fonts/plus-jakarta-sans-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/static/vendor/fonts/fonts.css">
 
-    <!-- Flicker oldini olish -->
+    <!-- ✅ Birinchi chizishdan OLDIN: tema + kirish tekshiruvi + menyu (lip-lip qilmasligi uchun) -->
     <script>
     (function(){
-        var t = localStorage.getItem('pos_theme') || 'light';
-        document.documentElement.setAttribute('data-theme', t);
+        var d = document.documentElement, ls = {};
+        try { ls.t = localStorage.getItem('pos_theme'); ls.tok = localStorage.getItem('access_token');
+              ls.ui = JSON.parse(localStorage.getItem('user_info') || '{}'); } catch (e) { ls.ui = {}; }
+        d.setAttribute('data-theme', ls.t || 'light');
+
+        // Kirish tekshiruvi — sahifa ko'rinmasdan oldin yo'naltiramiz
+        var p = location.pathname, pub = (p === '/login' || p === '/register'), ok = false, role = '';
+        try {
+            if (ls.tok) {
+                var pl = JSON.parse(atob(ls.tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+                ok = Date.now() < pl.exp * 1000 - 30000; role = pl.role || '';
+            }
+        } catch (e) {}
+        if (!pub && !ok)  { location.replace('/login'); return; }
+        if (pub && ok)    { location.replace(role === 'super_admin' ? '/superadmin' : '/pos'); return; }
+        if (ok && p.indexOf('/superadmin') === 0 && role !== 'super_admin') { location.replace('/pos'); return; }
+
+        // Menyu — sinxron chiziladi (JS keyin qayta qurmaydi → ikonkalar almashib ketmaydi)
+        var r = (ls.ui.role && ls.ui.role.value) || ls.ui.role || role || 'cashier';
+        var LINKS = r === 'super_admin' ? [
+            ['/superadmin',          'fa-chart-pie',           'Panel'],
+            ['/superadmin/stores',   'fa-shop',                "Do'konlar"],
+            ['/superadmin/requests', 'fa-hand-holding-dollar', "To'lovlar"],
+        ] : [
+            ['/pos',           'fa-cash-register',  'Kassa'],
+            ['/sales/history', 'fa-receipt',        'Tarix'],
+            ['/products',      'fa-boxes-stacked',  'Ombor'],
+            ['/customers',     'fa-users',          'Mijozlar'],
+        ].concat(r === 'admin' ? [['/reports', 'fa-chart-column', 'Hisobot']] : [])
+         .concat([['/settings', 'fa-gear', 'Sozlama']]);
+        function active(h) {
+            if (h === '/pos' || h === '/superadmin') return p === h;
+            if (h === '/sales/history') return p.indexOf('/sales') === 0;
+            if (h === '/products') return p.indexOf('/products') === 0 || p.indexOf('/ai-scan') === 0;
+            return p.indexOf(h) === 0;
+        }
+        window.__navHTML = LINKS.map(function (l) {
+            return '<a href="' + l[0] + '" class="nav-link' + (active(l[0]) ? ' active' : '') + '" data-nav="' + l[0] + '" title="' + l[2] + '">' +
+                   '<i class="fa-solid ' + l[1] + ' nl-icon"></i><span class="nl-label">' + l[2] + '</span></a>';
+        }).join('');
+        window.__navUser = {
+            store: ls.ui.store_name || (ls.ui.store && ls.ui.store.name) || 'NovaPOS',
+            name:  ls.ui.full_name || ls.ui.username || '',
+            role:  { admin: 'Administrator', cashier: 'Kassir', super_admin: 'SuperAdmin' }[r] || 'Kassir',
+        };
+        d.classList.add('nav-count-' + LINKS.length);
     })();
+    </script>
+
+    <!-- Sahifalar orasida silliq o'tish (Chrome/Edge/Safari 18+) va menyuga yaqinlashganda oldindan yuklash -->
+    <script type="speculationrules">
+    {"prefetch": [{"source": "document", "where": {"selector_matches": ".nav-link"}, "eagerness": "moderate"}]}
     </script>
 
     <style>
@@ -66,9 +118,27 @@
         --sidebar-w:  68px;
 
         /* ── Bottom nav o'lchamlari ── */
-        --nav-h:      56px;
+        --nav-h:      60px;
         --nav-safe:   calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+
+        /* ✅ Sahifa uchun mavjud balandlik (telefonda pastki menyu chiqarib tashlanadi) */
+        --app-h:      100dvh;
     }
+    @media (max-width: 767px) {
+        :root { --app-h: calc(100dvh - var(--nav-safe)); }
+        body.no-nav { --app-h: 100dvh; }
+    }
+    @media (min-width: 768px)  { :root { --sidebar-w: 84px; } }
+    @media (min-width: 1440px) { :root { --sidebar-w: 224px; } }
+    html { background: var(--bg); color-scheme: light; }
+    html[data-theme="dark"] { color-scheme: dark; }
+
+    /* Sahifalar orasidagi o'tish: menyu joyida qoladi, kontent yumshoq almashadi */
+    @view-transition { navigation: auto; }
+    #sidebar    { view-transition-name: nova-sidebar; }
+    #bottom-nav { view-transition-name: nova-bottomnav; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 140ms; }
+    @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
     [data-theme="dark"] {
         --bg:         #0a0f1e;
@@ -193,17 +263,21 @@
     }
 
     #app-main {
-        flex: 1;         /* BO'SH JOYNI TO'LIQ EGALLASH BUYRUG'I */
-        display: flex;   /* Ichidagi #page-content ham cho'zilishi uchun */
+        flex: 1;
+        display: flex;
         flex-direction: column;
-        min-height: 0;   /* Flex ichida skroll ishlashi uchun juda muhim */
-        overflow: hidden; /* App-main o'zi skroll bo'lmaydi, ichidagilar skroll bo'ladi */
+        min-height: 0;
+        /* ✅ Oddiy sahifalar (Hisobot, Mahsulot qo'shish, AI Scan, Superadmin) shu yerda aylanadi.
+           To'liq ekranli sahifalar (Kassa, Ombor, Tarix...) o'zi overflow:hidden qiladi. */
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         position: relative;
     }
-
-
-    @media (min-width: 1024px) {
-        #app-main { padding-bottom: 0 !important; }
+    /* Telefon: kontent pastki menyu ostida qolmasin */
+    @media (max-width: 767px) {
+        body:not(.no-nav) #app-main { padding-bottom: var(--nav-safe); }
     }
 
     /* ── HTMX page swap container ── */
@@ -225,153 +299,116 @@
     }
 
     /* ═══════════════════════════════════════
-       SIDEBAR — ichki elementlar
+       NAVIGATSIYA
+       Telefon (<768)   : pastki menyu — ikonka + yozuv
+       Planshet (768+)  : ixcham yon menyu (84px) — ikonka + kichik yozuv
+       Kompyuter (1440+): keng yon menyu (224px) — do'kon nomi, yozuvli tugmalar, foydalanuvchi
     ═══════════════════════════════════════ */
     .brand-mark {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
+        width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
         background: linear-gradient(135deg, var(--primary), var(--primary-h));
         box-shadow: 0 4px 12px rgba(37,99,235,.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
     }
-    .brand-mark i { font-size: 14px; color: #fff; }
+    .brand-mark i { font-size: 16px; color: #fff; }
+    .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; width: 100%; justify-content: center; }
+    .brand-text, .sb-user, .sb-theme-label { display: none; }
 
     #nav-sidebar {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        width: 100%;
+        flex: 1; display: flex; flex-direction: column; align-items: stretch;
+        gap: 4px; width: 100%; padding: 0 10px; overflow-y: auto; min-height: 0;
     }
+    #sidebar .nav-link {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        height: 60px; border-radius: 16px; color: var(--text3); text-decoration: none;
+        transition: background .15s, color .15s;
+    }
+    .nav-link .nl-icon { font-size: 19px; line-height: 1; width: 22px; text-align: center; }
+    #sidebar .nl-label { font-size: 10px; font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
+    .nav-link:hover:not(.active) { background: var(--surface2); color: var(--text); }
+    .nav-link.active { background: var(--primary-s); color: var(--primary); }
+    .nav-link:focus-visible, .sb-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-    /* Umumiy nav link stili */
-    .nav-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 52px; /* Kattaroq bosish maydoni */
-        width: 52px;
-        border-radius: 16px; /* Yumshoq burchaklar */
-        margin: 4px auto; /* Markazlash */
-        color: var(--text3);
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .nav-link .nl-icon {  
-        font-family: "Font Awesome 6 Free" !important;
-        font-weight: 900 !important;
-        display: inline-block !important;
-    }
-    .nav-link .nl-label { display: none; } /* Desktop: label yo'q */
-    .nav-link:hover:not(.active) {
-        background: var(--surface2);
-        color: var(--text);
-    }
-    .nav-link.active {
-        background: var(--primary-s) !important;
-        color: var(--primary) !important;
-        transform: scale(1.1);
-    }
-
-    /* ── Sidebar pastki bo'lim ── */
     .sidebar-bottom {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding-top: 12px;
-        border-top: 1px solid var(--border);
-        width: 100%;
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 12px 10px 0; border-top: 1px solid var(--border); width: 100%;
     }
     .sb-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: none;
-        background: transparent;
-        color: var(--text3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background .18s, color .18s;
-        font-size: 15px;
+        width: 44px; height: 44px; border-radius: 12px; border: none; background: transparent;
+        color: var(--text3); display: flex; align-items: center; justify-content: center; gap: 10px;
+        cursor: pointer; transition: background .15s, color .15s; font-size: 16px; font-family: inherit;
     }
     .sb-btn:hover { background: var(--surface2); color: var(--text); }
     .sb-btn.danger:hover { background: rgba(239,68,68,.1); color: var(--danger); }
 
+    /* Yotiq telefon / past ekran: yon menyu ixchamlashadi, notch hisobga olinadi */
+    #sidebar { padding-left: env(safe-area-inset-left, 0px); }
+    @media (min-width: 768px) and (max-height: 560px) {
+        .brand-row { margin-bottom: 8px; }
+        .brand-mark { width: 34px; height: 34px; }
+        #sidebar .nav-link { height: 46px; gap: 2px; }
+        #sidebar .nl-label { font-size: 9px; }
+        .sidebar-bottom { gap: 2px; padding-top: 6px; }
+        .sb-btn { width: 40px; height: 36px; }
+        #sb-user-btn { display: none; }
+    }
+
+    /* ── Kompyuter: keng yon menyu ── */
+    @media (min-width: 1440px) {
+        #sidebar { align-items: stretch !important; padding: 18px 0 !important; }
+        .brand-row { justify-content: flex-start; padding: 0 18px; }
+        .brand-text { display: flex; flex-direction: column; min-width: 0; }
+        .brand-text b { font-size: 15px; font-weight: 900; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brand-text small { font-size: 11px; font-weight: 700; color: var(--text3); }
+        #nav-sidebar { padding: 0 12px; }
+        #sidebar .nav-link { flex-direction: row; justify-content: flex-start; gap: 12px; height: 46px; padding: 0 14px; border-radius: 12px; }
+        #sidebar .nl-label { font-size: 14px; font-weight: 700; }
+        .sidebar-bottom { align-items: stretch; padding: 12px 12px 0; }
+        .sb-user { display: flex; align-items: center; gap: 10px; padding: 8px 6px; min-width: 0; }
+        .sb-user .sb-ava { width: 34px; height: 34px; border-radius: 10px; background: var(--primary-s); color: var(--primary);
+                           display: flex; align-items: center; justify-content: center; font-weight: 900; flex-shrink: 0; }
+        .sb-user b { display: block; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sb-user small { font-size: 11px; color: var(--text3); font-weight: 700; }
+        .sb-btn { width: 100%; justify-content: flex-start; padding: 0 14px; height: 40px; font-size: 14px; font-weight: 700; }
+        .sb-theme-label { display: inline; }
+        #sidebar #ws-dot { margin: 4px 14px; }
+        #sb-user-btn { display: none; }
+    }
+
     /* WS dot */
     #ws-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--border2);
-        margin: 4px 0;
-        transition: background .3s, box-shadow .3s;
-        flex-shrink: 0;
+        width: 8px; height: 8px; border-radius: 50%; background: var(--border2);
+        margin: 4px 0; transition: background .3s, box-shadow .3s; flex-shrink: 0;
     }
     #ws-dot.online    { background: var(--success); box-shadow: 0 0 6px var(--success); }
     #ws-dot.offline   { background: var(--danger); }
     #ws-dot.connecting{ background: var(--warning); }
 
-    /* ═══════════════════════════════════════
-       BOTTOM NAV — faqat mobil
-       position: fixed pastda, safe area bilan
-    ═══════════════════════════════════════ */
+    /* ── Telefon: pastki menyu ── */
     #bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        height: var(--nav-safe);
-        background: rgba(255,255,255,0.97);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+        height: var(--nav-safe); padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(255,255,255,0.96);
+        backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
         border-top: 1px solid rgba(0,0,0,.07);
         display: flex;
-        align-items: flex-start;   /* iconlar tepada turadi */
-        padding-top: 0;
-        /* Faqat mobile da ko'rinadi */
-        display: flex;
     }
-    [data-theme="dark"] #bottom-nav {
-        background: rgba(17,24,39,0.97);
-        border-top-color: rgba(255,255,255,.06);
-    }
-    /* Desktop: yashirish */
-    @media (min-width: 768px) {
-        #bottom-nav { display: none !important; }
-    }
-
-    #nav-mobile {
-        display: flex;
-        justify-content: space-evenly;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-    }
-
-    /* Mobile nav link */
+    [data-theme="dark"] #bottom-nav { background: rgba(17,24,39,0.96); border-top-color: rgba(255,255,255,.06); }
+    @media (min-width: 768px) { #bottom-nav { display: none !important; } }
+    #nav-mobile { display: flex; width: 100%; height: var(--nav-h); }
     #bottom-nav .nav-link {
-        flex: 1;
-        width: auto;
-        height: 100%;
-        border-radius: 0;
-        flex-direction: column;
-        gap: 3px;
-        padding: 8px 4px;
-        font-size: 7px;
-        font-weight: 900;
-        letter-spacing: -.02em;
-        text-transform: uppercase;
+        flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 4px; padding: 6px 2px 4px;
+        color: var(--text3); text-decoration: none; position: relative;
     }
-    #bottom-nav .nav-link .nl-label { display: block; }
+    #bottom-nav .nav-link.active { background: transparent; }
+    #bottom-nav .nav-link.active::before {
+        content: ''; position: absolute; top: 0; left: 28%; right: 28%; height: 3px;
+        border-radius: 0 0 3px 3px; background: var(--primary);
+    }
+    #bottom-nav .nl-icon { font-size: 19px; }
+    #bottom-nav .nl-label { font-size: 10px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    @media (max-width: 359px) { #bottom-nav .nl-label { font-size: 9px; } }
 
     /* ═══════════════════════════════════════
        TOAST
@@ -393,14 +430,14 @@
         opacity: 0;
         pointer-events: none;
         transition: transform .32s cubic-bezier(.34,1.56,.64,1), opacity .25s;
-        white-space: nowrap;
     }
     #toast-wrap.show {
         transform: translateX(-50%) translateY(0);
         opacity: 1;
     }
     #toast-icon { font-size: 14px; color: #fff; flex-shrink: 0; }
-    #toast-msg  { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #toast-msg  { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.35; overflow-wrap: anywhere;
+                  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
     /* ═══════════════════════════════════════
        OFFLINE BADGE
@@ -579,6 +616,11 @@
         border: 1px solid var(--border);
     }
     .modal-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    /* Planshet/kompyuter: modal markazda (pastdan chiqadigan "sheet" faqat telefonda) */
+    @media (min-width: 768px) {
+        .modal-overlay { align-items: center; padding: 24px; }
+        .modal-sheet { border-radius: 28px; border: 1px solid var(--border); max-height: 86dvh; animation: scaleIn .2s ease-out; }
+    }
 
     @keyframes slideUp  { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes scaleIn  { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -748,6 +790,17 @@
     /* ═══════════════════════════════════════
        UTILITY
     ═══════════════════════════════════════ */
+    .hidden { display: none !important; }
+
+    /* ✅ Sensorli ekranlar (telefon/planshet): barmoq bilan bosiladigan elementlar kamida ~38px */
+    @media (pointer: coarse) {
+        .mchip, .fpchip, .filter-chip, .unit-pill, .pay-btn, .tab-pill, .period-btn,
+        [id^="pb-"], #mt-pwd, #mt-pin, #tab-single, #tab-group,
+        #tab-pending, #tab-approved, #tab-rejected, .sample-toggle-btn, .sidebar-cat-add-btn { min-height: 38px; }
+        .limit-btn { min-width: 38px; min-height: 38px; }
+        #eye1 { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+        #inv-header .btn, .icon-btn, #sh-header button, .p-1\.5.rounded-lg { min-width: 38px; min-height: 38px; }
+    }
     .scrollable {
         scrollbar-width: thin;
         scrollbar-color: var(--border) transparent;
@@ -760,7 +813,7 @@
     </style>
 </head>
 
-<body>
+<body{% if hide_nav %} class="no-nav"{% endif %}>
 
 <!-- ── TOAST ── -->
 <div id="toast-wrap">
@@ -780,32 +833,37 @@
 <div id="app-shell">
 
     {% if not hide_nav %}
-    <!-- ── SIDEBAR — Desktop/Tablet ── -->
-    <nav id="sidebar">
-        <!-- Logo -->
-        <div class="brand-mark">
-            <i class="fa-solid fa-bolt"></i>
+    <!-- ── SIDEBAR — Planshet / Kompyuter ── -->
+    <nav id="sidebar" aria-label="Asosiy menyu">
+        <div class="brand-row">
+            <div class="brand-mark"><i class="fa-solid fa-bolt"></i></div>
+            <div class="brand-text"><b id="sidebar-store"></b><small>NovaPOS</small></div>
         </div>
-
-        <!-- Nav linklarini JS qurmaydi, to'g'ri HTML — ishonchli -->
-        <div id="nav-sidebar">
-            <a href="/pos"       class="nav-link" data-nav="/pos"><i class="fa-solid fa-cash-register nl-icon"></i></a>
-            <a href="/products"  class="nav-link" data-nav="/products"><i class="fa-solid fa-box nl-icon"></i></a>
-            <a href="/sales"     class="nav-link" data-nav="/sales"><i class="fa-solid fa-chart-line nl-icon"></i></a>
-            <a href="/customers" class="nav-link" data-nav="/customers"><i class="fa-solid fa-users nl-icon"></i></a>
-            <a href="/settings"  class="nav-link" data-nav="/settings"><i class="fa-solid fa-gear nl-icon"></i></a>
-        </div>
+        <div id="nav-sidebar"></div>
+        <script>document.getElementById('nav-sidebar').innerHTML = window.__navHTML || '';
+                document.getElementById('sidebar-store').textContent = (window.__navUser || {}).store || '';</script>
 
         <div class="sidebar-bottom">
+            <div class="sb-user">
+                <div class="sb-ava" id="sb-ava"></div>
+                <div style="min-width:0"><b id="sidebar-user"></b><small id="sidebar-role"></small></div>
+            </div>
+            <script>(function(){ var u = window.__navUser || {}; var n = u.name || '';
+                document.getElementById('sidebar-user').textContent = n;
+                document.getElementById('sidebar-role').textContent = u.role || '';
+                document.getElementById('sb-ava').textContent = (n || '?').trim().charAt(0).toUpperCase(); })();</script>
             <div id="ws-dot" title="Ulanish holati"></div>
             <button class="sb-btn" id="theme-btn" onclick="toggleTheme()" title="Tema">
-                <i id="theme-icon" class="fa-solid fa-moon"></i>
+                <i id="theme-icon" class="fa-solid fa-moon"></i><span class="sb-theme-label" id="theme-label">Tungi rejim</span>
             </button>
-            <button class="sb-btn" title="Foydalanuvchi">
+            <script>if (document.documentElement.getAttribute('data-theme') === 'dark') {
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+                document.getElementById('theme-label').textContent = 'Kunduzgi rejim'; }</script>
+            <button class="sb-btn" id="sb-user-btn" title="Profil" onclick="location.href='/settings'">
                 <i class="fa-solid fa-user"></i>
             </button>
             <button class="sb-btn danger" onclick="confirmLogout()" title="Chiqish">
-                <i class="fa-solid fa-right-from-bracket"></i>
+                <i class="fa-solid fa-right-from-bracket"></i><span class="sb-theme-label">Chiqish</span>
             </button>
         </div>
     </nav>
@@ -824,24 +882,9 @@
 
 {% if not hide_nav %}
 <!-- ── BOTTOM NAV — Mobil (app-shell tashqarisida, fixed) ── -->
-<nav id="bottom-nav">
-    <div id="nav-mobile">
-        <a href="/pos" class="nav-link" data-nav="/pos">
-            <i class="fa-solid fa-cash-register nl-icon"></i>
-        </a>
-        <a href="/products" class="nav-link" data-nav="/products">
-            <i class="fa-solid fa-box nl-icon"></i>
-        </a>
-        <a href="/sales" class="nav-link" data-nav="/sales">
-            <i class="fa-solid fa-chart-line nl-icon"></i>
-        </a>
-        <a href="/customers" class="nav-link" data-nav="/customers">
-            <i class="fa-solid fa-users nl-icon"></i>
-        </a>
-        <a href="/settings" class="nav-link" data-nav="/settings">
-            <i class="fa-solid fa-gear nl-icon"></i>
-        </a>
-    </div>
+<nav id="bottom-nav" aria-label="Asosiy menyu">
+    <div id="nav-mobile"></div>
+    <script>document.getElementById('nav-mobile').innerHTML = window.__navHTML || '';</script>
 </nav>
 {% endif %}
 
@@ -982,7 +1025,6 @@ function updateActiveNav() {
         }
     });
 }
-document.addEventListener('DOMContentLoaded', updateActiveNav);
 
 /* ════════════════════════════════════════
    TEMA
@@ -998,6 +1040,8 @@ function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     var icon = document.getElementById('theme-icon');
     if (icon) icon.className = 'fa-solid ' + (t === 'dark' ? 'fa-sun' : 'fa-moon');
+    var lbl = document.getElementById('theme-label');
+    if (lbl) lbl.textContent = t === 'dark' ? 'Kunduzgi rejim' : 'Tungi rejim';
 }
 
 document.addEventListener('DOMContentLoaded', function() {

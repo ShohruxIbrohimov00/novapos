@@ -12,7 +12,7 @@
 /* ── Sahifa ── */
 #rpt-page {
     background: var(--bg);
-    min-height: 100vh;
+    min-height: var(--app-h);
     transition: background .2s;
 }
 
@@ -677,7 +677,7 @@
    PASTKI KLAVIATURA (desktop)
    ════════════════════════════════════════════════════════════ */
 #rpt-kb-bar {
-    position: fixed; bottom: 0; left: 64px; right: 0;
+    position: fixed; bottom: 0; left: var(--sidebar-w); right: 0;
     background: var(--surface); border-top: 1px solid var(--border);
     z-index: 300; transform: translateY(100%);
     transition: transform .28s cubic-bezier(.4,0,.2,1), background .2s;
