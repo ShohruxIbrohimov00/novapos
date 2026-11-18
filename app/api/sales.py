@@ -94,6 +94,8 @@ async def create_sale(
     Yangi sotuv yaratish.
     ✅ WebSocket: sale_created + stock_updated barcha kasslarga broadcast
     """
+    # ✅ Do'kon ID har doim tokendan olinadi (brauzer yuborgan qiymatga ishonilmaydi)
+    sale_data.store_id = employee.store_id
     try:
         sale = crud.create_sale(db, sale_data, employee.id)
     except ValueError as e:
@@ -266,7 +268,10 @@ async def cancel_sale(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
-    """Sotuvni to'liq bekor qilish (mahsulotlar qaytariladi)"""
+    """Sotuvni to'liq bekor qilish (mahsulotlar qaytariladi). ✅ Faqat admin."""
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin"):
+        raise HTTPException(403, "Sotuvni faqat admin bekor qila oladi")
     sale = crud.get_sale(db, sale_id)
     if not sale or sale.store_id != employee.store_id:
         raise HTTPException(404, "Sotuv topilmadi")

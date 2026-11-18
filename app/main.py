@@ -14,9 +14,16 @@ NovaPOS — Main Application v2.2
 """
 
 import os
+import secrets
 import logging
 import asyncio
 from contextlib import asynccontextmanager
+
+# ✅ .env ENG BIRINCHI yuklanadi — app.database / app.dependencies import paytida
+# DATABASE_URL va SECRET_KEY ni o'qiydi. Avval load_dotenv() keyinroq chaqirilgani
+# uchun .env dagi qiymatlar e'tiborsiz qolardi.
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -39,9 +46,6 @@ from app.api import (
 )
 from app.api import ai_scan
 from app import models, crud
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # ─── Logging ──────────────────────────────────────────────────
 logging.basicConfig(
@@ -109,14 +113,14 @@ def create_initial_superadmin() -> None:
             full_name       = fullname,
             username        = username,
             hashed_password = crud.hash_password(password), # ✅ TO'G'RI HASH
-            pin_code        = crud.hash_pin("0000"), 
+            pin_code        = crud.hash_pin(secrets.token_hex(16)),  # PIN bilan kirish yopiq
             role            = models.EmployeeRole.super_admin,
             is_active       = True,
             store_id        = None,
         )
         db.add(new_admin)
         db.commit()
-        logger.info(f"✨ Superadmin yaratildi: '{username}' (PIN: 0000)")
+        logger.info(f"✨ Superadmin yaratildi: '{username}'")
 
     except Exception as e:
         db.rollback()
@@ -352,6 +356,7 @@ app.get("/login",                   response_class=HTMLResponse)(_page("login.ht
 app.get("/register",                response_class=HTMLResponse)(_page("register.html"))
 app.get("/pos",                     response_class=HTMLResponse)(_page("pos.html"))
 app.get("/sales/history",           response_class=HTMLResponse)(_page("sales_history.html"))
+app.get("/sales",                   response_class=HTMLResponse)(_page("sales_history.html"))  # menyu shu manzilga olib boradi
 app.get("/products",                response_class=HTMLResponse)(_page("inventory.html"))
 app.get("/products/add",            response_class=HTMLResponse)(_page("add_product.html"))
 app.get("/products/supply-history", response_class=HTMLResponse)(_page("supply_history.html"))

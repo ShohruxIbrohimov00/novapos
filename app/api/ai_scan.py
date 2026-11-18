@@ -327,7 +327,7 @@ async def scan_image(
         scan_id     = scan_record.id if scan_record else None,
     )
 
-@router.get("/scan/{scan_id}")
+@router.get("/scan/{scan_id:int}")
 async def get_scan_detail(
     scan_id: int,
     db: Session = Depends(get_db),

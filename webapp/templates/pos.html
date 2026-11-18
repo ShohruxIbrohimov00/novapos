@@ -1839,24 +1839,44 @@ async function submitSale() {
     const ui=JSON.parse(localStorage.getItem('user_info')||'{}');
     const storeId=ui.store?.id||ui.store_id;
     if(!storeId){showToast("Do'kon ID topilmadi!",'error');return;}
-    const snap=cart.getItems().map(i=>({...i}));
-    const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
-    closeCo();
-    _showRc({receipt_number:'...',total_amount:total,paid_amount:paid},snap);
-    cart.clear(); _selId=null; _resetPayForm();
-    if(window.NovaPOS_DB){await NovaPOS_DB.products.batchDecreaseStock(snap.map(i=>({product_id:i.id,quantity:i.quantity})));await _loadProds();_renderProds();}
+    if(_saleSubmitting)return;  // ikki marta bosilsa, ikki marta sotilmasin
+    _saleSubmitting=true;
     try {
-        if(!navigator.onLine) throw new Error('offline');
-        const res=await apiRequest('/api/sales/checkout','POST',saleData);
-        if(res?.receipt_number){const el=document.getElementById('rc-num');if(el)el.textContent=res.receipt_number;}
-        document.getElementById('rc-offline')?.classList.add('hidden');
-        showToast(_payMethod==='nasiya'?'Qarzga yozildi! 📝':'Sotuv yakunlandi! ✅','success');
-        try{new BroadcastChannel('pos_data_sync').postMessage({type:'UPDATE_DATA',time:Date.now()});}catch{}
-    } catch {
-        if(window.NovaPOS_DB){await NovaPOS_DB.offlineSales.add(saleData);document.getElementById('rc-offline')?.classList.remove('hidden');showToast('Oflayn saqlandi! 📦','warning');}
-        else showToast('Xatolik: Lokal baza yo\'q','error');
-    }
+        const snap=cart.getItems().map(i=>({...i}));
+        const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
+
+        // 1) Avval serverga yuboramiz. Faqat INTERNET YO'Q bo'lsa oflayn saqlaymiz.
+        //    Server rad etsa (qoldiq yetarli emas, obuna tugagan va h.k.) —
+        //    sotuv O'TMAGAN: chek chiqarilmaydi, savat saqlanib qoladi.
+        let res=null, offline=!navigator.onLine;
+        if(!offline){
+            try { res=await apiRequest('/api/sales/checkout','POST',saleData,true); }
+            catch(e){
+                if(!e.offline){ showToast(e.message||'Sotuv saqlanmadi!','error'); return; }
+                offline=true;
+            }
+            if(!offline&&!res){ showToast('Sotuv saqlanmadi! Qaytadan tizimga kiring.','error'); return; }
+        }
+        if(offline){
+            if(!window.NovaPOS_DB){ showToast('Internet yo\'q va lokal baza ishlamayapti — sotuv saqlanmadi!','error'); return; }
+            await NovaPOS_DB.offlineSales.add(saleData);
+        }
+
+        // 2) Sotuv saqlandi — endi chek va savatni tozalash
+        closeCo();
+        _showRc({receipt_number:res?.receipt_number||'...',total_amount:res?.total_amount??total,paid_amount:paid},snap);
+        const rcNum=document.getElementById('rc-num'); if(rcNum&&res?.receipt_number) rcNum.textContent=res.receipt_number;
+        document.getElementById('rc-offline')?.classList.toggle('hidden',!offline);
+        cart.clear(); _selId=null; _resetPayForm();
+        if(window.NovaPOS_DB){await NovaPOS_DB.products.batchDecreaseStock(snap.map(i=>({product_id:i.id,quantity:i.quantity})));await _loadProds();_renderProds();}
+        if(offline) showToast('Internet yo\'q — sotuv oflayn saqlandi, internet kelganda yuboriladi 📦','warning');
+        else {
+            showToast(_payMethod==='nasiya'?'Qarzga yozildi! 📝':'Sotuv yakunlandi! ✅','success');
+            try{new BroadcastChannel('pos_data_sync').postMessage({type:'UPDATE_DATA',time:Date.now()});}catch{}
+        }
+    } finally { _saleSubmitting=false; }
 }
+let _saleSubmitting=false;
 
 function _resetPayForm() {
     _payMethod='naqd';

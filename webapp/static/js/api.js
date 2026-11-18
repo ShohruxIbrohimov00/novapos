@@ -114,10 +114,15 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
       throw error;
     }
     // Network xatosi (fetch throw qildi)
-    console.warn('[API] Network xato, IDB fallback:', url, error.message);
-    const cached = await _offlineGet(url);
-    if (cached !== null) return cached;
+    // Keshdan javob faqat GET uchun! POST/PUT/DELETE uchun eski kesh
+    // "muvaffaqiyatli" javob bo'lib qaytsa, saqlanmagan narsa saqlandi deb ko'rinadi.
+    if (method === 'GET') {
+      console.warn('[API] Network xato, IDB fallback:', url, error.message);
+      const cached = await _offlineGet(url);
+      if (cached !== null) return cached;
+    }
     if (!silent) showToast("Internet aloqasi yo'q", 'warning');
+    error.offline = true;
     throw error;
   }
 }
@@ -274,8 +279,19 @@ function _handleUnauthorized() {
 
 // ── Auth: 402 (paywall) ───────────────────────────────────────
 function _handlePaywall(code) {
-  const pw = document.getElementById('paywall-screen');
-  if (pw) pw.classList.remove('hidden');
+  // Obuna tugagan: to'lov Sozlamalar → "Obuna & To'lov" bo'limida qilinadi
+  if (!location.pathname.startsWith('/settings')) {
+    location.href = '/settings#obuna';
+    return;
+  }
+  if (!window._paywallToastShown) {
+    window._paywallToastShown = true;
+    const msg = code === 'SUBSCRIPTION_EXPIRED_PENDING'
+      ? "Obuna muddati tugagan. To'lovingiz tekshirilmoqda (24 soat ichida)."
+      : "Obuna muddati tugagan! Davom etish uchun to'lov qiling.";
+    if (typeof showToast === 'function') showToast(msg, 'warning');
+    document.getElementById('obuna')?.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 // ── Device ID (har qurilma uchun yagona) ──────────────────────

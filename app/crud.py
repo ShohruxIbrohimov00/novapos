@@ -453,7 +453,10 @@ def create_sale(
 
     for item in sale_data.items:
         product = get_product(db, item.product_id)
-        if not product:
+        # ✅ Mahsulot aynan shu do'konniki va o'chirilmagan bo'lishi shart
+        if (not product
+                or product.store_id != sale_data.store_id
+                or getattr(product, "is_deleted", False)):
             raise ValueError(f"Mahsulot topilmadi: ID={item.product_id}")
 
         qty = round(float(item.quantity), 3)
@@ -469,7 +472,8 @@ def create_sale(
         discount_pct    = round(float(getattr(item, "discount_percent", 0) or 0), 2)
         discount_amount = round(subtotal * discount_pct / 100, 2)
         final_amount    = round(subtotal - discount_amount, 2)
-        item_profit     = round((unit_price - product.price_in) * qty, 2)
+        # ✅ Foyda chegirmadan KEYINGI summadan hisoblanadi
+        item_profit     = round(final_amount - product.price_in * qty, 2)
 
         items_data.append({
             "product":          product,
@@ -496,6 +500,14 @@ def create_sale(
     if _safe_val(sale_data.payment_method) == "nasiya":
         if not sale_data.customer_id:
             raise ValueError("Nasiya sotuvda mijoz tanlanishi shart")
+    # ✅ Mijoz aynan shu do'konniki bo'lishi shart
+    if sale_data.customer_id:
+        cust = db.query(models.Customer).filter(
+            models.Customer.id       == sale_data.customer_id,
+            models.Customer.store_id == sale_data.store_id,
+        ).first()
+        if not cust:
+            raise ValueError("Mijoz topilmadi")
 
     # ── 3. Receipt number — 3x retry ─────────────────────────
     db_sale = None
@@ -519,8 +531,9 @@ def create_sale(
             break
         except Exception as e:
             db.rollback()
+            logger.error(f"Sale insert error (attempt {attempt + 1}): {e}")
             if attempt == 2:
-                raise ValueError(f"Chek raqami yaratib bo'lmadi: {e}")
+                raise ValueError("Sotuvni saqlab bo'lmadi. Qaytadan urinib ko'ring.")
             logger.warning(f"Receipt collision, retry {attempt + 1}")
 
     # ── 4. SaleItem va qoldiq kamaytirish ────────────────────
@@ -705,7 +718,9 @@ def return_sale_item(
     # refund_amount: mijozga qaytariladigan pul (sotuv narxi bo'yicha)
     # cost_back: qaytayotgan tovarning tannarxi
     # profit_back: ushbu qaytayotgan tovardan qilingan foyda
-    refund_amount = round(sale_item.unit_price * quantity, 2)
+    # ✅ Chegirma hisobga olinadi: mijoz haqiqatda to'lagan narx bo'yicha qaytariladi
+    unit_paid     = (sale_item.final_amount / sale_item.quantity) if sale_item.quantity else 0.0
+    refund_amount = round(unit_paid * quantity, 2)
     cost_back     = round(sale_item.cost_price * quantity, 2)
     profit_back   = round(refund_amount - cost_back, 2)
 
