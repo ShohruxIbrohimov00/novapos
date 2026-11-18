@@ -162,6 +162,8 @@ async def login(
     if not crud.verify_password(password, employee.hashed_password):
         logger.warning(f"Login failure: Wrong password for {clean_username}")
         raise HTTPException(401, "Login yoki parol noto'g'ri")
+    if not employee.is_active:
+        raise HTTPException(403, "Hisobingiz bloklangan. Do'kon admini bilan bog'laning.")
 
     # Obunani tekshirish
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)

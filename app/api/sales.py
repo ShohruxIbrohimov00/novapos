@@ -96,8 +96,18 @@ async def create_sale(
     """
     # ✅ Do'kon ID har doim tokendan olinadi (brauzer yuborgan qiymatga ishonilmaydi)
     sale_data.store_id = employee.store_id
+
+    # ✅ Shu sotuv avval yozilganmi? (oflayn navbat qayta yuborgan bo'lishi mumkin)
+    existing = crud.find_sale_by_client_uid(db, employee.store_id, sale_data.client_uid)
+    if existing:
+        return _fmt(crud.get_sale(db, existing.id))
+
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
     try:
-        sale = crud.create_sale(db, sale_data, employee.id)
+        sale = crud.create_sale(
+            db, sale_data, employee.id,
+            can_sell_below_cost = role in ("admin", "super_admin"),
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
 

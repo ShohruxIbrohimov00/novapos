@@ -733,7 +733,7 @@
 {% endblock %}
 
 {% block content %}
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="/static/vendor/html5-qrcode.min.js"></script>
 
 <div id="pos-root">
 
@@ -1843,7 +1843,7 @@ async function submitSale() {
     _saleSubmitting=true;
     try {
         const snap=cart.getItems().map(i=>({...i}));
-        const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
+        const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,client_uid:_newSaleUid(),items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
 
         // 1) Avval serverga yuboramiz. Faqat INTERNET YO'Q bo'lsa oflayn saqlaymiz.
         //    Server rad etsa (qoldiq yetarli emas, obuna tugagan va h.k.) —
@@ -1877,6 +1877,10 @@ async function submitSale() {
     } finally { _saleSubmitting=false; }
 }
 let _saleSubmitting=false;
+function _newSaleUid(){
+    try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch{}
+    return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
+}
 
 function _resetPayForm() {
     _payMethod='naqd';

@@ -69,6 +69,11 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
   try {
     const response = await fetch(url, cfg);
 
+    // Service Worker: "internet yo'q" — bu server xatosi emas, tarmoq xatosi
+    if (response.headers.get('X-SW-Offline')) {
+      throw new TypeError('offline (service worker)');
+    }
+
     // JSON javob olish
     let resData = null;
     const ct = response.headers.get('content-type') || '';

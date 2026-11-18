@@ -177,6 +177,23 @@ app.add_middleware(
 )
 
 
+# ─── Xavfsizlik sarlavhalari ──────────────────────────────────
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    h = response.headers
+    h.setdefault("X-Content-Type-Options", "nosniff")
+    h.setdefault("X-Frame-Options", "SAMEORIGIN")
+    h.setdefault("Referrer-Policy", "same-origin")
+    h.setdefault("Permissions-Policy", "camera=(self), microphone=(), geolocation=()")
+    if IS_PRODUCTION:
+        h.setdefault("Strict-Transport-Security", "max-age=31536000")
+    # Yuklangan fayllar hech qachon sahifa sifatida bajarilmasin
+    if request.url.path.startswith("/static/uploads/"):
+        h["Content-Security-Policy"] = "default-src 'none'; img-src 'self'; sandbox"
+    return response
+
+
 # ─── Global Exception Handlers ────────────────────────────────
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

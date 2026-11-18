@@ -357,6 +357,7 @@ function renderNavigation() {
       { href:'/pos',           icon:'fa-cash-register', label:'Kassa'   },
       { href:'/sales/history', icon:'fa-receipt',       label:'Tarix'   },
       { href:'/products',      icon:'fa-box-archive',   label:'Ombor'   },
+      { href:'/customers',     icon:'fa-users',         label:'Mijozlar'},
       ...(role === 'admin' ? [{ href:'/reports', icon:'fa-chart-column', label:'Hisobot' }] : []),
       { href:'/settings',      icon:'fa-gears',         label:'Sozlama' },
     ];
@@ -371,15 +372,10 @@ function renderNavigation() {
     side.innerHTML = links.map(l => `
       <a href="${l.href}"
          class="nav-link${isActive(l.href) ? ' active' : ''}"
-         hx-get="${l.href}"
-         hx-target="#page-content"
-         hx-select="#page-content"
-         hx-push-url="true"
          title="${l.label}">
         <i class="fa-solid ${l.icon} nl-icon"></i>
       </a>`).join('');
-      
-    if (typeof htmx !== 'undefined') htmx.process(side);
+
   }
 
   /* Mobil bottom nav */
@@ -388,16 +384,10 @@ function renderNavigation() {
     mob.innerHTML = links.map(l => `
       <a href="${l.href}"
          class="nav-link nav-link--mobile${isActive(l.href) ? ' active' : ''}"
-         hx-get="${l.href}"
-         hx-target="#page-content"
-         hx-select="#page-content"
-         hx-push-url="true"
          title="${l.label}">
         <i class="fa-solid ${l.icon} nl-icon"></i>
       </a>`).join('');
-      
-    // HTMX yangi qo'shilgan linklarni tanishi uchun "process" qilamiz
-    if (typeof htmx !== 'undefined') htmx.process(mob);
+
   }
 }
 

@@ -37,19 +37,21 @@ def verify_super_admin(
 
 # ─── Yordamchi ────────────────────────────────────────────────
 def _sync_block(db: Session, store: models.Store) -> None:
-    """Obuna muddatiga qarab xodimlarni blok/och"""
-    now        = datetime.now(timezone.utc).replace(tzinfo=None)
-    should_blk = (
-        store.subscription_expires_at is not None
-        and store.subscription_expires_at < now
-        and store.payment_status not in ("active",)
-    )
+    """
+    ✅ Obuna tugaganda xodimlar endi o'chirilmaydi: cheklov har bir so'rovda
+    402 orqali ishlaydi (dependencies._check_store_subscription), shunda do'kon
+    egasi tizimga kirib to'lov chekini yubora oladi.
+    Obuna faollashganda do'kon adminlari ochiladi (eski versiyada bloklangan bo'lsa).
+    Kassirlarning holatiga tegilmaydi — ularni do'kon admini o'zi boshqaradi.
+    """
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    active = store.subscription_expires_at is None or store.subscription_expires_at >= now
+    if not active:
+        return
     for emp in db.query(models.Employee).filter(models.Employee.store_id == store.id).all():
         role = emp.role.value if hasattr(emp.role, "value") else str(emp.role)
-        if role != "super_admin":
-            emp.is_active = not should_blk
-
-    logger.info(f"Store #{store.id} xodimlari {'bloklandi' if should_blk else 'ochildi'}")
+        if role == "admin":
+            emp.is_active = True
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -439,7 +441,7 @@ def run_expiry_check(
     ).all()
     count = 0
     for s in expired:
-        s.is_active      = False
+        # is_active o'zgartirilmaydi — aks holda egasi kirib to'lay olmaydi
         s.payment_status = "expired"
         _sync_block(db, s)
         count += 1

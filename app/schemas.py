@@ -173,6 +173,10 @@ class SaleCreate(BaseModel):
     payment_method: PaymentMethod
     paid_amount:    float = Field(ge=0)
     notes:          Optional[str] = None
+    # Oflayn rejim: qurilma yaratgan noyob ID (qayta yuborilsa ikki marta yozilmaydi)
+    client_uid:         Optional[str] = Field(default=None, max_length=64)
+    is_offline:         bool = False
+    offline_created_at: Optional[datetime] = None
 
     @field_validator("items")
     @classmethod

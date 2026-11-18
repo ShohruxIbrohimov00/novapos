@@ -17,7 +17,8 @@ from app.dependencies import get_current_employee
 logger     = logging.getLogger(__name__)
 router     = APIRouter(tags=["Subscriptions"])
 
-UPLOAD_DIR        = "webapp/static/uploads/proofs"
+UPLOAD_DIR        = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                 "webapp", "static", "uploads", "proofs")
 ALLOWED_TYPES     = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 ALLOWED_EXT       = {"jpg", "jpeg", "png", "webp"}
 MAX_SIZE          = 5 * 1024 * 1024   # 5 MB
@@ -81,7 +82,15 @@ async def upload_proof(
         raise HTTPException(404, "Tarif topilmadi")
 
     # Faylni saqlash
-    ext = (file.filename or "image.jpg").rsplit(".", 1)[-1].lower()
+    # ✅ Fayl haqiqatan rasm ekanini ichidan tekshiramiz (nom va content-type soxta bo'lishi mumkin)
+    if content[:3] == b"\xff\xd8\xff":
+        ext = "jpg"
+    elif content[:8] == b"\x89PNG\r\n\x1a\n":
+        ext = "png"
+    elif content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        ext = "webp"
+    else:
+        raise HTTPException(400, "Faqat JPG, PNG yoki WEBP rasm yuklang")
     fname = f"proof_{employee.store_id}_{int(datetime.now().timestamp())}.{ext}"
     fpath = os.path.join(UPLOAD_DIR, fname)
     
