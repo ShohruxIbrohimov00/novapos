@@ -499,8 +499,8 @@ def create_sale(
         # yoziladi (qoldiq minusga tushadi, inventarizatsiyada ko'rinadi).
         if not sale_data.is_offline and round(product.quantity, 3) < qty:
             raise ValueError(
-                f"'{product.name}' yetarli emas. "
-                f"Mavjud: {product.quantity}, So'ralgan: {qty}"
+                f"'{product.name}' yetarli emas: omborda {product.quantity:g} ta, "
+                f"savatda {qty:g} ta"
             )
 
         unit_price      = round(float(item.price_out if item.price_out is not None else product.price_out), 2)

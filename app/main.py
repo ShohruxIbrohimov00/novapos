@@ -29,7 +29,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPExcept
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
 
 from app.database import init_db, check_db_health, SessionLocal
@@ -375,7 +375,10 @@ def _page(template: str):
 app.get("/",                        response_class=HTMLResponse)(_page("index.html"))
 app.get("/login",                   response_class=HTMLResponse)(_page("login.html"))
 app.get("/register",                response_class=HTMLResponse)(_page("register.html"))
-app.get("/pos",                     response_class=HTMLResponse)(_page("pos.html"))
+# ✅ Kassa React'ga ko'chirildi
+@app.get("/pos")
+async def pos_redirect():
+    return RedirectResponse("/app/pos", status_code=302)
 app.get("/sales/history",           response_class=HTMLResponse)(_page("sales_history.html"))
 app.get("/sales",                   response_class=HTMLResponse)(_page("sales_history.html"))  # menyu shu manzilga olib boradi
 app.get("/products",                response_class=HTMLResponse)(_page("inventory.html"))
@@ -383,7 +386,22 @@ app.get("/products/add",            response_class=HTMLResponse)(_page("add_prod
 app.get("/products/supply-history", response_class=HTMLResponse)(_page("supply_history.html"))
 app.get("/reports",                 response_class=HTMLResponse)(_page("reports.html"))
 app.get("/settings",                response_class=HTMLResponse)(_page("settings.html"))
-app.get("/customers",               response_class=HTMLResponse)(_page("customers.html"))
+# ✅ Mijozlar sahifasi React'ga ko'chirildi — eski manzil yangisiga yo'naltiriladi
+@app.get("/customers")
+async def customers_redirect():
+    return RedirectResponse("/app/customers", status_code=302)
+
+
+# ── React ilovasi (frontend/ → webapp/static/app/) ─────────────
+APP_INDEX = os.path.join(STATIC_DIR, "app", "index.html")
+
+@app.get("/app", include_in_schema=False)
+@app.get("/app/{path:path}", include_in_schema=False)
+async def react_app(path: str = ""):
+    if not os.path.exists(APP_INDEX):
+        raise HTTPException(404, "Frontend build qilinmagan: cd frontend && npm run build")
+    # index.html keshlanmaydi — yangi versiya darhol yetib boradi (fayllar nomida hash bor)
+    return FileResponse(APP_INDEX, media_type="text/html", headers={"Cache-Control": "no-cache"})
 
 @app.get("/ai-scan", response_class=HTMLResponse)
 async def page_ai_scan(request: Request):

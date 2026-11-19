@@ -1,0 +1,40 @@
+.cust-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.cust-total { flex-shrink: 0; }
+.cust-total .ui-stat { padding: 6px var(--s3); text-align: right; }
+.cust-total .ui-stat__value { font-size: var(--fs-md); }
+
+/* Ro'yxat: konteyner kengligiga qarab ustunlar (telefon 1, planshet 2, keng ekran 3) */
+.cust-grid {
+  list-style: none; margin: 0; padding: 0 0 var(--s4);
+  display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+}
+.cust-row { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); min-height: 72px; }
+.cust-row__ava {
+  width: 44px; height: 44px; border-radius: var(--r-md); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary-s); color: var(--primary); font-weight: 900; font-size: var(--fs-lg);
+}
+.cust-row__main { flex: 1; min-width: 0; }
+.cust-row__name { font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cust-row__phone { font-size: var(--fs-sm); color: var(--text3); margin-top: 2px; }
+.cust-row__debt { flex-shrink: 0; font-size: var(--fs-sm); font-weight: 700; color: var(--text3); text-align: right; font-variant-numeric: tabular-nums; }
+.cust-row__debt.is-debt { color: var(--danger); font-size: var(--fs-md); font-weight: 900; }
+
+/* Detal oynasi */
+.cust-meta { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); color: var(--text2); font-size: var(--fs-sm); }
+.cust-meta__phone { color: var(--primary); font-weight: 700; text-decoration: none; }
+.cust-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+.cust-pay { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s4); border-radius: var(--r-lg); background: var(--surface2); }
+.cust-pay__row { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.cust-actions { display: flex; gap: var(--s2); }
+.cust-actions > * { flex: 1; }
+.cust-h { font-size: var(--fs-md); font-weight: 800; margin-top: var(--s2); }
+.cust-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s2); }
+.cust-hist__row {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s3);
+  padding: var(--s3); border-radius: var(--r-md); background: var(--surface2);
+}
+.cust-hist__row small { display: block; color: var(--text3); font-size: var(--fs-xs); margin-top: 2px; }
+.cust-hist__main { min-width: 0; }
+.cust-hist__sum { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.tone-success { color: var(--success); }

@@ -1,0 +1,188 @@
+/* ═══════════════════════════════════════════════════════════
+   UI komponentlar — butun ilova uchun YAGONA uslub manbai.
+   Sahifalar o'z tugma/maydon/oyna uslubini yozmaydi.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Tugma ─────────────────────────────────────────────── */
+.ui-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+  min-height: 44px; padding: 0 var(--s5);
+  border: 1px solid transparent; border-radius: var(--r-md);
+  font-size: var(--fs-md); font-weight: 800; line-height: 1;
+  text-decoration: none; white-space: nowrap; user-select: none;
+  transition: transform .12s, box-shadow .15s, background .15s, opacity .15s;
+}
+.ui-btn:active:not(:disabled) { transform: scale(.97); }
+.ui-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ui-btn i { font-size: .95em; }
+.ui-btn--sm { min-height: 36px; padding: 0 var(--s3); font-size: var(--fs-sm); border-radius: var(--r-sm); }
+.ui-btn--lg { min-height: 56px; padding: 0 var(--s6); font-size: var(--fs-lg); border-radius: var(--r-lg); }
+.ui-btn--block { width: 100%; }
+.ui-btn--primary { background: linear-gradient(135deg, var(--primary), var(--primary-h)); color: #fff; box-shadow: var(--sh-pri); }
+.ui-btn--success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; box-shadow: var(--sh-suc); }
+.ui-btn--danger  { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: var(--sh-dan); }
+.ui-btn--ghost   { background: var(--surface2); color: var(--text2); }
+.ui-btn--ghost:hover:not(:disabled) { background: var(--surface3); color: var(--text); }
+.ui-btn--outline { background: transparent; border-color: var(--border2); color: var(--text2); }
+.ui-btn--outline:hover:not(:disabled) { color: var(--text); border-color: var(--text3); }
+.ui-btn--danger-soft { background: var(--danger-s); color: var(--danger); }
+.ui-btn .ui-spinner { width: 16px; height: 16px; border-width: 2px; }
+.ui-btn--primary .ui-spinner, .ui-btn--success .ui-spinner, .ui-btn--danger .ui-spinner {
+  border-color: rgba(255, 255, 255, .35); border-top-color: #fff;
+}
+
+.ui-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; flex-shrink: 0;
+  border: none; border-radius: var(--r-sm);
+  background: var(--surface2); color: var(--text2);
+  transition: background .15s, color .15s;
+}
+.ui-icon-btn:hover { background: var(--surface3); color: var(--text); }
+
+/* ── Maydon ────────────────────────────────────────────── */
+.ui-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ui-field__label { font-size: var(--fs-sm); font-weight: 700; color: var(--text2); }
+.ui-field__req { color: var(--danger); margin-left: 2px; }
+.ui-field__wrap { position: relative; display: flex; align-items: center; }
+.ui-field__icon { position: absolute; left: 14px; color: var(--text3); pointer-events: none; font-size: 14px; }
+.ui-input {
+  width: 100%; height: 48px; padding: 0 var(--s4);
+  background: var(--surface2); border: 2px solid var(--border); border-radius: var(--r-md);
+  outline: none; font-weight: 600;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.ui-input::placeholder { color: var(--text3); font-weight: 500; }
+.ui-input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 4px var(--primary-t); }
+.ui-input--icon { padding-left: 40px; }
+.ui-input--error { border-color: var(--danger); }
+.ui-input--money { font-size: 22px !important; font-weight: 900; height: 56px; }
+textarea.ui-input { height: auto; min-height: 88px; padding: var(--s3) var(--s4); resize: vertical; }
+.ui-field__hint  { font-size: var(--fs-xs); color: var(--text3); }
+.ui-field__error { font-size: var(--fs-xs); color: var(--danger); font-weight: 700; }
+
+/* ── Karta ─────────────────────────────────────────────── */
+.ui-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--sh-sm);
+}
+.ui-card--pad { padding: var(--s4); }
+.ui-card--interactive { cursor: pointer; transition: border-color .15s, transform .1s; }
+.ui-card--interactive:hover { border-color: var(--border2); }
+.ui-card--interactive:active { transform: scale(.995); }
+
+/* ── Belgi ─────────────────────────────────────────────── */
+.ui-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: var(--fs-xs); font-weight: 800; white-space: nowrap;
+}
+.ui-badge--blue  { background: var(--primary-s); color: var(--primary); }
+.ui-badge--green { background: var(--success-s); color: var(--success); }
+.ui-badge--red   { background: var(--danger-s);  color: var(--danger); }
+.ui-badge--amber { background: var(--warning-s); color: var(--warning); }
+.ui-badge--gray  { background: var(--surface2);  color: var(--text2); }
+
+/* ── Tab (segment) ─────────────────────────────────────── */
+.ui-tabs { display: flex; gap: var(--s2); overflow-x: auto; scrollbar-width: none; }
+.ui-tabs::-webkit-scrollbar { display: none; }
+.ui-tab {
+  flex-shrink: 0; min-height: 38px; padding: 0 var(--s4);
+  border: none; border-radius: var(--r-sm);
+  background: var(--surface2); color: var(--text2);
+  font-size: var(--fs-sm); font-weight: 800;
+}
+.ui-tab[aria-selected='true'] { background: var(--primary); color: #fff; }
+.ui-tab__count { margin-left: 6px; opacity: .75; font-weight: 700; }
+
+/* ── Ko'rsatkich ───────────────────────────────────────── */
+.ui-stat { background: var(--surface2); border-radius: var(--r-md); padding: var(--s3) var(--s4); min-width: 0; }
+.ui-stat__label { font-size: var(--fs-xs); font-weight: 700; color: var(--text3); }
+.ui-stat__value { font-size: var(--fs-lg); font-weight: 900; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.ui-stat--danger .ui-stat__value { color: var(--danger); }
+.ui-stat--success .ui-stat__value { color: var(--success); }
+
+/* ── Spinner va skelet ─────────────────────────────────── */
+.ui-spinner {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  border: 3px solid var(--border2); border-top-color: var(--primary);
+  animation: ui-spin .75s linear infinite;
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+.ui-skeleton {
+  border-radius: var(--r-md);
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+  background-size: 200% 100%; animation: ui-shimmer 1.4s infinite;
+}
+@keyframes ui-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* ── Bo'sh holat ───────────────────────────────────────── */
+.ui-empty { text-align: center; padding: var(--s8) var(--s4); color: var(--text3); }
+.ui-empty__icon { font-size: 40px; opacity: .35; margin-bottom: var(--s3); }
+.ui-empty__title { font-size: var(--fs-md); font-weight: 800; color: var(--text2); }
+.ui-empty__text { font-size: var(--fs-sm); margin-top: 4px; }
+.ui-empty .ui-btn { margin-top: var(--s4); }
+
+/* ── Oyna (telefonda pastdan chiqadi, planshet/kompyuterda markazda) ── */
+.ui-modal-backdrop {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0, 0, 0, .5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: flex-end; justify-content: center;
+  animation: ui-fade .15s ease-out;
+}
+.ui-modal {
+  width: 100%; max-width: 520px; max-height: 92dvh;
+  display: flex; flex-direction: column;
+  background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: var(--sh-xl);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  animation: ui-sheet-up .25s cubic-bezier(.16, 1, .3, 1);
+}
+.ui-modal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s5) var(--s5) var(--s2); }
+.ui-modal__title { font-size: var(--fs-lg); font-weight: 900; }
+.ui-modal__body { padding: var(--s2) var(--s5) var(--s5); overflow-y: auto; display: flex; flex-direction: column; gap: var(--s3); }
+.ui-modal__foot { display: flex; gap: var(--s2); padding: var(--s3) var(--s5) var(--s5); border-top: 1px solid var(--border); }
+.ui-modal__foot > * { flex: 1; }
+@media (min-width: 768px) {
+  .ui-modal-backdrop { align-items: center; padding: var(--s6); }
+  .ui-modal { border-radius: var(--r-xl); border: 1px solid var(--border); animation: ui-pop .18s ease-out; }
+  .ui-modal--wide { max-width: 760px; }
+}
+@keyframes ui-fade { from { opacity: 0; } }
+@keyframes ui-sheet-up { from { transform: translateY(100%); } }
+@keyframes ui-pop { from { transform: scale(.96); opacity: 0; } }
+
+/* ── Bildirishnoma ─────────────────────────────────────── */
+.ui-toast-region {
+  position: fixed; top: max(env(safe-area-inset-top, 0px), 14px); left: 50%; transform: translateX(-50%);
+  z-index: 99999; display: flex; flex-direction: column; gap: var(--s2); align-items: center;
+  pointer-events: none; width: max-content; max-width: min(92vw, 420px);
+}
+.ui-toast {
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s3) var(--s5); border-radius: var(--r-md);
+  color: #fff; font-size: var(--fs-sm); font-weight: 700; line-height: 1.35;
+  box-shadow: var(--sh-xl); pointer-events: auto;
+  animation: ui-toast-in .28s cubic-bezier(.34, 1.56, .64, 1);
+}
+.ui-toast--success { background: #10b981; }
+.ui-toast--error   { background: #ef4444; }
+.ui-toast--warning { background: #f59e0b; }
+.ui-toast--info    { background: #2563eb; }
+@keyframes ui-toast-in { from { transform: translateY(-20px); opacity: 0; } }
+
+/* ── Sahifa sarlavhasi ─────────────────────────────────── */
+.ui-page { display: flex; flex-direction: column; height: var(--app-h); min-height: 0; }
+.ui-page__head {
+  flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: var(--s3) var(--s4); padding-top: max(var(--s3), env(safe-area-inset-top, 0px));
+  display: flex; flex-direction: column; gap: var(--s3);
+}
+.ui-page__titlerow { display: flex; align-items: center; gap: var(--s3); min-height: 44px; }
+.ui-page__title { flex: 1; min-width: 0; font-size: var(--fs-xl); font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-page__actions { display: flex; gap: var(--s2); flex-shrink: 0; }
+.ui-page__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s4); -webkit-overflow-scrolling: touch; }
+@media (min-width: 1024px) {
+  .ui-page__head { padding: var(--s4) var(--s6); }
+  .ui-page__body { padding: var(--s5) var(--s6); }
+}

@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '6.2.0';
+const VER      = '7.2.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -49,8 +49,8 @@ const STATIC_FILES = [
 
 const PAGES = [
   '/', '/login', '/register',
-  '/pos', '/products', '/products/add', '/sales', '/sales/history',
-  '/reports', '/settings', '/products/supply-history', '/customers',
+  '/products', '/products/add', '/sales', '/sales/history',
+  '/reports', '/settings', '/products/supply-history', '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -155,8 +155,11 @@ async function _cacheFirst(req) {
 async function _swrPage(req) {
   const cache  = await caches.open(C_PAGES);
   const url    = new URL(req.url);
-  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz
-  const key    = url.pathname.startsWith('/products/edit/') ? null : url.pathname;
+  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz.
+  // React ilovasi (/app/...) — hamma manzil uchun bitta index.html → '/app/' kaliti.
+  const key    = url.pathname.startsWith('/products/edit/') ? null
+               : (url.pathname === '/app' || url.pathname.startsWith('/app/')) ? '/app/'
+               : url.pathname;
   const cached = key ? await cache.match(key) : null;
 
   const net = fetch(req)
@@ -172,8 +175,8 @@ async function _swrPage(req) {
     const add = await cache.match('/products/add');
     if (add) return add;
   }
-  const pos = await cache.match('/pos');
-  if (pos) return pos;
+  const app = await cache.match('/app/');
+  if (app) return app;
   return new Response(_offlinePage(), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   });
@@ -282,46 +285,36 @@ async function _notify(msg) {
 // ─── IDB (SW ichida — localStorage yo'q!) ────────────────────
 // MUHIM: offline-db.js bilan bir xil DB_NAME va DB_VERSION ishlatiladi!
 
+// ✅ Umumiy sxema (offline-db.js, sw.js va React lib/db.ts da BIR XIL bo'lishi shart).
+// v6: kim birinchi ochishidan qat'i nazar hamma jadval va indekslar yaratiladi.
+const NOVA_DB_SCHEMA = {
+  products_cache:  { keyPath: 'id', indexes: ['store_id', 'barcode', 'short_code', 'category_id'] },
+  customers_cache: { keyPath: 'id', indexes: ['store_id', 'phone'] },
+  offline_sales:   { keyPath: 'local_id', autoIncrement: true, indexes: ['status', 'created_at', 'store_id'] },
+  offline_queue:   { keyPath: 'id', autoIncrement: true, indexes: ['status', 'endpoint', 'created_at'] },
+  reports_cache:   {},
+  auth:            {},
+  meta:            {},
+};
+function novaDbUpgrade(db, tx) {
+  for (const [name, def] of Object.entries(NOVA_DB_SCHEMA)) {
+    const os = db.objectStoreNames.contains(name)
+      ? tx.objectStore(name)
+      : db.createObjectStore(name, def.keyPath ? { keyPath: def.keyPath, autoIncrement: !!def.autoIncrement } : undefined);
+    for (const ix of def.indexes || []) if (!os.indexNames.contains(ix)) os.createIndex(ix, ix);
+  }
+}
+
 const DB_NAME    = 'novapos_db';
-const DB_VERSION = 5;  // ← offline-db.js bilan MOS bo'lishi SHART
+const DB_VERSION = 6;  // ← offline-db.js va frontend/src/lib/db.ts bilan BIR XIL
 
 function _openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onerror   = () => reject(req.error);
-    req.onsuccess = () => resolve(req.result);
+    req.onsuccess = () => { const db = req.result; db.onversionchange = () => db.close(); resolve(db); };
 
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-
-      if (!db.objectStoreNames.contains('offline_sales')) {
-        const s = db.createObjectStore('offline_sales', { keyPath: 'local_id', autoIncrement: true });
-        s.createIndex('status',     'status');
-        s.createIndex('created_at', 'created_at');
-        s.createIndex('store_id',   'store_id');
-      }
-      if (!db.objectStoreNames.contains('auth'))
-        db.createObjectStore('auth');
-
-      if (!db.objectStoreNames.contains('offline_queue')) {
-        const s = db.createObjectStore('offline_queue', { keyPath: 'id', autoIncrement: true });
-        s.createIndex('status',   'status');
-        s.createIndex('endpoint', 'endpoint');
-      }
-      if (!db.objectStoreNames.contains('products_cache')) {
-        const s = db.createObjectStore('products_cache', { keyPath: 'id' });
-        s.createIndex('barcode',    'barcode');
-        s.createIndex('short_code', 'short_code');
-      }
-      if (!db.objectStoreNames.contains('customers_cache')) {
-        const s = db.createObjectStore('customers_cache', { keyPath: 'id' });
-        s.createIndex('phone', 'phone');
-      }
-      if (!db.objectStoreNames.contains('reports_cache'))
-        db.createObjectStore('reports_cache');
-      if (!db.objectStoreNames.contains('meta'))
-        db.createObjectStore('meta');
-    };
+    req.onupgradeneeded = e => novaDbUpgrade(e.target.result, e.target.transaction);
   });
 }
 
