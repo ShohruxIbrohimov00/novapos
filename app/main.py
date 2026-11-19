@@ -437,9 +437,11 @@ async def react_app(path: str = ""):
 async def ai_scan_redirect():
     return RedirectResponse("/app/products/ai", status_code=302)
 
-app.get("/superadmin",          response_class=HTMLResponse)(_page("superadmin_dashboard.html"))
-app.get("/superadmin/requests", response_class=HTMLResponse)(_page("superadmin_requests.html"))
-app.get("/superadmin/stores",   response_class=HTMLResponse)(_page("superadmin_stores.html"))
+# ✅ Superadmin React'ga ko'chirildi
+@app.get("/superadmin")
+@app.get("/superadmin/{sub:path}")
+async def superadmin_redirect(sub: str = ""):
+    return RedirectResponse("/app/superadmin" + (f"/{sub}" if sub in ("stores", "requests") else ""), status_code=302)
 
 
 # ============================================

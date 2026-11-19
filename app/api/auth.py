@@ -172,6 +172,8 @@ async def login(
         raise HTTPException(401, "Login yoki parol noto'g'ri")
     if not employee.is_active:
         raise HTTPException(403, "Hisobingiz bloklangan. Do'kon admini bilan bog'laning.")
+    if employee.store is not None and not employee.store.is_active:
+        raise HTTPException(403, "Do'kon bloklangan. NovaPOS bilan bog'laning.")
 
     # Obunani tekshirish
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
@@ -202,6 +204,8 @@ async def login_pin(
     # ✅ Superadmin faqat parol bilan kiradi (avtomatik PIN 0000 edi — xavfli)
     if (employee.role.value if hasattr(employee.role, "value") else str(employee.role)) == "super_admin":
         raise HTTPException(401, "Login yoki PIN noto'g'ri")
+    if employee.store is not None and not employee.store.is_active:
+        raise HTTPException(403, "Do'kon bloklangan. NovaPOS bilan bog'laning.")
 
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
     # ✅ Obuna tugagan bo'lsa ham kirishga ruxsat beriladi — aks holda do'kon

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { useConfirm, useToast } from '@/components/ui';
-import { logout as doLogout } from '@/lib/session';
+import { isImpersonating, logout as doLogout } from '@/lib/session';
 import { isActive, navLinks, type NavLink } from './nav';
 import './shell.css';
 
@@ -55,7 +55,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (!r.ok) toast.show(`${r.pending} ta oflayn sotuv hali serverga yuborilmagan. Internetga ulanib, yuborilishini kuting.`, 'error');
   };
 
+  const support = isImpersonating();
   return (
+    <>
+    {support && (
+      <div className="support-bar" role="status">
+        <i className="fa-solid fa-headset" aria-hidden="true" /> Support rejimi: {user?.store_name}
+        <button type="button" onClick={() => { doLogout(); }}>SuperAdmin'ga qaytish</button>
+      </div>
+    )}
     <div className="shell">
       <nav className="sidebar" aria-label="Asosiy menyu">
         <div className="sidebar__brand">
@@ -97,5 +105,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         {links.map((l) => <NavItem key={l.to} link={l} path={path} />)}
       </nav>
     </div>
+    </>
   );
 }

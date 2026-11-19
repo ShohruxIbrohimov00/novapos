@@ -22,8 +22,11 @@ export async function logout(): Promise<LogoutResult> {
     const sup = localStorage.getItem('super_token');
     if (sup) {
       localStorage.setItem('access_token', sup);
-      localStorage.removeItem('super_token');
-      location.href = '/superadmin/stores';
+      const su = localStorage.getItem('super_user_info');
+      if (su) localStorage.setItem('user_info', su);
+      ['super_token', 'super_user_info', 'pos_cart_v2'].forEach((k) => localStorage.removeItem(k));
+      try { navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_API_CACHE' }); } catch { /* SW yo'q */ }
+      location.href = '/app/superadmin/stores';
       return { ok: true };
     }
   } catch { /* xotira yopiq */ }
@@ -39,4 +42,23 @@ export async function logout(): Promise<LogoutResult> {
   try { localStorage.removeItem('pos_cart_v2'); } catch { /* xotira yopiq */ }
   location.href = '/app/login';
   return { ok: true };
+}
+
+/** Superadmin do'kon nomidan kiradi (yordam berish uchun). Chiqishda o'z hisobiga qaytadi. */
+export function impersonate(token: string, userInfo: unknown): void {
+  try {
+    if (!localStorage.getItem('super_token')) {
+      localStorage.setItem('super_token', localStorage.getItem('access_token') || '');
+      localStorage.setItem('super_user_info', localStorage.getItem('user_info') || '');
+    }
+    localStorage.setItem('access_token', token);
+    localStorage.setItem('user_info', JSON.stringify(userInfo));
+    localStorage.removeItem('pos_cart_v2');
+  } catch { /* xotira yopiq */ }
+  try { navigator.serviceWorker?.controller?.postMessage({ type: 'CLEAR_API_CACHE' }); } catch { /* SW yo'q */ }
+  location.href = '/app/pos';
+}
+
+export function isImpersonating(): boolean {
+  try { return !!localStorage.getItem('super_token'); } catch { return false; }
 }

@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.8.0';
+const VER      = '7.9.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -168,6 +168,7 @@ async function _cacheFirst(req) {
 function _appPath(p) {
   if (p === '/pos') return '/app/pos';
   if (p === '/login') return '/app/login';
+  if (p === '/superadmin' || p === '/superadmin/stores' || p === '/superadmin/requests') return '/app' + p;
   if (p === '/register') return '/app/register';
   if (p === '/customers') return '/app/customers';
   if (p === '/sales' || p === '/sales/history') return '/app/sales';

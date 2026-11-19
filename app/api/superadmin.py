@@ -265,9 +265,8 @@ def reject_payment(
     if store:
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         if store.subscription_expires_at and store.subscription_expires_at < now:
+            # ✅ is_active o'zgartirilmaydi — aks holda egasi kirib qayta to'lay olmaydi (402 yetarli)
             store.payment_status = "expired"
-            store.is_active      = False
-            _sync_block(db, store)
         else:
             store.payment_status = "active"
     db.commit()
@@ -351,11 +350,11 @@ def toggle_store(
 ):
     s = db.query(models.Store).filter(models.Store.id == store_id).first()
     if not s: raise HTTPException(404, "Do'kon topilmadi")
+    # ✅ Xodimlarga tegilmaydi: do'kon bloklangani har bir so'rovda va kirishda tekshiriladi.
+    # (Avval blokdan chiqarishda do'kon egasi ataylab bloklagan kassirlar ham ochilib ketardi.)
     s.is_active = not s.is_active
-    for emp in db.query(models.Employee).filter(models.Employee.store_id == store_id).all():
-        role = emp.role.value if hasattr(emp.role, "value") else str(emp.role)
-        if role != "super_admin":
-            emp.is_active = s.is_active
+    if s.is_active:
+        _sync_block(db, s)   # eski versiyada bloklanganda o'chirilgan admin qayta ochiladi
     db.commit()
     return {"status": "success", "is_active": s.is_active,
             "message": f"Do'kon {'faollashtirildi' if s.is_active else 'bloklandi'}"}
@@ -411,20 +410,14 @@ def login_as_store(
     ).first()
     if not target: raise HTTPException(404, "Bu do'konda faol admin topilmadi")
 
-    # ✅ Yangi token payload (employee_id, store_id, role)
-    token = create_access_token(target, store_id)
-
+    # ✅ Kirish javobi bilan bir xil shakl (user_info) — avval "employee" qaytarilardi va
+    # kassa do'kon ID'sisiz qolardi
+    from app.api.auth import _make_token_response
+    resp = _make_token_response(target)
+    resp["user_info"]["full_name"] = f"SUPPORT: {target.full_name}"
+    resp["user_info"]["impersonated"] = True
     logger.warning(f"[IMPERSONATE] Admin #{admin.id} → Store #{store_id} '{target.username}'")
-    return {
-        "access_token": token,
-        "token_type":   "bearer",
-        "employee": {
-            "full_name":  f"🔧 SUPPORT: {target.full_name}",
-            "username":   target.username,
-            "role":       "admin",
-            "store_name": target.store.name if target.store else "—",
-        },
-    }
+    return resp
 
 
 @router.post("/run-expiry-check")

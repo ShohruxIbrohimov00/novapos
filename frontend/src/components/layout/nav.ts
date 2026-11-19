@@ -14,9 +14,9 @@ export interface NavLink {
 export function navLinks(role: Role | undefined): NavLink[] {
   if (role === 'super_admin') {
     return [
-      { to: '/superadmin', icon: 'fa-chart-pie', label: 'Panel', match: ['/superadmin$'] },
-      { to: '/superadmin/stores', icon: 'fa-shop', label: "Do'konlar", match: ['/superadmin/stores'] },
-      { to: '/superadmin/requests', icon: 'fa-hand-holding-dollar', label: "To'lovlar", match: ['/superadmin/requests'] },
+      { to: '/app/superadmin', icon: 'fa-chart-pie', label: 'Panel', spa: true, match: ['/app/superadmin$', '/superadmin$'] },
+      { to: '/app/superadmin/stores', icon: 'fa-shop', label: "Do'konlar", spa: true, match: ['/app/superadmin/stores', '/superadmin/stores'] },
+      { to: '/app/superadmin/requests', icon: 'fa-hand-holding-dollar', label: "To'lovlar", spa: true, match: ['/app/superadmin/requests', '/superadmin/requests'] },
     ];
   }
   const links: NavLink[] = [

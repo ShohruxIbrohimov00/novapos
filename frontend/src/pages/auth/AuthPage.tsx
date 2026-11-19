@@ -14,7 +14,7 @@ function saveAndGo(r: TokenResp) {
     localStorage.setItem('user_info', JSON.stringify(r.user_info));
     localStorage.setItem('saved_username', r.user_info.username);
   } catch { /* xotira yopiq */ }
-  location.replace(r.user_info.role === 'super_admin' ? '/superadmin' : '/app/pos');
+  location.replace(r.user_info.role === 'super_admin' ? '/app/superadmin' : '/app/pos');
 }
 
 const savedUser = () => { try { return localStorage.getItem('saved_username') || ''; } catch { return ''; } };
@@ -37,7 +37,7 @@ export function AuthPage() {
   // Allaqachon kirgan bo'lsa — to'g'ri kassaga
   useEffect(() => {
     const role = tokenValid();
-    if (role) location.replace(role === 'super_admin' ? '/superadmin' : '/app/pos');
+    if (role) location.replace(role === 'super_admin' ? '/app/superadmin' : '/app/pos');
   }, []);
 
   return (
