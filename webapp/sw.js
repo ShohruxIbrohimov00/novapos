@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.3.0';
+const VER      = '7.4.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -49,7 +49,7 @@ const STATIC_FILES = [
 
 const PAGES = [
   '/', '/login', '/register',
-  '/sales', '/sales/history', '/reports', '/settings', '/app/',
+  '/reports', '/settings', '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -155,6 +155,7 @@ async function _cacheFirst(req) {
 function _appPath(p) {
   if (p === '/pos') return '/app/pos';
   if (p === '/customers') return '/app/customers';
+  if (p === '/sales' || p === '/sales/history') return '/app/sales';
   if (p === '/products') return '/app/products';
   if (p === '/products/add') return '/app/products/new';
   if (p === '/products/supply-history') return '/app/products/supply-history';

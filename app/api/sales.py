@@ -26,6 +26,11 @@ from app.timezone_utils import now_tashkent
 router = APIRouter(tags=["Sales"])
 
 
+def _unit(item: models.SaleItem) -> str:
+    u = item.product.unit_type if item.product else None
+    return u.value if hasattr(u, "value") else (str(u) if u else "dona")
+
+
 # ─── Helper: sale → dict ──────────────────────────────────────
 def _fmt(sale: models.Sale) -> dict:
     """
@@ -61,9 +66,13 @@ def _fmt(sale: models.Sale) -> dict:
                 "final_amount": net_final_amount,     # Haqiqiy qolgan summa
                 "total":        net_final_amount,     # Frontend uchun
                 "item_profit":  item.item_profit,
-                "is_partially_returned": item.returned_quantity > 0
+                "is_partially_returned": item.returned_quantity > 0,
+                "sold_quantity":     item.quantity,
+                "returned_quantity": item.returned_quantity,
+                "unit_type":    _unit(item),
             })
 
+    refunded = round(sum(r.refund_amount for r in (sale.returns or [])), 2)
     return {
         "id":             sale.id,
         "receipt_number": sale.receipt_number,
@@ -76,6 +85,10 @@ def _fmt(sale: models.Sale) -> dict:
         "employee_name":  sale.employee.full_name  if sale.employee  else None,
         "notes":          sale.notes,
         "is_cancelled":   sale.is_cancelled,
+        "cancelled_by_name": sale.canceller.full_name if sale.is_cancelled and sale.canceller else None,
+        "refunded_amount": refunded,
+        "returns_count":  len(sale.returns or []),
+        "fully_returned": not sale.is_cancelled and bool(sale.items) and not formatted_items,
         "created_at":     sale.created_at.isoformat(),
         "items":          formatted_items, # Yangilangan mahsulotlar ro'yxati
     }
@@ -163,10 +176,25 @@ def get_sales_history(
     end_date:       Optional[str] = None,
     payment_method: Optional[str] = None,
     employee_id:    Optional[int] = None,
+    receipt:        Optional[str] = Query(None, max_length=20, description="Chek raqami (sanadan qat'i nazar)"),
+    include_cancelled: bool       = False,
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
     """Sotuvlar tarixi — filter bilan"""
+    if receipt:
+        code = receipt.strip().upper()
+        if code and not code.startswith("CH-"):
+            code = "CH-" + code
+        sales = db.query(models.Sale).options(
+            joinedload(models.Sale.items), joinedload(models.Sale.employee),
+            joinedload(models.Sale.customer), joinedload(models.Sale.returns),
+        ).filter(
+            models.Sale.store_id == employee.store_id,
+            models.Sale.receipt_number.like(f"{code}%"),
+        ).order_by(desc(models.Sale.created_at)).limit(20).all()
+        return [_fmt(x) for x in sales]
+
     start_dt = end_dt = None
     if start_date:
         try:   start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -184,8 +212,61 @@ def get_sales_history(
         employee_id    = employee_id,
         limit          = limit,
         skip           = offset,
+        include_cancelled = include_cancelled,
     )
     return [_fmt(s) for s in sales]
+
+
+# ============================================================
+# DAVR BO'YICHA JAMI (tarix sahifasi tepasidagi raqamlar)
+# ============================================================
+
+@router.get("/summary")
+def get_sales_summary(
+    start_date: Optional[str] = None,
+    end_date:   Optional[str] = None,
+    db:       Session         = Depends(get_db),
+    employee: models.Employee = Depends(get_current_employee),
+):
+    """Sotuvlar soni va summasi (to'lov turi bo'yicha), qaytarishlar — limit'siz, aniq."""
+    from sqlalchemy import func
+    from app.timezone_utils import end_of_day
+    try:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
+        end_dt   = end_of_day(datetime.strptime(end_date, "%Y-%m-%d")) if end_date else None
+    except ValueError:
+        raise HTTPException(400, "Sana YYYY-MM-DD bo'lsin")
+
+    q = db.query(models.Sale.payment_method, func.count(models.Sale.id), func.coalesce(func.sum(models.Sale.total_amount), 0.0)) \
+          .filter(models.Sale.store_id == employee.store_id, models.Sale.is_cancelled == False)  # noqa: E712
+    if start_dt: q = q.filter(models.Sale.created_at >= start_dt)
+    if end_dt:   q = q.filter(models.Sale.created_at <= end_dt)
+    by_method = {"naqd": 0.0, "plastik": 0.0, "nasiya": 0.0}
+    count = 0
+    for pm, n, total in q.group_by(models.Sale.payment_method).all():
+        key = pm.value if hasattr(pm, "value") else str(pm)
+        by_method[key] = round(by_method.get(key, 0.0) + float(total or 0), 2)
+        count += n
+
+    rq = db.query(func.count(models.SaleReturn.id), func.coalesce(func.sum(models.SaleReturn.refund_amount), 0.0)) \
+           .join(models.Sale).filter(models.Sale.store_id == employee.store_id,
+                                     models.Sale.is_cancelled == False)  # noqa: E712  (bekor qilingan chek — jamida ham yo'q)
+    if start_dt: rq = rq.filter(models.SaleReturn.created_at >= start_dt)
+    if end_dt:   rq = rq.filter(models.SaleReturn.created_at <= end_dt)
+    r_count, r_sum = rq.one()
+
+    cq = db.query(func.count(models.Sale.id)).filter(models.Sale.store_id == employee.store_id, models.Sale.is_cancelled == True)  # noqa: E712
+    if start_dt: cq = cq.filter(models.Sale.created_at >= start_dt)
+    if end_dt:   cq = cq.filter(models.Sale.created_at <= end_dt)
+
+    return {
+        "count":          count,
+        "total":          round(sum(by_method.values()), 2),
+        "by_method":      by_method,
+        "returns_count":  r_count,
+        "returns_amount": round(float(r_sum or 0), 2),
+        "cancelled_count": cq.scalar() or 0,
+    }
 
 
 # ============================================================
@@ -222,7 +303,8 @@ def get_all_returns_history(
     # Query yozamiz
     query = db.query(models.SaleReturn)\
         .join(models.Sale)\
-        .filter(models.Sale.store_id == employee.store_id)
+        .filter(models.Sale.store_id == employee.store_id,
+                models.Sale.is_cancelled == False)  # noqa: E712  bekor qilingan chek to'liq omborga qaytgan
 
     if start_dt:
         query = query.filter(models.SaleReturn.created_at >= start_dt)

@@ -55,7 +55,7 @@
             ['/superadmin/requests', 'fa-hand-holding-dollar', "To'lovlar"],
         ] : [
             ['/app/pos',       'fa-cash-register',  'Kassa'],
-            ['/sales/history', 'fa-receipt',        'Tarix'],
+            ['/app/sales',     'fa-receipt',        'Tarix'],
             ['/app/products',  'fa-boxes-stacked',  'Ombor'],
             ['/app/customers', 'fa-users',          'Mijozlar'],
         ].concat(r === 'admin' ? [['/reports', 'fa-chart-column', 'Hisobot']] : [])
@@ -63,7 +63,7 @@
         function active(h) {
             if (h === '/superadmin') return p === h;
             if (h === '/app/pos') return p === '/pos' || p === '/app/pos';
-            if (h === '/sales/history') return p.indexOf('/sales') === 0;
+            if (h === '/app/sales') return p.indexOf('/sales') === 0 || p.indexOf('/app/sales') === 0;
             if (h === '/app/products') return p.indexOf('/products') === 0 || p.indexOf('/app/products') === 0 || p.indexOf('/ai-scan') === 0;
             if (h === '/app/customers') return p.indexOf('/customers') === 0;
             return p.indexOf(h) === 0;

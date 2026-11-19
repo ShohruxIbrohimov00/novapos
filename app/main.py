@@ -379,8 +379,11 @@ app.get("/register",                response_class=HTMLResponse)(_page("register
 @app.get("/pos")
 async def pos_redirect():
     return RedirectResponse("/app/pos", status_code=302)
-app.get("/sales/history",           response_class=HTMLResponse)(_page("sales_history.html"))
-app.get("/sales",                   response_class=HTMLResponse)(_page("sales_history.html"))  # menyu shu manzilga olib boradi
+# ✅ Sotuv tarixi React'ga ko'chirildi
+@app.get("/sales")
+@app.get("/sales/history")
+async def sales_redirect():
+    return RedirectResponse("/app/sales", status_code=302)
 # ✅ Ombor React'ga ko'chirildi — eski manzillar yangisiga yo'naltiriladi
 @app.get("/products")
 async def products_redirect():
