@@ -400,7 +400,10 @@ async def supply_history_redirect():
 @app.get("/products/edit/{product_id}")
 async def product_edit_redirect(product_id: int):
     return RedirectResponse(f"/app/products/{product_id}", status_code=302)
-app.get("/reports",                 response_class=HTMLResponse)(_page("reports.html"))
+# ✅ Hisobot React'ga ko'chirildi
+@app.get("/reports")
+async def reports_redirect():
+    return RedirectResponse("/app/reports", status_code=302)
 app.get("/settings",                response_class=HTMLResponse)(_page("settings.html"))
 # ✅ Mijozlar sahifasi React'ga ko'chirildi — eski manzil yangisiga yo'naltiriladi
 @app.get("/customers")

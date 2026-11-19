@@ -37,7 +37,7 @@ obuna to'laydi, siz esa **superadmin** sifatida hammasini boshqarasiz.
 | **Ombor** | Mahsulot qo'shish va tahrirlash, kategoriyalar, kirim (blok bilan, ta'minotchidan qarzga), qoldiqni tuzatish (inventarizatsiya), kam qolgan tovarlar, ombor qiymati, to'plam (variantlar), kirim tarixi, Excel/AI orqali import |
 | **Sotuv tarixi** | Davr bo'yicha jami (naqd / plastik / nasiya / qaytarilgan), chek raqami, mijoz yoki tovar bo'yicha qidiruv, qisman qaytarish, chekni bekor qilish, chekni qayta chiqarish, qaytarishlar ro'yxati |
 | **Mijozlar** | Nasiya (qarz) hisobi, qarz to'lovlarini qabul qilish, xaridlar tarixi |
-| **Hisobot** | Savdo, foyda, kassadagi naqd pul, chiqimlar, sof foyda, top tovarlar, qarzdorlar, ta'minotchilar |
+| **Hisobot** | Savdo, yalpi va sof foyda, kassaga tushgan pul (naqd / plastik / nasiya), chiqimlar (qo'shish, turlari), eng ko'p sotilganlar, ombor qiymati, qarzdorlar (qarz to'lovi), ta'minotchilar (to'lov, qarz, tarix) |
 | **Xodimlar** | 1 ta admin + 3 tagacha kassir, PIN bilan tezkor kirish |
 | **Superadmin** | Do'konlar, tariflar, obuna to'lovlarini tasdiqlash, do'kon nomidan kirish |
 | **Oflayn** | Internet yo'q paytda ham sotuv, internet qaytganda avtomatik yuboriladi |
@@ -542,7 +542,7 @@ Chekni butunlay bekor qilish — faqat admin.
 | Mahsulot qo'shish, tovar qabul qilish (kirim) | ✅ | ✅ | — |
 | Narxni o'zgartirish, mahsulotni yoki kategoriyani o'chirish, qoldiqni tuzatish | ❌ | ✅ | — |
 | Tannarxdan arzon sotish | ❌ | ✅ | — |
-| Hisobot, foyda, chiqimlar | ❌ | ✅ | — |
+| Hisobot, foyda, chiqimlar, ta'minotchiga to'lov | ❌ | ✅ | — |
 | Xodimlar, do'kon ma'lumotlari | ❌ | ✅ | — |
 | Do'konlar, tariflar, to'lovlarni tasdiqlash | — | — | ✅ |
 
@@ -698,11 +698,12 @@ shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va 
 | Kassa | ✅ React (`/app/pos`) |
 | Ombor, tovar qo'shish/tahrirlash, kirim tarixi | ✅ React (`/app/products`) |
 | Sotuv tarixi | ✅ React (`/app/sales`) |
+| Hisobot | ✅ React (`/app/reports`) |
 | Mijozlar | ✅ React (`/app/customers`) |
-| AI Scan, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+| AI Scan, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
 
 Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
-Eski manzil (masalan `/pos`, `/products`, `/sales`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+Eski manzil (masalan `/pos`, `/products`, `/sales`, `/reports`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
 
 ### Serverga o'rnatishda
 

@@ -47,6 +47,7 @@ export function ReturnModal({ sale, item, onClose, onDone }: { sale: Sale; item:
            footer={<><Button variant="ghost" onClick={onClose}>Bekor</Button>
              <Button variant="danger" icon="fa-rotate-left" loading={busy} disabled={!valid} onClick={submit}>Qaytarish</Button></>}>
       <form className="sl-ret" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         <div className="sl-ret__prod">
           <b>{item.product_name}</b>
           <span>Chekda: {fmtQty(item.quantity)} {unit} × {money(unitPaid)}</span>

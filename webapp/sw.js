@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.4.0';
+const VER      = '7.5.1';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -49,7 +49,7 @@ const STATIC_FILES = [
 
 const PAGES = [
   '/', '/login', '/register',
-  '/reports', '/settings', '/app/',
+  '/settings', '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -69,9 +69,22 @@ self.addEventListener('install', e => {
       caches.open(C_PAGES).then(c =>
         Promise.allSettled(PAGES.map(u => c.add(u)))
       ),
-    ]).then(() => self.skipWaiting())
+    ])
+      // React ilovasining JS/CSS fayllari ham oldindan — aks holda oflaynda bo'sh sahifa ochilishi mumkin
+      .then(() => caches.match('/app/', { cacheName: C_PAGES }))
+      .then(res => res ? res.clone().text().then(_cacheAppAssets) : null)
+      .catch(() => {})
+      .then(() => self.skipWaiting())
   );
 });
+
+// index.html ichidagi /static/app/assets/... fayllarini keshga olish
+async function _cacheAppAssets(html) {
+  const urls = [...new Set((html.match(/\/static\/app\/assets\/[^"'\s>]+/g) || []))];
+  if (!urls.length) return;
+  const cache = await caches.open(C_STATIC);
+  await Promise.allSettled(urls.map(async u => { if (!(await cache.match(u))) await cache.add(u); }));
+}
 
 // ─── ACTIVATE ────────────────────────────────────────────────
 self.addEventListener('activate', e => {
@@ -156,6 +169,7 @@ function _appPath(p) {
   if (p === '/pos') return '/app/pos';
   if (p === '/customers') return '/app/customers';
   if (p === '/sales' || p === '/sales/history') return '/app/sales';
+  if (p === '/reports') return '/app/reports';
   if (p === '/products') return '/app/products';
   if (p === '/products/add') return '/app/products/new';
   if (p === '/products/supply-history') return '/app/products/supply-history';
@@ -174,7 +188,14 @@ async function _swrPage(req) {
   const cached = await cache.match(key);
 
   const net = fetch(req)
-    .then(res => { if (res.ok && !res.redirected) cache.put(key, res.clone()); return res; })
+    .then(res => {
+      if (res.ok && !res.redirected) {
+        cache.put(key, res.clone());
+        // Yangi build chiqqan bo'lsa — uning fayllari ham darhol keshga (keyingi oflayn ochilish uchun)
+        if (key === '/app/') res.clone().text().then(_cacheAppAssets).catch(() => {});
+      }
+      return res;
+    })
     .catch(() => null);
 
   if (cached) { net.catch(() => {}); return cached; }   // darhol ochiladi

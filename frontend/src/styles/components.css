@@ -195,3 +195,8 @@ textarea.ui-input { height: auto; min-height: 88px; padding: var(--s3) var(--s4)
   .ui-page__head { padding: var(--s4) var(--s6); }
   .ui-page__body { padding: var(--s5) var(--s6); }
 }
+
+/* ── Davr tanlagich ── */
+.period-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.period-tabs::-webkit-scrollbar { display: none; }
+.period-dates { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }

@@ -58,7 +58,7 @@
             ['/app/sales',     'fa-receipt',        'Tarix'],
             ['/app/products',  'fa-boxes-stacked',  'Ombor'],
             ['/app/customers', 'fa-users',          'Mijozlar'],
-        ].concat(r === 'admin' ? [['/reports', 'fa-chart-column', 'Hisobot']] : [])
+        ].concat(r === 'admin' ? [['/app/reports', 'fa-chart-column', 'Hisobot']] : [])
          .concat([['/settings', 'fa-gear', 'Sozlama']]);
         function active(h) {
             if (h === '/superadmin') return p === h;

@@ -344,6 +344,7 @@ function AdjustModal({ open, onClose, product, onDone }: { open: boolean; onClos
     <Modal open={open} onClose={onClose} title="Qoldiqni tuzatish"
            footer={<><Button variant="ghost" onClick={onClose}>Bekor</Button><Button icon="fa-check" loading={busy} onClick={submit}>Tasdiqlash</Button></>}>
       <form onSubmit={(e) => { e.preventDefault(); submit(); }} className="pf-form">
+        <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         <p className="pf-help">Hozir tizimda: <b>{fmtQty(product.quantity)} {unit}</b></p>
         <NumField label={`Haqiqiy qoldiq (${unit})`} value={val} onValue={setVal} autoFocus className="pf-big"
                   decimals={product.unit_type !== 'dona' && product.unit_type !== 'blok'} />
