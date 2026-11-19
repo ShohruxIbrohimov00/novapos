@@ -43,12 +43,26 @@ export function Tabs<T extends string>({ items, value, onChange, label }: { item
 }
 
 /** Sahifa: sarlavha qatori + asboblar + aylanadigan kontent */
-export function Page({ title, actions, toolbar, children }: { title: string; actions?: ReactNode; toolbar?: ReactNode; children: ReactNode }) {
+export function Page({ title, actions, toolbar, children, back, sub }: {
+  title: string; actions?: ReactNode; toolbar?: ReactNode; children: ReactNode;
+  /** Orqaga tugmasi (masalan ro'yxatga qaytish) */
+  back?: () => void;
+  /** Sarlavha ostidagi kichik matn */
+  sub?: ReactNode;
+}) {
   return (
     <div className="ui-page">
       <header className="ui-page__head">
         <div className="ui-page__titlerow">
-          <h1 className="ui-page__title">{title}</h1>
+          {back && (
+            <button type="button" className="ui-icon-btn ui-page__back" onClick={back} aria-label="Orqaga" title="Orqaga">
+              <i className="fa-solid fa-arrow-left" aria-hidden="true" />
+            </button>
+          )}
+          <div className="ui-page__titles">
+            <h1 className="ui-page__title">{title}</h1>
+            {sub && <div className="ui-page__sub">{sub}</div>}
+          </div>
           {actions && <div className="ui-page__actions">{actions}</div>}
         </div>
         {toolbar}

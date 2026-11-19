@@ -56,7 +56,7 @@
         ] : [
             ['/app/pos',       'fa-cash-register',  'Kassa'],
             ['/sales/history', 'fa-receipt',        'Tarix'],
-            ['/products',      'fa-boxes-stacked',  'Ombor'],
+            ['/app/products',  'fa-boxes-stacked',  'Ombor'],
             ['/app/customers', 'fa-users',          'Mijozlar'],
         ].concat(r === 'admin' ? [['/reports', 'fa-chart-column', 'Hisobot']] : [])
          .concat([['/settings', 'fa-gear', 'Sozlama']]);
@@ -64,7 +64,7 @@
             if (h === '/superadmin') return p === h;
             if (h === '/app/pos') return p === '/pos' || p === '/app/pos';
             if (h === '/sales/history') return p.indexOf('/sales') === 0;
-            if (h === '/products') return p.indexOf('/products') === 0 || p.indexOf('/ai-scan') === 0;
+            if (h === '/app/products') return p.indexOf('/products') === 0 || p.indexOf('/app/products') === 0 || p.indexOf('/ai-scan') === 0;
             if (h === '/app/customers') return p.indexOf('/customers') === 0;
             return p.indexOf(h) === 0;
         }

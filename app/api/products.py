@@ -18,8 +18,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, Request
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from app import schemas, models, crud
 from app.database import get_db
 from app.dependencies import get_current_employee
@@ -62,12 +61,23 @@ def _is_admin(employee: models.Employee) -> bool:
     return role in ("admin", "super_admin")
 
 
+def _check_category(db: Session, category_id: Optional[int], store_id: int) -> None:
+    """Boshqa do'konning kategoriyasini biriktirib bo'lmaydi"""
+    if category_id is None:
+        return
+    ok = db.query(models.Category.id).filter(
+        models.Category.id == category_id, models.Category.store_id == store_id,
+    ).first()
+    if not ok:
+        raise HTTPException(404, "Kategoriya topilmadi")
+
+
 def _require_admin(employee: models.Employee, what: str) -> None:
     if not _is_admin(employee):
         raise HTTPException(403, f"{what} faqat admin uchun")
 
 
-@router.get("/", response_class=Response)
+@router.get("/")
 async def get_products(
     request:  Request,
     search:   Optional[str] = None,
@@ -101,17 +111,8 @@ async def get_products(
     elif category:
         query = query.join(models.Category).filter(models.Category.name == category)
 
-    products = query.all()
-
-    if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            "inventory_items.html", 
-            {"request": request, "products": products}
-        )
-    
-    # Oddiy JSON qaytarish (agar kerak bo'lsa)
-    import json
-    return Response(content=json.dumps([_fmt(p) for p in products]), media_type="application/json")
+    products = query.options(joinedload(models.Product.category)).order_by(models.Product.name).all()
+    return JSONResponse([_fmt(p) for p in products])
 
 
 # ============================================================
@@ -149,6 +150,16 @@ def create_category(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    data.name = (data.name or "").strip()
+    if not data.name:
+        raise HTTPException(400, "Kategoriya nomini yozing")
+    dup = db.query(models.Category).filter(
+        models.Category.store_id == employee.store_id,
+        models.Category.is_active == True,
+        models.Category.name.ilike(data.name),
+    ).first()
+    if dup:
+        raise HTTPException(400, f"'{dup.name}' kategoriyasi allaqachon bor")
     return crud.create_category(db, data, employee.store_id)
 
 
@@ -158,6 +169,7 @@ def delete_category(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _require_admin(employee, "Kategoriyani o'chirish")
     cat = db.query(models.Category).filter(
         models.Category.id       == cat_id,
         models.Category.store_id == employee.store_id,
@@ -224,6 +236,7 @@ def get_supply_history(
             "total_cost":        b.total_cost,
             "unit_type":         b.product.unit_type.value if b.product and hasattr(b.product.unit_type, "value") else "dona",
             "is_paid":           b.is_paid,
+            "supply_type":       b.supply_type.value if hasattr(b.supply_type, "value") else str(b.supply_type or ""),
             "supplier_name":     b.supplier.name     if b.supplier else None,
             "employee_name":     emp_name,
             "created_at":        b.created_at.isoformat() if b.created_at else None,
@@ -246,6 +259,13 @@ async def create_product(
     ✅ short_code bandligi tekshiriladi
     ✅ WebSocket: product_added broadcast
     """
+    data.name = (data.name or "").strip()
+    if not data.name:
+        raise HTTPException(400, "Mahsulot nomi bo'sh bo'lmasin")
+    data.barcode    = (data.barcode or "").strip() or None
+    data.short_code = (data.short_code or "").strip() or None
+    _check_category(db, data.category_id, employee.store_id)
+
     # short_code bandligi
     if data.short_code:
         exist = db.query(models.Product).filter(
@@ -254,7 +274,7 @@ async def create_product(
             models.Product.is_deleted == False,
         ).first()
         if exist:
-            raise HTTPException(400, f"'{data.short_code}' PLU kodi band!")
+            raise HTTPException(400, f"'{data.short_code}' PLU kodi band: {exist.name}")
 
     # barcode bandligi
     if data.barcode:
@@ -264,9 +284,9 @@ async def create_product(
             models.Product.is_deleted == False,
         ).first()
         if exist:
-            raise HTTPException(400, f"'{data.barcode}' barcode band!")
+            raise HTTPException(400, f"'{data.barcode}' shtrix-kodi band: {exist.name}")
 
-    product = crud.create_product(db, data, employee.store_id)
+    product = crud.create_product(db, data, employee.store_id, created_by=employee.id)
 
     # Broadcast
     await ws_manager.broadcast(
@@ -334,6 +354,24 @@ async def update_product(
         for f in ("price_in", "price_out", "quantity", "min_stock_limit"):
             if f in d and d[f] is not None and float(d[f]) != float(getattr(p, f) or 0):
                 raise HTTPException(403, "Narx va qoldiqni faqat admin o'zgartira oladi")
+    for f in ("barcode", "short_code"):
+        if f in d and isinstance(d[f], str):
+            d[f] = d[f].strip() or None
+    if d.get("name") is not None:
+        d["name"] = d["name"].strip()
+        if not d["name"]:
+            raise HTTPException(400, "Mahsulot nomi bo'sh bo'lmasin")
+    if "category_id" in d:
+        _check_category(db, d["category_id"], employee.store_id)
+    if d.get("barcode"):
+        exist = db.query(models.Product).filter(
+            models.Product.store_id   == employee.store_id,
+            models.Product.barcode    == d["barcode"],
+            models.Product.is_deleted == False,
+            models.Product.id         != product_id,
+        ).first()
+        if exist:
+            raise HTTPException(400, f"'{d['barcode']}' shtrix-kodi band: {exist.name}")
     if "short_code" in d and d["short_code"]:
         exist = db.query(models.Product).filter(
             models.Product.store_id   == employee.store_id,
@@ -342,7 +380,7 @@ async def update_product(
             models.Product.id         != product_id,
         ).first()
         if exist:
-            raise HTTPException(400, f"'{d['short_code']}' PLU kodi band!")
+            raise HTTPException(400, f"'{d['short_code']}' PLU kodi band: {exist.name}")
 
     for k, v in d.items():
         setattr(p, k, v)
@@ -414,11 +452,21 @@ async def create_supply_batch(
     ✅ WebSocket: stock_updated broadcast
     """
     p = db.query(models.Product).filter(
-        models.Product.id       == data.product_id,
-        models.Product.store_id == employee.store_id,
+        models.Product.id         == data.product_id,
+        models.Product.store_id   == employee.store_id,
+        models.Product.is_deleted == False,
     ).first()
     if not p:
         raise HTTPException(404, "Mahsulot topilmadi")
+    if data.supplier_id is not None:
+        sup = db.query(models.Supplier).filter(
+            models.Supplier.id       == data.supplier_id,
+            models.Supplier.store_id == employee.store_id,
+        ).first()
+        if not sup:
+            raise HTTPException(404, "Ta'minotchi topilmadi")
+    if not data.is_paid and data.supplier_id is None:
+        raise HTTPException(400, "Qarzga olingan tovar uchun ta'minotchini tanlang")
     # ✅ Kassir tovar qabul qila oladi, lekin sotuv narxini o'zgartira olmaydi
     if (not _is_admin(employee) and data.price_out
             and float(data.price_out) != float(p.price_out or 0)):
@@ -459,15 +507,16 @@ async def create_supply_batch(
 async def adjust_stock(
     product_id:   int,
     new_quantity: float = Query(..., ge=0, description="Yangi haqiqiy qoldiq"),
-    reason:       Optional[str] = None,
-    notes:        Optional[str] = None,
+    reason:       Optional[models.AdjustmentReason] = Query(None, description="inventarizatsiya | shikastlangan | qaytarish | tuzatish | boshqa"),
+    notes:        Optional[str] = Query(None, max_length=300),
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
     """
     Inventarizatsiya — qoldiqni to'g'rilash.
-    StockAdjustment yoziladi.
+    StockAdjustment yoziladi. ✅ Faqat admin.
     """
+    _require_admin(employee, "Qoldiqni tuzatish")
     p = db.query(models.Product).filter(
         models.Product.id       == product_id,
         models.Product.store_id == employee.store_id,
@@ -544,26 +593,3 @@ def bulk_update_limits(
     db.commit()
 
     return {"status": "success", "updated_count": len(products), "unit": unit, "new_limit": new_limit}
-
-
-# Fayl oxiridagi templates qismini main.py bilan bir xil qilamiz
-# main.py loyiha rootidan ishga tushishini hisobga olsak:
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-templates = Jinja2Templates(directory=str(BASE_DIR / "webapp" / "templates"))
-
-@router.get("/pos/products-fragment", response_class=HTMLResponse)
-async def get_products_fragment(
-    request:  Request,
-    db:       Session         = Depends(get_db),
-    employee: models.Employee = Depends(get_current_employee),
-):
-    """Kassa uchun mahsulotlar gridini tayyor HTML ko'rinishida qaytaradi"""
-    products = db.query(models.Product).filter(
-        models.Product.store_id == employee.store_id,
-        models.Product.is_deleted == False
-    ).all()
-    
-    return templates.TemplateResponse(
-        "pos_products_list.html",
-        {"request": request, "products": products}
-    )

@@ -33,3 +33,20 @@ export const PAYMENT_LABEL: Record<string, string> = {
   plastik: 'Plastik karta',
   nasiya: 'Nasiya',
 };
+
+/** Foydalanuvchi yozgan sonni o'qish: "12 500", "1,5" → 12500, 1.5. Bo'sh/xato → NaN */
+export function parseNum(s: string | number | null | undefined): number {
+  if (typeof s === 'number') return s;
+  const t = String(s ?? '').replace(/[\s ]/g, '').replace(',', '.');
+  if (!t) return NaN;
+  return /^-?\d*\.?\d+$/.test(t) || /^-?\d+\.$/.test(t) ? Number(t) : NaN;
+}
+
+/** Raqam maydoni uchun: faqat raqam va bitta nuqta/vergul qoldiradi */
+export function cleanNumInput(s: string, decimals = true): string {
+  let t = s.replace(/[^\d.,]/g, '').replace(',', '.');
+  if (!decimals) return t.replace(/\./g, '');
+  const i = t.indexOf('.');
+  if (i >= 0) t = t.slice(0, i + 1) + t.slice(i + 1).replace(/\./g, '');
+  return t;
+}

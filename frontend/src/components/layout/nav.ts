@@ -22,7 +22,7 @@ export function navLinks(role: Role | undefined): NavLink[] {
   const links: NavLink[] = [
     { to: '/app/pos', icon: 'fa-cash-register', label: 'Kassa', spa: true, match: ['/app/pos', '/pos'] },
     { to: '/sales/history', icon: 'fa-receipt', label: 'Tarix', match: ['/sales'] },
-    { to: '/products', icon: 'fa-boxes-stacked', label: 'Ombor', match: ['/products', '/ai-scan'] },
+    { to: '/app/products', icon: 'fa-boxes-stacked', label: 'Ombor', spa: true, match: ['/app/products', '/products', '/ai-scan'] },
     { to: '/app/customers', icon: 'fa-users', label: 'Mijozlar', spa: true, match: ['/app/customers', '/customers'] },
   ];
   if (role === 'admin') links.push({ to: '/reports', icon: 'fa-chart-column', label: 'Hisobot', match: ['/reports'] });

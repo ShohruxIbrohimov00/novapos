@@ -3,6 +3,10 @@ import { AppShell } from '@/components/layout/AppShell';
 import { ConfirmProvider, ToastProvider } from '@/components/ui';
 import { CustomersPage } from '@/pages/customers/CustomersPage';
 import { PosPage } from '@/pages/pos/PosPage';
+import { NewProductPage } from '@/pages/products/NewProductPage';
+import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
+import { ProductsPage } from '@/pages/products/ProductsPage';
+import { SupplyHistoryPage } from '@/pages/products/SupplyHistoryPage';
 
 /**
  * React ilovasi /app/... manzilida ishlaydi. Sahifalar bosqichma-bosqich ko'chiriladi;
@@ -17,6 +21,10 @@ export function App() {
             <Routes>
               <Route path="/pos" element={<PosPage />} />
               <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/new" element={<NewProductPage />} />
+              <Route path="/products/supply-history" element={<SupplyHistoryPage />} />
+              <Route path="/products/:id" element={<ProductDetailPage />} />
               <Route path="*" element={<Navigate to="/pos" replace />} />
             </Routes>
           </AppShell>

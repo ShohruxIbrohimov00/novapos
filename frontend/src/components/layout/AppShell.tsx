@@ -6,7 +6,7 @@ import { useConfirm } from '@/components/ui';
 import { isActive, navLinks, type NavLink } from './nav';
 import './shell.css';
 
-const ROLE_LABEL = { admin: 'Administrator', cashier: 'Kassir', super_admin: 'SuperAdmin' } as const;
+const ROLE_LABEL: Record<string, string> = { admin: 'Administrator', sotuvchi: 'Kassir', cashier: 'Kassir', super_admin: 'SuperAdmin' };
 
 function NavItem({ link, path }: { link: NavLink; path: string }) {
   const active = isActive(link, path);
@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="sidebar__ava" aria-hidden="true">{(user?.full_name || '?').trim().charAt(0).toUpperCase()}</div>
             <div className="sidebar__usertext">
               <b>{user?.full_name}</b>
-              <small>{user ? ROLE_LABEL[user.role] : ''}</small>
+              <small>{user ? ROLE_LABEL[user.role] ?? '' : ''}</small>
             </div>
           </div>
           <span className={`net-dot${online ? ' is-on' : ''}`} title={online ? 'Internet bor' : "Internet yo'q"} />

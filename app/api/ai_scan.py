@@ -636,7 +636,7 @@ async def confirm_scan(
                 category_id = category_id,
                 description = None,
             )
-            new_product = crud.create_product(db, product_data, employee.store_id)
+            new_product = crud.create_product(db, product_data, employee.store_id, created_by=employee.id)
             added_new  += 1
 
             await ws_manager.broadcast(

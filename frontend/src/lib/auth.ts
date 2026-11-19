@@ -1,7 +1,8 @@
 // Sessiya — eski sahifalar bilan UMUMIY (bir xil localStorage kalitlari),
 // shuning uchun eski va yangi sahifalar orasida qayta kirish shart emas.
 
-export type Role = 'admin' | 'cashier' | 'super_admin';
+/** Backend kassirni 'sotuvchi' deb yuboradi */
+export type Role = 'admin' | 'sotuvchi' | 'cashier' | 'super_admin';
 
 export interface UserInfo {
   user_id: number;
