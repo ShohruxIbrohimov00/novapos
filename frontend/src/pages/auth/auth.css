@@ -1,0 +1,59 @@
+/* ═══ KIRISH / RO'YXATDAN O'TISH ═══
+   Telefon: bitta karta · Kompyuter (1024+): chapda tanishtiruv, o'ngda forma */
+.au-page { min-height: 100vh; min-height: 100dvh; display: grid; background: var(--bg); position: relative; }
+@media (min-width: 1024px) { .au-page { grid-template-columns: minmax(0, 1fr) minmax(460px, 560px); } }
+.au-theme { position: absolute; top: max(var(--s3), env(safe-area-inset-top)); right: var(--s3); z-index: 2; }
+
+.au-side { display: none; }
+@media (min-width: 1024px) {
+  .au-side {
+    display: flex; flex-direction: column; justify-content: center; gap: var(--s5); padding: var(--s8);
+    background: linear-gradient(150deg, var(--primary), #7c3aed); color: #fff;
+  }
+  .au-side h2 { margin: 0; font-size: 34px; line-height: 1.2; font-weight: 900; max-width: 520px; }
+  .au-side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); font-size: var(--fs-md); font-weight: 600; }
+  .au-side li i { width: 28px; opacity: .9; }
+  .au-side .brand-mark { background: rgba(255, 255, 255, .2); }
+}
+.au-brand { display: flex; align-items: center; gap: var(--s2); font-weight: 900; font-size: var(--fs-xl); }
+.au-brand--card { justify-content: center; margin-bottom: var(--s2); }
+@media (min-width: 1024px) { .au-brand--card { display: none; } }
+
+.au-main { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s4); padding: var(--s6) var(--s4); }
+.au-card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl); padding: var(--s5); box-shadow: var(--sh-lg); display: flex; flex-direction: column; gap: var(--s4); }
+@media (min-width: 640px) { .au-card { padding: var(--s6); } }
+.au-foot { margin: 0; color: var(--text3); font-size: var(--fs-sm); font-weight: 600; }
+
+.au-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface2); padding: 4px; border-radius: var(--r-md); }
+.au-tab { text-align: center; padding: var(--s3); border-radius: 10px; font-weight: 800; color: var(--text2); text-decoration: none; }
+.au-tab[aria-current='page'] { background: var(--surface); color: var(--primary); box-shadow: var(--sh-sm); }
+
+.au-form { display: flex; flex-direction: column; gap: var(--s3); }
+.au-form .ui-tabs { align-self: center; }
+.au-pwd { position: relative; }
+.au-eye { position: absolute; right: 4px; bottom: 4px; background: transparent; }
+.au-err { padding: var(--s3); border-radius: var(--r-md); background: var(--danger-s); color: var(--danger); font-weight: 700; font-size: var(--fs-sm); }
+.au-hint { margin: 0; text-align: center; font-size: var(--fs-xs); color: var(--text3); }
+.au-fs { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); }
+.au-fs legend { font-size: var(--fs-xs); font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: var(--s2); }
+
+.au-pin { display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+.au-pin .ui-field__label { align-self: flex-start; }
+.au-dots { display: flex; gap: var(--s3); min-height: 18px; }
+.au-dots span { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border2); transition: background .12s, border-color .12s; }
+.au-dots span.on { background: var(--primary); border-color: var(--primary); }
+.au-dots.is-shake { animation: au-shake .4s; }
+.au-dots.is-shake span.on, .au-dots.is-shake span { border-color: var(--danger); }
+@keyframes au-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@media (prefers-reduced-motion: reduce) { .au-dots.is-shake { animation: none; } }
+.au-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); width: 100%; max-width: 300px; }
+.au-key { height: 56px; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--surface2); font-size: 22px; font-weight: 800; color: var(--text); }
+.au-key:active { transform: scale(.96); background: var(--primary-s); }
+.au-key--fn { font-size: var(--fs-md); color: var(--text3); }
+.au-card { min-width: 0; }
+.au-card .ui-btn { white-space: normal; text-align: center; }
+.au-brand .brand-mark {
+  width: 36px; height: 36px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--primary); color: #fff; font-size: 16px; box-shadow: var(--sh-pri);
+}
+@media (max-width: 1023px) { .au-main { padding-top: calc(var(--s8) + env(safe-area-inset-top, 0px)); } }

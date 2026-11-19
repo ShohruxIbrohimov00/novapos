@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.6.0';
+const VER      = '7.7.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -48,7 +48,7 @@ const STATIC_FILES = [
 ];
 
 const PAGES = [
-  '/', '/login', '/register',
+  '/',
   '/app/',
 ];
 
@@ -167,6 +167,8 @@ async function _cacheFirst(req) {
 // Eski manzil → React manzili (server ham xuddi shunday yo'naltiradi; SW esa oflaynda ham)
 function _appPath(p) {
   if (p === '/pos') return '/app/pos';
+  if (p === '/login') return '/app/login';
+  if (p === '/register') return '/app/register';
   if (p === '/customers') return '/app/customers';
   if (p === '/sales' || p === '/sales/history') return '/app/sales';
   if (p === '/reports') return '/app/reports';

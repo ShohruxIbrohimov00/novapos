@@ -37,6 +37,6 @@ export async function logout(): Promise<LogoutResult> {
   } catch { /* IDB yo'q */ }
   clearSession();
   try { localStorage.removeItem('pos_cart_v2'); } catch { /* xotira yopiq */ }
-  location.href = '/login';
+  location.href = '/app/login';
   return { ok: true };
 }

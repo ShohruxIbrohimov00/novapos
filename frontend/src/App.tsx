@@ -1,6 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { ConfirmProvider, ToastProvider } from '@/components/ui';
+import { AuthPage } from '@/pages/auth/AuthPage';
 import { CustomersPage } from '@/pages/customers/CustomersPage';
 import { PosPage } from '@/pages/pos/PosPage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
@@ -20,8 +21,11 @@ export function App() {
     <BrowserRouter basename="/app">
       <ToastProvider>
         <ConfirmProvider>
-          <AppShell>
-            <Routes>
+          <Routes>
+            {/* Kirish sahifalari — menyusiz */}
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
+            <Route element={<AppShell><Outlet /></AppShell>}>
               <Route path="/pos" element={<PosPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/sales" element={<SalesPage />} />
@@ -32,8 +36,8 @@ export function App() {
               <Route path="/products/supply-history" element={<SupplyHistoryPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
               <Route path="*" element={<Navigate to="/pos" replace />} />
-            </Routes>
-          </AppShell>
+            </Route>
+          </Routes>
         </ConfirmProvider>
       </ToastProvider>
     </BrowserRouter>

@@ -373,8 +373,14 @@ def _page(template: str):
     return _handler
 
 app.get("/",                        response_class=HTMLResponse)(_page("index.html"))
-app.get("/login",                   response_class=HTMLResponse)(_page("login.html"))
-app.get("/register",                response_class=HTMLResponse)(_page("register.html"))
+# ✅ Kirish va ro'yxatdan o'tish React'ga ko'chirildi
+@app.get("/login")
+async def login_redirect():
+    return RedirectResponse("/app/login", status_code=302)
+
+@app.get("/register")
+async def register_redirect():
+    return RedirectResponse("/app/register", status_code=302)
 # ✅ Kassa React'ga ko'chirildi
 @app.get("/pos")
 async def pos_redirect():

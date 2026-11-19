@@ -59,7 +59,7 @@ export async function api<T = unknown>(path: string, method: Method = 'GET', bod
 
   if (res.status === 401 && !AUTH_CALL.test(url)) {
     clearSession();
-    location.replace('/login');
+    if (!location.pathname.startsWith('/app/login')) location.replace('/app/login');
     throw new ApiError('Sessiya tugagan', 401);
   }
   if (res.status === 402) {

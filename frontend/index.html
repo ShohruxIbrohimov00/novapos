@@ -28,7 +28,8 @@
           ok = Date.now() < pl.exp * 1000 - 30000;
         }
       } catch (e) {}
-      if (!ok) location.replace('/login');
+      // Kirish sahifalarida tekshiruv yo'q (aks holda cheksiz aylanadi)
+      if (!ok && !/^\/app\/(login|register)/.test(location.pathname)) location.replace('/app/login');
     })();
   </script>
 </head>
