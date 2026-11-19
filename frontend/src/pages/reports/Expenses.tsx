@@ -83,7 +83,7 @@ function ExpenseModal({ open, onClose, onSaved }: { open: boolean; onClose: () =
   return (
     <Modal open={open} onClose={onClose} title="Chiqim qo'shish"
            footer={<><Button variant="ghost" onClick={onClose}>Bekor</Button><Button icon="fa-check" loading={busy} onClick={save}>Saqlash</Button></>}>
-      <form className="pf-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
+      <form className="pf-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
         <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         <NumField label="Summa" isMoney required autoFocus value={amount} onValue={(v) => { setAmount(v); setErr(null); }} error={err} className="pf-big" placeholder="0" />
         <div className="ui-field">

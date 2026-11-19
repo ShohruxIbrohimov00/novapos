@@ -5,6 +5,7 @@ import { CustomersPage } from '@/pages/customers/CustomersPage';
 import { PosPage } from '@/pages/pos/PosPage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { SalesPage } from '@/pages/sales/SalesPage';
+import { SettingsPage } from '@/pages/settings/SettingsPage';
 import { NewProductPage } from '@/pages/products/NewProductPage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
 import { ProductsPage } from '@/pages/products/ProductsPage';
@@ -25,6 +26,7 @@ export function App() {
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/products/new" element={<NewProductPage />} />
               <Route path="/products/supply-history" element={<SupplyHistoryPage />} />

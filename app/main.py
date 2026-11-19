@@ -404,7 +404,10 @@ async def product_edit_redirect(product_id: int):
 @app.get("/reports")
 async def reports_redirect():
     return RedirectResponse("/app/reports", status_code=302)
-app.get("/settings",                response_class=HTMLResponse)(_page("settings.html"))
+# ✅ Sozlamalar React'ga ko'chirildi
+@app.get("/settings")
+async def settings_redirect():
+    return RedirectResponse("/app/settings", status_code=302)
 # ✅ Mijozlar sahifasi React'ga ko'chirildi — eski manzil yangisiga yo'naltiriladi
 @app.get("/customers")
 async def customers_redirect():

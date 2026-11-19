@@ -26,7 +26,7 @@ export function navLinks(role: Role | undefined): NavLink[] {
     { to: '/app/customers', icon: 'fa-users', label: 'Mijozlar', spa: true, match: ['/app/customers', '/customers'] },
   ];
   if (role === 'admin') links.push({ to: '/app/reports', icon: 'fa-chart-column', label: 'Hisobot', spa: true, match: ['/app/reports', '/reports'] });
-  links.push({ to: '/settings', icon: 'fa-gear', label: 'Sozlama', match: ['/settings'] });
+  links.push({ to: '/app/settings', icon: 'fa-gear', label: 'Sozlama', spa: true, match: ['/app/settings', '/settings'] });
   return links;
 }
 

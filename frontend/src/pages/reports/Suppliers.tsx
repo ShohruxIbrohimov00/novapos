@@ -71,7 +71,7 @@ function SupplierForm({ value, onClose, onSaved }: { value: Supplier | 'new' | n
   return (
     <Modal open={!!value} onClose={onClose} title={editing ? "Ta'minotchini tahrirlash" : "Yangi ta'minotchi"}
            footer={<><Button variant="ghost" onClick={onClose}>Bekor</Button><Button icon="fa-check" loading={busy} onClick={save}>Saqlash</Button></>}>
-      <form className="pf-form" onSubmit={(e) => { e.preventDefault(); save(); }}>
+      <form className="pf-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
         <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         <Field label="Nomi" required autoFocus placeholder="Masalan: Coca-Cola Uzbekistan" value={name} error={err} onChange={(e) => { setName(e.target.value); setErr(null); }} maxLength={100} />
         <Field label="Telefon" type="tel" inputMode="tel" placeholder="+998 90 123 45 67" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} />
@@ -131,7 +131,7 @@ function SupplierModal({ supplier, onClose, onChanged, onEdit }: { supplier: Sup
           <Stat label="Jami to'langan" value={money(supplier.total_paid)} tone="success" />
         </div>
 
-        <form className="cust-pay" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <form className="cust-pay" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
           <Tabs label="Amal" value={act} onChange={(v) => { setAct(v); setErr(null); }}
                 items={[{ value: 'pay', label: "To'lov qilish" }, { value: 'debt', label: "Qarzni qo'lda yozish" }]} />
           {act === 'debt' && <p className="rp-hint">Tovar omborga kiritilmagan bo'lsa ham qarzni yozib qo'yish uchun. Tovar bilan birga qarz — Ombor → tovar → Kirim → "Qarzga".</p>}

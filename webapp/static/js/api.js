@@ -290,8 +290,8 @@ function _handleUnauthorized() {
 // ── Auth: 402 (paywall) ───────────────────────────────────────
 function _handlePaywall(code) {
   // Obuna tugagan: to'lov Sozlamalar → "Obuna & To'lov" bo'limida qilinadi
-  if (!location.pathname.startsWith('/settings')) {
-    location.href = '/settings#obuna';
+  if (!/^\/(app\/)?settings/.test(location.pathname)) {
+    location.href = '/app/settings#obuna';
     return;
   }
   if (!window._paywallToastShown) {

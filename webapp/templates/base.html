@@ -59,7 +59,7 @@
             ['/app/products',  'fa-boxes-stacked',  'Ombor'],
             ['/app/customers', 'fa-users',          'Mijozlar'],
         ].concat(r === 'admin' ? [['/app/reports', 'fa-chart-column', 'Hisobot']] : [])
-         .concat([['/settings', 'fa-gear', 'Sozlama']]);
+         .concat([['/app/settings', 'fa-gear', 'Sozlama']]);
         function active(h) {
             if (h === '/superadmin') return p === h;
             if (h === '/app/pos') return p === '/pos' || p === '/app/pos';

@@ -59,7 +59,7 @@ export function CategoriesModal({ open, onClose, categories, counts, onChanged, 
 
   return (
     <Modal open={open} onClose={onClose} title={onPick ? 'Kategoriya tanlash' : 'Kategoriyalar'}>
-      <form className="inv-catadd" onSubmit={(e) => { e.preventDefault(); add(); }}>
+      <form className="inv-catadd" onSubmit={(e) => { e.preventDefault(); add(); }} noValidate>
         <Field ref={inputRef} placeholder="Yangi kategoriya nomi" value={name} error={err} aria-label="Yangi kategoriya nomi"
                onChange={(e) => { setName(e.target.value); setErr(null); }} maxLength={60} />
         <Button type="submit" icon="fa-plus" loading={busy}>Qo'shish</Button>
