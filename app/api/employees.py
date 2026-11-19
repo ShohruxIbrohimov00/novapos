@@ -283,6 +283,17 @@ def toggle_employee(
                 400,
                 "Obuna muddati tugagan. Avval obunani yangilang, so'ng xodimlarni faollashtiring."
             )
+        # ✅ Faollashtirishda ham limit (avval bloklab-ochish orqali 3 tadan ko'p kassir qilish mumkin edi)
+        active = db.query(models.Employee).filter(
+            models.Employee.store_id == employee.store_id, models.Employee.is_active == True,  # noqa: E712
+        )
+        same_role = active.filter(models.Employee.role == target.role).count()
+        if target.role == models.EmployeeRole.cashier and same_role >= 3:
+            raise HTTPException(400, "Maksimal 3 ta faol sotuvchi bo'lishi mumkin. Avval boshqasini bloklang.")
+        if target.role == models.EmployeeRole.admin and same_role >= 1:
+            raise HTTPException(400, "Do'konda faqat 1 ta faol admin bo'lishi mumkin")
+        if active.count() >= 4:
+            raise HTTPException(400, "Limit to'ldi: maks 4 ta faol xodim (1 Admin + 3 Sotuvchi)")
 
     target.is_active = not target.is_active
     db.commit(); db.refresh(target)

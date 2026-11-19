@@ -85,9 +85,9 @@ export function ProductsPage() {
         <Link to="/products/supply-history" className="ui-btn ui-btn--ghost inv-hbtn" title="Kirim tarixi">
           <i className="fa-solid fa-clock-rotate-left" aria-hidden="true" /><span className="inv-hbtn__label">Kirim tarixi</span>
         </Link>
-        <a href="/ai-scan" className="ui-btn ui-btn--ghost inv-hbtn inv-hbtn--ai" title="AI orqali qo'shish (rasm yoki Excel)">
+        <Link to="/products/ai" className="ui-btn ui-btn--ghost inv-hbtn inv-hbtn--ai" title="AI orqali qo'shish (rasm yoki Excel)">
           <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /><span className="inv-hbtn__label">AI</span>
-        </a>
+        </Link>
         <Link to="/products/new" className="ui-btn ui-btn--primary inv-hbtn" title="Tovar qo'shish">
           <i className="fa-solid fa-plus" aria-hidden="true" /><span className="inv-hbtn__label">Qo'shish</span>
         </Link>

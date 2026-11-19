@@ -94,6 +94,7 @@ def get_dashboard(
         func.coalesce(func.sum(models.SaleReturn.refund_amount), 0)
     ).join(models.Sale).filter(
         models.Sale.store_id         == store_id,
+        models.Sale.is_cancelled     == False,   # bekor qilingan chek savdoda ham yo'q
         models.SaleReturn.created_at >= start_dt,
         models.SaleReturn.created_at <= end_dt,
     ).scalar() or 0.0

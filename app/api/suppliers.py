@@ -56,6 +56,12 @@ def _fmt(s: models.Supplier) -> dict:
     }
 
 
+def _require_admin(employee: models.Employee, what: str) -> None:
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin"):
+        raise HTTPException(403, f"{what} faqat admin uchun")
+
+
 def _get_or_404(db: Session, supplier_id: int, store_id: int) -> models.Supplier:
     s = crud.get_supplier(db, supplier_id)
     if not s or s.store_id != store_id:
@@ -71,7 +77,11 @@ def pay_supplier(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
-    """Ta'minotchiga to'lov — qarzni kamaytiradi"""
+    """Ta'minotchiga to'lov — qarzni kamaytiradi. ✅ Faqat admin (kassadan pul chiqadi)."""
+    _require_admin(employee, "Ta'minotchiga to'lov")
+    m = data.payment_method.value if hasattr(data.payment_method, "value") else str(data.payment_method)
+    if m not in ("naqd", "plastik"):
+        raise HTTPException(400, "To'lov usuli: naqd yoki plastik")
     _get_or_404(db, data.supplier_id, employee.store_id)
     try:
         crud.create_supplier_payment(db, data, employee.id)
@@ -91,7 +101,9 @@ def receive_goods(
     """
     Ta'minotchidan tovar qabul — qarzni OSHIRADI (manual qayd).
     Mahsulot qoldig'ini o'zgartirmaydi — buning uchun /products/supply_batches ishlatiladi.
+    ✅ Faqat admin.
     """
+    _require_admin(employee, "Qarzni qo'lda yozish")
     s = _get_or_404(db, data.supplier_id, employee.store_id)
 
     # SupplierPayment ga [KIRIM] sifatida yozamiz
@@ -135,10 +147,13 @@ def create_supplier(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    data.name = (data.name or "").strip()
+    if not data.name:
+        raise HTTPException(400, "Ta'minotchi nomini yozing")
     # Nom bandligi
     exist = db.query(models.Supplier).filter(
         models.Supplier.store_id  == employee.store_id,
-        models.Supplier.name      == data.name,
+        models.Supplier.name.ilike(data.name),
         models.Supplier.is_active == True,
     ).first()
     if exist:
@@ -164,7 +179,18 @@ def update_supplier(
     employee: models.Employee = Depends(get_current_employee),
 ):
     s = _get_or_404(db, supplier_id, employee.store_id)
-    for k, v in data.model_dump(exclude_unset=True).items():
+    d = data.model_dump(exclude_unset=True)
+    if "name" in d:
+        d["name"] = (d["name"] or "").strip()
+        if not d["name"]:
+            raise HTTPException(400, "Ta'minotchi nomini yozing")
+        dup = db.query(models.Supplier).filter(
+            models.Supplier.store_id == employee.store_id, models.Supplier.is_active == True,  # noqa: E712
+            models.Supplier.name.ilike(d["name"]), models.Supplier.id != supplier_id,
+        ).first()
+        if dup:
+            raise HTTPException(400, f"'{d['name']}' nomli ta'minotchi allaqachon mavjud")
+    for k, v in d.items():
         setattr(s, k, v)
     db.commit(); db.refresh(s)
     return _fmt(s)
@@ -235,6 +261,10 @@ def get_supplier_history(
             "date":     b.created_at.isoformat() if b.created_at else datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             "note":     f"{b.quantity_received} dona × {price_str} so'm",
             "method":   "",
+            "product_name": b.product.name if b.product else None,
+            "unit_type":    (b.product.unit_type.value if b.product and hasattr(b.product.unit_type, "value") else "dona"),
+            "unit_price":   b.supply_price,
+            "is_paid":      b.is_paid,
         })
 
     history.sort(key=lambda x: x["date"], reverse=True)

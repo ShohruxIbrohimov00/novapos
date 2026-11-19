@@ -28,11 +28,12 @@
           ok = Date.now() < pl.exp * 1000 - 30000;
         }
       } catch (e) {}
-      if (!ok) location.replace('/login');
+      // Kirish sahifalarida tekshiruv yo'q (aks holda cheksiz aylanadi)
+      if (!ok && !/^\/app\/(login|register)/.test(location.pathname)) location.replace('/app/login');
     })();
   </script>
-  <script type="module" crossorigin src="/static/app/assets/index-CsjQMXc3.js"></script>
-  <link rel="stylesheet" crossorigin href="/static/app/assets/index-BPI9xX6Q.css">
+  <script type="module" crossorigin src="/static/app/assets/index-DjndYux6.js"></script>
+  <link rel="stylesheet" crossorigin href="/static/app/assets/index-CrFxZMem.css">
 </head>
 <body>
   <div id="root"></div>

@@ -10,13 +10,13 @@ export interface NavLink {
   match: string[];
 }
 
-// Ko'chirilgan sahifalar `spa: true`. Qolganlari hozircha eski sahifaga oddiy havola.
+// Hamma sahifa React ichida (`spa: true` — sahifa qayta yuklanmaydi).
 export function navLinks(role: Role | undefined): NavLink[] {
   if (role === 'super_admin') {
     return [
-      { to: '/superadmin', icon: 'fa-chart-pie', label: 'Panel', match: ['/superadmin$'] },
-      { to: '/superadmin/stores', icon: 'fa-shop', label: "Do'konlar", match: ['/superadmin/stores'] },
-      { to: '/superadmin/requests', icon: 'fa-hand-holding-dollar', label: "To'lovlar", match: ['/superadmin/requests'] },
+      { to: '/app/superadmin', icon: 'fa-chart-pie', label: 'Panel', spa: true, match: ['/app/superadmin$', '/superadmin$'] },
+      { to: '/app/superadmin/stores', icon: 'fa-shop', label: "Do'konlar", spa: true, match: ['/app/superadmin/stores', '/superadmin/stores'] },
+      { to: '/app/superadmin/requests', icon: 'fa-hand-holding-dollar', label: "To'lovlar", spa: true, match: ['/app/superadmin/requests', '/superadmin/requests'] },
     ];
   }
   const links: NavLink[] = [
@@ -25,8 +25,8 @@ export function navLinks(role: Role | undefined): NavLink[] {
     { to: '/app/products', icon: 'fa-boxes-stacked', label: 'Ombor', spa: true, match: ['/app/products', '/products', '/ai-scan'] },
     { to: '/app/customers', icon: 'fa-users', label: 'Mijozlar', spa: true, match: ['/app/customers', '/customers'] },
   ];
-  if (role === 'admin') links.push({ to: '/reports', icon: 'fa-chart-column', label: 'Hisobot', match: ['/reports'] });
-  links.push({ to: '/settings', icon: 'fa-gear', label: 'Sozlama', match: ['/settings'] });
+  if (role === 'admin') links.push({ to: '/app/reports', icon: 'fa-chart-column', label: 'Hisobot', spa: true, match: ['/app/reports', '/reports'] });
+  links.push({ to: '/app/settings', icon: 'fa-gear', label: 'Sozlama', spa: true, match: ['/app/settings', '/settings'] });
   return links;
 }
 

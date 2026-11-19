@@ -59,11 +59,12 @@ export async function api<T = unknown>(path: string, method: Method = 'GET', bod
 
   if (res.status === 401 && !AUTH_CALL.test(url)) {
     clearSession();
-    location.replace('/login');
+    if (!location.pathname.startsWith('/app/login')) location.replace('/app/login');
     throw new ApiError('Sessiya tugagan', 401);
   }
   if (res.status === 402) {
-    if (!location.pathname.startsWith('/settings')) location.href = '/settings#obuna';
+    // Sozlamalarda (to'lov qilinadigan joy) qayta yo'naltirilmaydi — aks holda cheksiz aylanadi
+    if (!/^\/(app\/)?settings/.test(location.pathname)) location.href = '/app/settings#obuna';
     throw new ApiError("Obuna muddati tugagan. To'lov qiling.", 402);
   }
   if (!res.ok) throw new ApiError(detailToMessage(data?.detail ?? data), res.status);

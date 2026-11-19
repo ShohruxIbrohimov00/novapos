@@ -92,8 +92,16 @@ async def register_store(
     store_name = store_name.strip()
     username   = username.strip().lower()
 
+    full_name  = (full_name or "").strip()
     if not store_name:
         raise HTTPException(400, "Do'kon nomi bo'sh bo'lishi mumkin emas")
+    if len(full_name) < 2:
+        raise HTTPException(400, "Ismingizni yozing")
+    import re as _re
+    if not _re.fullmatch(r"[a-z0-9_.]{3,30}", username):
+        raise HTTPException(400, "Login: 3–30 ta lotin harf, raqam, _ yoki . (bo'sh joysiz)")
+    if len(pin_code) > 8:
+        raise HTTPException(400, "PIN ko'pi bilan 8 ta raqam")
     if len(password) < 4:
         raise HTTPException(400, "Parol kamida 4 belgi bo'lsin")
     if not pin_code.isdigit() or len(pin_code) < 4:
@@ -164,6 +172,8 @@ async def login(
         raise HTTPException(401, "Login yoki parol noto'g'ri")
     if not employee.is_active:
         raise HTTPException(403, "Hisobingiz bloklangan. Do'kon admini bilan bog'laning.")
+    if employee.store is not None and not employee.store.is_active:
+        raise HTTPException(403, "Do'kon bloklangan. NovaPOS bilan bog'laning.")
 
     # Obunani tekshirish
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
@@ -189,11 +199,13 @@ async def login_pin(
         db, username.strip().lower(), pin_code
     )
     if not employee:
-        raise HTTPException(401, "Username yoki PIN noto'g'ri")
+        raise HTTPException(401, "Login yoki PIN noto'g'ri")
 
     # ✅ Superadmin faqat parol bilan kiradi (avtomatik PIN 0000 edi — xavfli)
     if (employee.role.value if hasattr(employee.role, "value") else str(employee.role)) == "super_admin":
-        raise HTTPException(401, "Username yoki PIN noto'g'ri")
+        raise HTTPException(401, "Login yoki PIN noto'g'ri")
+    if employee.store is not None and not employee.store.is_active:
+        raise HTTPException(403, "Do'kon bloklangan. NovaPOS bilan bog'laning.")
 
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
     # ✅ Obuna tugagan bo'lsa ham kirishga ruxsat beriladi — aks holda do'kon

@@ -37,7 +37,7 @@ obuna to'laydi, siz esa **superadmin** sifatida hammasini boshqarasiz.
 | **Ombor** | Mahsulot qo'shish va tahrirlash, kategoriyalar, kirim (blok bilan, ta'minotchidan qarzga), qoldiqni tuzatish (inventarizatsiya), kam qolgan tovarlar, ombor qiymati, to'plam (variantlar), kirim tarixi, Excel/AI orqali import |
 | **Sotuv tarixi** | Davr bo'yicha jami (naqd / plastik / nasiya / qaytarilgan), chek raqami, mijoz yoki tovar bo'yicha qidiruv, qisman qaytarish, chekni bekor qilish, chekni qayta chiqarish, qaytarishlar ro'yxati |
 | **Mijozlar** | Nasiya (qarz) hisobi, qarz to'lovlarini qabul qilish, xaridlar tarixi |
-| **Hisobot** | Savdo, foyda, kassadagi naqd pul, chiqimlar, sof foyda, top tovarlar, qarzdorlar, ta'minotchilar |
+| **Hisobot** | Savdo, yalpi va sof foyda, kassaga tushgan pul (naqd / plastik / nasiya), chiqimlar (qo'shish, turlari), eng ko'p sotilganlar, ombor qiymati, qarzdorlar (qarz to'lovi), ta'minotchilar (to'lov, qarz, tarix) |
 | **Xodimlar** | 1 ta admin + 3 tagacha kassir, PIN bilan tezkor kirish |
 | **Superadmin** | Do'konlar, tariflar, obuna to'lovlarini tasdiqlash, do'kon nomidan kirish |
 | **Oflayn** | Internet yo'q paytda ham sotuv, internet qaytganda avtomatik yuboriladi |
@@ -56,18 +56,20 @@ novapos/
 │   ├── dependencies.py     # Token, obuna tekshiruvi
 │   ├── sanitize.py         # Kiruvchi matnni tozalash (XSS himoyasi)
 │   └── api/                # API manzillari (products, sales, reports ...)
-├── frontend/               # Yangi frontend (React + Vite + TypeScript) — 15-bo'lim
+├── frontend/               # Ilova interfeysi (React + Vite + TypeScript) — 15-bo'lim
 │   └── src/
 │       ├── components/ui/  # Tugma, maydon, oyna, bildirishnoma... (yagona dizayn)
 │       ├── components/layout/  # Menyu: telefon / planshet / kompyuter
-│       ├── lib/            # API, sessiya, formatlar, tema
-│       └── pages/          # Sahifalar (React'ga ko'chirilganlari)
+│       ├── lib/            # API, sessiya, oflayn baza, formatlar, tema
+│       └── pages/          # Sahifalar: pos, products, sales, customers, reports,
+│                           #   settings, auth (kirish), superadmin
 ├── webapp/
-│   ├── templates/          # Eski HTML sahifalar (bosqichma-bosqich React'ga ko'chirilmoqda)
+│   ├── templates/index.html  # Bosh (reklama) sahifa
 │   ├── static/app/         # React build natijasi (repoga qo'shiladi — serverda Node.js shart emas)
-│   ├── static/js/          # Kassa, oflayn baza, sinxronizatsiya, printer, skaner
-│   ├── static/vendor/      # htmx, ikonkalar, shriftlar (internetsiz ishlashi uchun)
-│   └── sw.js               # Service Worker (oflayn rejim)
+│   ├── static/js/printer.js  # Chek chop etish (RawBT, Bluetooth, QZ Tray, brauzer)
+│   ├── static/shablon/     # Excel namuna (AI orqali qo'shish uchun)
+│   ├── static/vendor/      # Ikonkalar, shriftlar, QR skaner (internetsiz ishlashi uchun)
+│   └── sw.js               # Service Worker (oflayn rejim, fonda sinxronlash)
 ├── deploy/
 │   ├── nginx.conf          # Nginx sozlamasi (HTTPS, WebSocket)
 │   ├── novapos.service     # Serverda avtomatik ishga tushirish (systemd)
@@ -449,23 +451,27 @@ Ishlayotganini tekshirish uchun manzil: `https://pos.sizningbrend.uz/api/health`
 
 ### 7.1. Superadmin paneli
 
-`https://domeningiz/login` → superadmin login va paroli bilan kiring.
+`https://domeningiz/login` → **Parol** bo'limida superadmin login va paroli bilan kiring
+(superadmin PIN bilan kirmaydi).
 
 1. **To'lov sozlamalari** — do'konlar obuna uchun pul o'tkazadigan karta raqami, karta egasi
    va qo'llab-quvvatlash telefoni.
 2. **Tariflar** — masalan: "1 oy — 100 000 so'm", "3 oy — 270 000 so'm".
 3. **Do'konlar** — ro'yxatdan o'tgan do'konlar, muddatini qo'lda uzaytirish, bloklash,
-   "do'kon nomidan kirish" (yordam berish uchun).
+   "do'kon nomidan kirish" (yordam berish uchun; yuqorida binafsha chiziq chiqadi,
+   "SuperAdmin'ga qaytish" bilan o'z hisobingizga qaytasiz). Do'konni o'chirish uchun
+   uning nomini yozib tasdiqlash kerak.
 4. **To'lovlar** — do'konlar yuborgan to'lov cheklari. **Tasdiqlash** bosilsa, obuna avtomatik
    uzayadi.
 
 ### 7.2. Do'kon ochish (do'kon egasi qiladi)
 
-1. `https://domeningiz/register` → do'kon nomi, ism, telefon → login va parol → 4 xonali PIN.
+1. `https://domeningiz/register` → do'kon nomi, ism, telefon, login, parol va PIN (4–8 raqam).
 2. Do'konga **30 kunlik bepul sinov** beriladi.
 3. Sozlamalar → **Do'kon ma'lumotlari**: nom, telefon, manzil (chekda chiqadi).
 4. Sozlamalar → **Xodimlar** → kassir qo'shish (login, parol, PIN).
-5. Ombor → **Qo'shish** — mahsulotlar (yoki AI Scan / Excel orqali ommaviy).
+5. Ombor → **Qo'shish** — mahsulotlar. Ko'p tovar bo'lsa: Ombor → **AI** — faktura rasmini
+   yuklang yoki Excel namunani to'ldirib yuklang, tekshirib saqlang.
 
 ### 7.3. Obuna tugaganda
 
@@ -542,7 +548,7 @@ Chekni butunlay bekor qilish — faqat admin.
 | Mahsulot qo'shish, tovar qabul qilish (kirim) | ✅ | ✅ | — |
 | Narxni o'zgartirish, mahsulotni yoki kategoriyani o'chirish, qoldiqni tuzatish | ❌ | ✅ | — |
 | Tannarxdan arzon sotish | ❌ | ✅ | — |
-| Hisobot, foyda, chiqimlar | ❌ | ✅ | — |
+| Hisobot, foyda, chiqimlar, ta'minotchiga to'lov | ❌ | ✅ | — |
 | Xodimlar, do'kon ma'lumotlari | ❌ | ✅ | — |
 | Do'konlar, tariflar, to'lovlarni tasdiqlash | — | — | ✅ |
 
@@ -560,6 +566,8 @@ Bir do'konda: **1 ta admin + 3 tagacha kassir**.
 - Yuborilmagan oflayn sotuvlar bo'lsa, tizimdan chiqib bo'lmaydi (yo'qolmasligi uchun).
 - Oflayn paytda **faqat sotuv** qilinadi. Mahsulot va mijoz qo'shish, qarz to'lovi uchun
   internet kerak.
+- Ilova yopiq bo'lsa ham (Chrome, Android), internet qaytganda brauzer navbatdagi sotuvlarni
+  fonda yuboradi. Navbatni Sozlamalar → **Tizim** bo'limida ko'rish va qo'lda yuborish mumkin.
 
 ---
 
@@ -689,20 +697,27 @@ PIN esda bo'lsa, PIN bilan kirish ham mumkin (Kirish → PIN).
 
 ## 15. Frontend (React) bilan ishlash
 
-Frontend bosqichma-bosqich **React + Vite + TypeScript** ga ko'chirilmoqda. Ko'rinish (ranglar,
-shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va oyna endi
-**bitta komponentlar to'plamidan** (`frontend/src/components/ui/`) foydalanadi.
+Butun ilova interfeysi **React + Vite + TypeScript** da (`frontend/`). Ko'rinish (ranglar,
+Plus Jakarta Sans shrifti, tungi rejim) hamma sahifada bir xil: tugma, maydon va oynalar
+**bitta komponentlar to'plamidan** (`frontend/src/components/ui/`) olinadi.
 
-| Sahifa | Holati |
+| Bo'lim | Manzil |
 |---|---|
-| Kassa | ✅ React (`/app/pos`) |
-| Ombor, tovar qo'shish/tahrirlash, kirim tarixi | ✅ React (`/app/products`) |
-| Sotuv tarixi | ✅ React (`/app/sales`) |
-| Mijozlar | ✅ React (`/app/customers`) |
-| AI Scan, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+| Kirish, do'kon ochish | `/app/login`, `/app/register` |
+| Kassa | `/app/pos` |
+| Ombor, tovar qo'shish/tahrirlash, kirim tarixi, AI orqali qo'shish | `/app/products`, `/app/products/ai` |
+| Sotuv tarixi | `/app/sales` |
+| Mijozlar | `/app/customers` |
+| Hisobot (chiqimlar, qarzdorlar, ta'minotchilar) | `/app/reports` |
+| Sozlamalar (profil, obuna, xodimlar, printer) | `/app/settings` |
+| Superadmin | `/app/superadmin` |
 
-Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
-Eski manzil (masalan `/pos`, `/products`, `/sales`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+Eski manzillar (`/login`, `/pos`, `/products`, `/sales`, `/reports`, `/settings`, `/superadmin`
+...) yangisiga avtomatik yo'naltiriladi — eski xatcho'plar va o'rnatilgan ilova ishlayveradi.
+Bosh sahifa (`/`) oddiy HTML bo'lib qoladi.
+
+Ekranlar: **telefon** (< 768 px) — pastki menyu; **planshet** (768+) — ixcham yon menyu;
+**kompyuter** (1100+ / 1440+) — keng yon menyu, ko'p sahifada ikki ustun.
 
 ### Serverga o'rnatishda
 
@@ -756,4 +771,4 @@ git add webapp/static/app frontend && git commit -m "Frontend: ..."
 
 - Ikonkalar: Font Awesome Free (`webapp/static/vendor/fontawesome/LICENSE.txt`)
 - Shriftlar: Plus Jakarta Sans, JetBrains Mono — SIL Open Font License
-- htmx, html5-qrcode — o'z litsenziyalari bo'yicha
+- React, React Router, html5-qrcode — o'z litsenziyalari bo'yicha (MIT / Apache-2.0)

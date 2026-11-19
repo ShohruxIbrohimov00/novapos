@@ -26,6 +26,11 @@ export async function printText(text: string): Promise<void> {
   await printer.print(text);
 }
 
+/** Sozlamalar saqlangach — yuklangan printer moduli yangi usul/qog'ozni darhol olsin */
+export function reloadPrinterSettings(): void {
+  try { if (typeof printer !== 'undefined') (printer as unknown as { _loadSettings?: () => void })._loadSettings?.(); } catch { /* yo'q */ }
+}
+
 function paperWidth(): number {
   return (typeof printer !== 'undefined' && printer.paperWidth) || 32;   // 58mm = 32, 80mm = 48 belgi
 }

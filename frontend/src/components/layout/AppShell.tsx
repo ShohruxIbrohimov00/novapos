@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
-import { useConfirm } from '@/components/ui';
+import { useConfirm, useToast } from '@/components/ui';
+import { isImpersonating, logout as doLogout } from '@/lib/session';
 import { isActive, navLinks, type NavLink } from './nav';
 import './shell.css';
 
@@ -46,13 +47,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const confirm = useConfirm();
 
+  const toast = useToast();
   const logout = async () => {
     const ok = await confirm({ title: 'Tizimdan chiqish', message: 'Kassadan chiqmoqchimisiz?', confirmText: 'Chiqish', danger: true });
-    // Chiqishni eski sahifadagi mantiq bajaradi (yuborilmagan oflayn sotuvlarni tekshiradi)
-    if (ok) location.href = '/settings#chiqish';
+    if (!ok) return;
+    const r = await doLogout();
+    if (!r.ok) toast.show(`${r.pending} ta oflayn sotuv hali serverga yuborilmagan. Internetga ulanib, yuborilishini kuting.`, 'error');
   };
 
+  const support = isImpersonating();
   return (
+    <>
+    {support && (
+      <div className="support-bar" role="status">
+        <i className="fa-solid fa-headset" aria-hidden="true" /> Support rejimi: {user?.store_name}
+        <button type="button" onClick={() => { doLogout(); }}>SuperAdmin'ga qaytish</button>
+      </div>
+    )}
     <div className="shell">
       <nav className="sidebar" aria-label="Asosiy menyu">
         <div className="sidebar__brand">
@@ -94,5 +105,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         {links.map((l) => <NavItem key={l.to} link={l} path={path} />)}
       </nav>
     </div>
+    </>
   );
 }

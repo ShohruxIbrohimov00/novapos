@@ -2,7 +2,7 @@
  * NovaPOS — Service Worker v6.0
  * ==============================
  * v6.0:
- *   ✅ Barcha kutubxonalar (htmx, Font Awesome, shriftlar, QR skaner) LOKAL —
+ *   ✅ Barcha kutubxonalar (Font Awesome, shriftlar, QR skaner) LOKAL —
  *      internet bo'lmasa ham ilova to'liq ochiladi
  *   ✅ Barcha sahifalar o'rnatishda oldindan keshlanadi
  *   ✅ Sahifalar: keshdan darhol (tez ochiladi), fonda yangilanadi
@@ -11,27 +11,19 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.4.0';
+const VER      = '8.0.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
 const ALL_C    = [C_STATIC, C_PAGES, C_API];
 
 const STATIC_FILES = [
-  '/static/js/offline-db.js',
-  '/static/js/sync-manager.js',
-  '/static/js/api.js',
-  '/static/js/auth.js',
-  '/static/js/main.js',
-  '/static/js/cart.js',
   '/static/js/printer.js',
-  '/static/js/scanner.js',
   '/static/manifest.json',
   '/static/img/icon-192.png',
   '/static/img/icon-512.png',
   '/static/sounds/success.wav',
   '/static/sounds/error.wav',
-  '/static/vendor/htmx.min.js',
   '/static/vendor/html5-qrcode.min.js',
   '/static/vendor/fontawesome/css/all.min.css',
   '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
@@ -48,8 +40,8 @@ const STATIC_FILES = [
 ];
 
 const PAGES = [
-  '/', '/login', '/register',
-  '/reports', '/settings', '/app/',
+  '/',
+  '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -69,9 +61,22 @@ self.addEventListener('install', e => {
       caches.open(C_PAGES).then(c =>
         Promise.allSettled(PAGES.map(u => c.add(u)))
       ),
-    ]).then(() => self.skipWaiting())
+    ])
+      // React ilovasining JS/CSS fayllari ham oldindan — aks holda oflaynda bo'sh sahifa ochilishi mumkin
+      .then(() => caches.match('/app/', { cacheName: C_PAGES }))
+      .then(res => res ? res.clone().text().then(_cacheAppAssets) : null)
+      .catch(() => {})
+      .then(() => self.skipWaiting())
   );
 });
+
+// index.html ichidagi /static/app/assets/... fayllarini keshga olish
+async function _cacheAppAssets(html) {
+  const urls = [...new Set((html.match(/\/static\/app\/assets\/[^"'\s>]+/g) || []))];
+  if (!urls.length) return;
+  const cache = await caches.open(C_STATIC);
+  await Promise.allSettled(urls.map(async u => { if (!(await cache.match(u))) await cache.add(u); }));
+}
 
 // ─── ACTIVATE ────────────────────────────────────────────────
 self.addEventListener('activate', e => {
@@ -154,10 +159,16 @@ async function _cacheFirst(req) {
 // Eski manzil → React manzili (server ham xuddi shunday yo'naltiradi; SW esa oflaynda ham)
 function _appPath(p) {
   if (p === '/pos') return '/app/pos';
+  if (p === '/login') return '/app/login';
+  if (p === '/superadmin' || p === '/superadmin/stores' || p === '/superadmin/requests') return '/app' + p;
+  if (p === '/register') return '/app/register';
   if (p === '/customers') return '/app/customers';
   if (p === '/sales' || p === '/sales/history') return '/app/sales';
+  if (p === '/reports') return '/app/reports';
+  if (p === '/settings') return '/app/settings';
   if (p === '/products') return '/app/products';
   if (p === '/products/add') return '/app/products/new';
+  if (p === '/ai-scan' || p === '/ai-scan/confirm') return '/app/products/ai';
   if (p === '/products/supply-history') return '/app/products/supply-history';
   const m = p.match(/^\/products\/edit\/(\d+)$/);
   return m ? `/app/products/${m[1]}` : null;
@@ -174,7 +185,14 @@ async function _swrPage(req) {
   const cached = await cache.match(key);
 
   const net = fetch(req)
-    .then(res => { if (res.ok && !res.redirected) cache.put(key, res.clone()); return res; })
+    .then(res => {
+      if (res.ok && !res.redirected) {
+        cache.put(key, res.clone());
+        // Yangi build chiqqan bo'lsa — uning fayllari ham darhol keshga (keyingi oflayn ochilish uchun)
+        if (key === '/app/') res.clone().text().then(_cacheAppAssets).catch(() => {});
+      }
+      return res;
+    })
     .catch(() => null);
 
   if (cached) { net.catch(() => {}); return cached; }   // darhol ochiladi

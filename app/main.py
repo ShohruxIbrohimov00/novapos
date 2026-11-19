@@ -373,8 +373,14 @@ def _page(template: str):
     return _handler
 
 app.get("/",                        response_class=HTMLResponse)(_page("index.html"))
-app.get("/login",                   response_class=HTMLResponse)(_page("login.html"))
-app.get("/register",                response_class=HTMLResponse)(_page("register.html"))
+# ✅ Kirish va ro'yxatdan o'tish React'ga ko'chirildi
+@app.get("/login")
+async def login_redirect():
+    return RedirectResponse("/app/login", status_code=302)
+
+@app.get("/register")
+async def register_redirect():
+    return RedirectResponse("/app/register", status_code=302)
 # ✅ Kassa React'ga ko'chirildi
 @app.get("/pos")
 async def pos_redirect():
@@ -400,8 +406,14 @@ async def supply_history_redirect():
 @app.get("/products/edit/{product_id}")
 async def product_edit_redirect(product_id: int):
     return RedirectResponse(f"/app/products/{product_id}", status_code=302)
-app.get("/reports",                 response_class=HTMLResponse)(_page("reports.html"))
-app.get("/settings",                response_class=HTMLResponse)(_page("settings.html"))
+# ✅ Hisobot React'ga ko'chirildi
+@app.get("/reports")
+async def reports_redirect():
+    return RedirectResponse("/app/reports", status_code=302)
+# ✅ Sozlamalar React'ga ko'chirildi
+@app.get("/settings")
+async def settings_redirect():
+    return RedirectResponse("/app/settings", status_code=302)
 # ✅ Mijozlar sahifasi React'ga ko'chirildi — eski manzil yangisiga yo'naltiriladi
 @app.get("/customers")
 async def customers_redirect():
@@ -419,15 +431,17 @@ async def react_app(path: str = ""):
     # index.html keshlanmaydi — yangi versiya darhol yetib boradi (fayllar nomida hash bor)
     return FileResponse(APP_INDEX, media_type="text/html", headers={"Cache-Control": "no-cache"})
 
-@app.get("/ai-scan", response_class=HTMLResponse)
-async def page_ai_scan(request: Request):
-    return templates.TemplateResponse("ai_scan.html", {"request": request})
+# ✅ AI Scan React'ga ko'chirildi
+@app.get("/ai-scan")
+@app.get("/ai-scan/confirm")
+async def ai_scan_redirect():
+    return RedirectResponse("/app/products/ai", status_code=302)
 
-app.get("/ai-scan/confirm", response_class=HTMLResponse)(_page("ai_scan_confirm.html"))
-
-app.get("/superadmin",          response_class=HTMLResponse)(_page("superadmin_dashboard.html"))
-app.get("/superadmin/requests", response_class=HTMLResponse)(_page("superadmin_requests.html"))
-app.get("/superadmin/stores",   response_class=HTMLResponse)(_page("superadmin_stores.html"))
+# ✅ Superadmin React'ga ko'chirildi
+@app.get("/superadmin")
+@app.get("/superadmin/{sub:path}")
+async def superadmin_redirect(sub: str = ""):
+    return RedirectResponse("/app/superadmin" + (f"/{sub}" if sub in ("stores", "requests") else ""), status_code=302)
 
 
 # ============================================

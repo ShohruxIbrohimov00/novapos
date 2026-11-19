@@ -58,7 +58,7 @@ export function CustomerFormModal({ open, customer, onClose, onSaved }: Props) {
         <Button variant="ghost" onClick={onClose}>Bekor qilish</Button>
         <Button onClick={() => submit()} loading={saving} icon="fa-check">Saqlash</Button>
       </>}>
-      <form onSubmit={submit} style={{ display: 'contents' }}>
+      <form onSubmit={submit} style={{ display: 'contents' }} noValidate>
         <Field label="Ism va familiya" required value={form.full_name} onChange={set('full_name')}
                error={error} autoComplete="off" maxLength={120} />
         <Field label="Telefon" type="tel" inputMode="tel" placeholder="+998 90 123 45 67" value={form.phone} onChange={set('phone')} />
