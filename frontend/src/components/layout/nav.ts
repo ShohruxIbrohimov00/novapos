@@ -20,7 +20,7 @@ export function navLinks(role: Role | undefined): NavLink[] {
     ];
   }
   const links: NavLink[] = [
-    { to: '/pos', icon: 'fa-cash-register', label: 'Kassa', match: ['/pos'] },
+    { to: '/app/pos', icon: 'fa-cash-register', label: 'Kassa', spa: true, match: ['/app/pos', '/pos'] },
     { to: '/sales/history', icon: 'fa-receipt', label: 'Tarix', match: ['/sales'] },
     { to: '/products', icon: 'fa-boxes-stacked', label: 'Ombor', match: ['/products', '/ai-scan'] },
     { to: '/app/customers', icon: 'fa-users', label: 'Mijozlar', spa: true, match: ['/app/customers', '/customers'] },

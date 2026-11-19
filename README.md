@@ -674,11 +674,12 @@ shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va 
 
 | Sahifa | Holati |
 |---|---|
+| Kassa | ✅ React (`/app/pos`) |
 | Mijozlar | ✅ React (`/app/customers`) |
-| Kassa, Ombor, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+| Ombor, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
 
 Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
-Eski manzil (masalan `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+Eski manzil (masalan `/pos`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
 
 ### Serverga o'rnatishda
 
@@ -706,7 +707,7 @@ tushiring (3.5-bo'lim), keyin:
 npm run dev
 ```
 
-Brauzerda: http://localhost:5173/app/customers
+Brauzerda: http://localhost:5173/app/pos
 
 Tayyor bo'lgach build qiling va natijani commit qiling:
 

@@ -11,9 +11,29 @@
  *   ✅ meta             — sync vaqtlari va boshqa metama'lumotlar
  */
 
+// ✅ Umumiy sxema (offline-db.js, sw.js va React lib/db.ts da BIR XIL bo'lishi shart).
+// v6: kim birinchi ochishidan qat'i nazar hamma jadval va indekslar yaratiladi.
+const NOVA_DB_SCHEMA = {
+  products_cache:  { keyPath: 'id', indexes: ['store_id', 'barcode', 'short_code', 'category_id'] },
+  customers_cache: { keyPath: 'id', indexes: ['store_id', 'phone'] },
+  offline_sales:   { keyPath: 'local_id', autoIncrement: true, indexes: ['status', 'created_at', 'store_id'] },
+  offline_queue:   { keyPath: 'id', autoIncrement: true, indexes: ['status', 'endpoint', 'created_at'] },
+  reports_cache:   {},
+  auth:            {},
+  meta:            {},
+};
+function novaDbUpgrade(db, tx) {
+  for (const [name, def] of Object.entries(NOVA_DB_SCHEMA)) {
+    const os = db.objectStoreNames.contains(name)
+      ? tx.objectStore(name)
+      : db.createObjectStore(name, def.keyPath ? { keyPath: def.keyPath, autoIncrement: !!def.autoIncrement } : undefined);
+    for (const ix of def.indexes || []) if (!os.indexNames.contains(ix)) os.createIndex(ix, ix);
+  }
+}
+
 const NovaPOS_DB = (() => {
   const DB_NAME    = 'novapos_db';
-  const DB_VERSION = 5;
+  const DB_VERSION = 6;   // ← sw.js va frontend/src/lib/db.ts bilan BIR XIL
   const CHUNK_SIZE = 200; // bitta TX da max yozuv (UI muzlamasligi uchun)
 
   let _db = null;
@@ -24,56 +44,14 @@ const NovaPOS_DB = (() => {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onerror   = () => reject(req.error);
-      req.onsuccess = () => { _db = req.result; resolve(_db); };
-
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        const ov = e.oldVersion;
-
-        // products_cache
-        if (!db.objectStoreNames.contains('products_cache')) {
-          const s = db.createObjectStore('products_cache', { keyPath: 'id' });
-          s.createIndex('store_id',   'store_id');
-          s.createIndex('barcode',    'barcode');
-          s.createIndex('short_code', 'short_code');
-          s.createIndex('category_id','category_id');
-        }
-
-        // customers_cache
-        if (!db.objectStoreNames.contains('customers_cache')) {
-          const s = db.createObjectStore('customers_cache', { keyPath: 'id' });
-          s.createIndex('store_id', 'store_id');
-          s.createIndex('phone',    'phone');
-        }
-
-        // offline_sales
-        if (!db.objectStoreNames.contains('offline_sales')) {
-          const s = db.createObjectStore('offline_sales', { keyPath: 'local_id', autoIncrement: true });
-          s.createIndex('status',     'status');
-          s.createIndex('created_at', 'created_at');
-          s.createIndex('store_id',   'store_id');
-        }
-
-        // offline_queue (POST/PATCH/DELETE lar)
-        if (!db.objectStoreNames.contains('offline_queue')) {
-          const s = db.createObjectStore('offline_queue', { keyPath: 'id', autoIncrement: true });
-          s.createIndex('status',     'status');
-          s.createIndex('endpoint',   'endpoint');
-          s.createIndex('created_at', 'created_at');
-        }
-
-        // reports_cache
-        if (!db.objectStoreNames.contains('reports_cache'))
-          db.createObjectStore('reports_cache');
-
-        // auth
-        if (!db.objectStoreNames.contains('auth'))
-          db.createObjectStore('auth');
-
-        // meta
-        if (!db.objectStoreNames.contains('meta'))
-          db.createObjectStore('meta');
+      req.onsuccess = () => {
+        _db = req.result;
+        // Boshqa varaq bazani yangi versiyaga ko'tarsa — ulanishni yopamiz (aks holda u bloklanadi)
+        _db.onversionchange = () => { try { _db.close(); } catch (e) {} _db = null; };
+        resolve(_db);
       };
+
+      req.onupgradeneeded = (e) => novaDbUpgrade(e.target.result, e.target.transaction);
     });
   }
 

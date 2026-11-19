@@ -375,7 +375,10 @@ def _page(template: str):
 app.get("/",                        response_class=HTMLResponse)(_page("index.html"))
 app.get("/login",                   response_class=HTMLResponse)(_page("login.html"))
 app.get("/register",                response_class=HTMLResponse)(_page("register.html"))
-app.get("/pos",                     response_class=HTMLResponse)(_page("pos.html"))
+# ✅ Kassa React'ga ko'chirildi
+@app.get("/pos")
+async def pos_redirect():
+    return RedirectResponse("/app/pos", status_code=302)
 app.get("/sales/history",           response_class=HTMLResponse)(_page("sales_history.html"))
 app.get("/sales",                   response_class=HTMLResponse)(_page("sales_history.html"))  # menyu shu manzilga olib boradi
 app.get("/products",                response_class=HTMLResponse)(_page("inventory.html"))
