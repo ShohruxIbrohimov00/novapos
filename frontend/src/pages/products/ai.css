@@ -1,0 +1,50 @@
+/* ═══ AI SCAN ═══ */
+.ai-layout { display: grid; gap: var(--s4); max-width: 1100px; align-items: start; }
+@media (min-width: 1024px) { .ai-layout { grid-template-columns: minmax(0, 1fr) 320px; } }
+.ai-aside { display: flex; flex-direction: column; gap: var(--s4); }
+.ai-pick { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.ai-pick__btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 140px; padding: var(--s4);
+  border: 2px dashed var(--border2); border-radius: var(--r-lg); background: var(--surface2); color: var(--text); cursor: pointer; text-align: center;
+}
+.ai-pick__btn i { font-size: 30px; color: var(--primary); margin-bottom: var(--s2); }
+.ai-pick__btn small { color: var(--text3); font-size: var(--fs-xs); }
+.ai-pick__btn:hover { border-color: var(--primary); background: var(--primary-s); }
+.ai-pick__btn--cam i { color: #8b5cf6; }
+@media (min-width: 1024px) { .ai-pick__btn--cam { display: none; } .ai-pick { grid-template-columns: 1fr; } }
+.ai-file { display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-md); background: var(--surface2); }
+.ai-file img, .ai-file__xls { width: 72px; height: 72px; border-radius: var(--r-sm); object-fit: cover; flex-shrink: 0; }
+.ai-file__xls { display: flex; align-items: center; justify-content: center; background: var(--success-s); color: var(--success); font-size: 30px; }
+.ai-file__meta { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ai-file__meta b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-file__meta small { color: var(--text3); }
+.ai-busy { display: flex; align-items: center; justify-content: center; gap: var(--s3); min-height: 56px; border-radius: var(--r-md); background: var(--primary-s); color: var(--primary); font-weight: 800; }
+.ai-hist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s2); }
+.ai-hist li { display: flex; gap: var(--s2); align-items: flex-start; font-size: var(--fs-sm); }
+.ai-hist span { display: flex; flex-direction: column; }
+.ai-hist small { color: var(--text3); font-size: var(--fs-xs); }
+
+.ai-review { display: flex; flex-direction: column; gap: var(--s3); max-width: 1100px; }
+.ai-sum { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--border); font-size: var(--fs-sm); color: var(--text2); }
+.ai-sum b { font-size: var(--fs-lg); color: var(--text); }
+.ai-sum .tone-danger b { color: var(--danger); }
+.ai-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s3); }
+.ai-row { gap: var(--s2) !important; }
+.ai-row.has-error { border-color: var(--danger); }
+.ai-row__head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.ai-row__del { margin-left: auto; }
+.ai-match { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px var(--s2); font-size: var(--fs-sm); color: var(--success); font-weight: 600; }
+.ai-match button { border: none; background: none; color: var(--primary); font-weight: 800; padding: 0; text-decoration: underline; font-size: var(--fs-xs); }
+.ai-match--off { color: var(--text3); }
+.ai-grid { display: grid; gap: var(--s2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 768px) { .ai-grid { grid-template-columns: 2.4fr 1.4fr 0.9fr 0.9fr 1.1fr 1.1fr 1.2fr; } }
+.ai-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ai-f span { font-size: var(--fs-xs); font-weight: 700; color: var(--text3); }
+.ai-f .ui-input { height: 42px; padding: 0 var(--s3); }
+.ai-f select.ui-input { padding-right: 30px; background-position: right 10px center; }
+.ai-f--name { grid-column: 1 / -1; }
+@media (min-width: 768px) { .ai-f--name { grid-column: auto; } }
+.ai-done { display: flex; flex-direction: column; align-items: center; gap: var(--s3); text-align: center; }
+.ai-done > i { font-size: 48px; color: var(--success); }
+.ai-done p { margin: 0; font-size: var(--fs-md); }
+.ai-errs { margin: 0; padding: var(--s3) var(--s3) var(--s3) var(--s6); border-radius: var(--r-md); background: var(--danger-s); color: var(--danger); text-align: left; font-size: var(--fs-sm); }

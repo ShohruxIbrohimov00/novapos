@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.7.0';
+const VER      = '7.8.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -175,6 +175,7 @@ function _appPath(p) {
   if (p === '/settings') return '/app/settings';
   if (p === '/products') return '/app/products';
   if (p === '/products/add') return '/app/products/new';
+  if (p === '/ai-scan' || p === '/ai-scan/confirm') return '/app/products/ai';
   if (p === '/products/supply-history') return '/app/products/supply-history';
   const m = p.match(/^\/products\/edit\/(\d+)$/);
   return m ? `/app/products/${m[1]}` : null;

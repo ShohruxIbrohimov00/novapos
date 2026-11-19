@@ -7,6 +7,7 @@ import { PosPage } from '@/pages/pos/PosPage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { SalesPage } from '@/pages/sales/SalesPage';
 import { SettingsPage } from '@/pages/settings/SettingsPage';
+import { AiScanPage } from '@/pages/products/AiScanPage';
 import { NewProductPage } from '@/pages/products/NewProductPage';
 import { ProductDetailPage } from '@/pages/products/ProductDetailPage';
 import { ProductsPage } from '@/pages/products/ProductsPage';
@@ -33,6 +34,7 @@ export function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/products/new" element={<NewProductPage />} />
+              <Route path="/products/ai" element={<AiScanPage />} />
               <Route path="/products/supply-history" element={<SupplyHistoryPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
               <Route path="*" element={<Navigate to="/pos" replace />} />

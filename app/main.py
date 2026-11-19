@@ -431,11 +431,11 @@ async def react_app(path: str = ""):
     # index.html keshlanmaydi — yangi versiya darhol yetib boradi (fayllar nomida hash bor)
     return FileResponse(APP_INDEX, media_type="text/html", headers={"Cache-Control": "no-cache"})
 
-@app.get("/ai-scan", response_class=HTMLResponse)
-async def page_ai_scan(request: Request):
-    return templates.TemplateResponse("ai_scan.html", {"request": request})
-
-app.get("/ai-scan/confirm", response_class=HTMLResponse)(_page("ai_scan_confirm.html"))
+# ✅ AI Scan React'ga ko'chirildi
+@app.get("/ai-scan")
+@app.get("/ai-scan/confirm")
+async def ai_scan_redirect():
+    return RedirectResponse("/app/products/ai", status_code=302)
 
 app.get("/superadmin",          response_class=HTMLResponse)(_page("superadmin_dashboard.html"))
 app.get("/superadmin/requests", response_class=HTMLResponse)(_page("superadmin_requests.html"))

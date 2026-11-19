@@ -392,7 +392,7 @@ async def scan_excel(
                 try:
                     name = str(row[1]).strip() if len(row) > 1 and row[1] not in (None, "") else ""
                 except: name = ""
-                if not name or name.lower() in ("none","nan","mahsulot nomi ★","mahsulot nomi","nomi","mahsulot nomi"):
+                if not name or name.lower().strip(" ★*") in ("none", "nan", "mahsulot nomi", "nomi", "nomlanishi", "tovar", "tovar nomi", "mahsulot", "name"):
                     continue
 
                 try:
@@ -432,7 +432,9 @@ async def scan_excel(
             import openpyxl
             wb = openpyxl.load_workbook(BytesIO(content), data_only=True)
             ws = wb.active
-            rows = list(ws.iter_rows(min_row=5, values_only=True))
+            # ✅ 1-qatordan: namunada ma'lumot 2-qatordan boshlanadi (avval 5-qatordan o'qilib,
+            # birinchi 3 ta tovar yo'qolardi). Sarlavha qatori nomidan tanilib o'tkaziladi.
+            rows = list(ws.iter_rows(min_row=1, values_only=True))
             products = _parse_ws(rows)
 
         else:
@@ -442,7 +444,7 @@ async def scan_excel(
                 wb_xls = xlrd.open_workbook(file_contents=content)
                 ws_xls = wb_xls.sheet_by_index(0)
                 rows = []
-                for i in range(4, ws_xls.nrows):   # 5-qatordan (0-indexed: 4)
+                for i in range(0, ws_xls.nrows):
                     rows.append([ws_xls.cell_value(i, j) for j in range(ws_xls.ncols)])
                 products = _parse_ws(rows)
             except ImportError:
@@ -495,6 +497,9 @@ async def confirm_scan(
     added_stock = 0
     errors      = 0
     error_list  = []
+    # ✅ Narxni faqat admin o'zgartiradi (Ombor sahifasidagi qoida bilan bir xil)
+    role     = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    is_admin = role in ("admin", "super_admin")
 
     # Kategoriya cache — nom → id
     cat_cache: dict[str, int] = {}
@@ -558,7 +563,7 @@ async def confirm_scan(
                             product_id        = existing.id,
                             quantity_received = item.quantity,
                             supply_price      = supply_price,
-                            price_out         = item.price_out or existing.price_out or 0,
+                            price_out         = (item.price_out or existing.price_out or 0) if is_admin else None,
                             is_paid           = True,
                             supplier_id       = None,
                         )
@@ -566,10 +571,12 @@ async def confirm_scan(
 
                     # Narxlar o'zgargan bo'lsa — yangilash
                     changed = False
-                    if item.price_out and item.price_out > 0 and item.price_out != existing.price_out:
+                    if not is_admin:
+                        pass   # kassir: narxlarga tegilmaydi
+                    elif item.price_out and item.price_out > 0 and item.price_out != existing.price_out:
                         existing.price_out = item.price_out
                         changed = True
-                    if item.price_in and item.price_in > 0 and item.price_in != existing.price_in:
+                    if is_admin and item.price_in and item.price_in > 0 and item.price_in != existing.price_in:
                         existing.price_in = item.price_in
                         changed = True
                     if changed:
@@ -613,7 +620,7 @@ async def confirm_scan(
                             product_id        = barcode_exist.id,
                             quantity_received = item.quantity,
                             supply_price      = supply_price,
-                            price_out         = item.price_out or barcode_exist.price_out or 0,
+                            price_out         = (item.price_out or barcode_exist.price_out or 0) if is_admin else None,
                             is_paid           = True,
                             supplier_id       = None,
                         )
@@ -622,6 +629,11 @@ async def confirm_scan(
                     continue
 
             # ── YO'L 3: YANGI MAHSULOT YARATISH ─────────────
+            # ✅ Sotuv narxisiz tovar yaratilmaydi (kassada 0 so'mga sotilib ketardi)
+            if not item.price_out or item.price_out <= 0:
+                errors += 1
+                error_list.append(f"{item.name.strip()}: sotuv narxi yo'q")
+                continue
             # Kategoriya ID olish yoki yaratish
             category_id = _get_or_create_category(item.category_name)
 
