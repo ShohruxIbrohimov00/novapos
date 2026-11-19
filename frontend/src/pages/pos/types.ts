@@ -1,19 +1,7 @@
-export type Unit = 'dona' | 'kg' | 'litr' | 'metr' | 'blok';
+import type { Unit } from '@/lib/products';
 
-export interface Product {
-  id: number;
-  name: string;
-  barcode: string | null;
-  short_code: string | null;
-  unit_type: Unit;
-  price_in: number;
-  price_out: number;
-  quantity: number;
-  min_stock_limit?: number;
-  category_id: number | null;
-  category_name?: string | null;
-  is_deleted?: boolean;
-}
+export { isWeight, UNIT_SHORT, WEIGHT_UNITS } from '@/lib/products';
+export type { Product, Unit } from '@/lib/products';
 
 export interface CartItem {
   id: number;            // product id
@@ -25,9 +13,5 @@ export interface CartItem {
   fixedTotal?: number;
   stock: number;
 }
-
-export const WEIGHT_UNITS: Unit[] = ['kg', 'litr', 'metr'];
-export const isWeight = (u: Unit) => WEIGHT_UNITS.includes(u);
-export const UNIT_SHORT: Record<Unit, string> = { dona: 'dona', kg: 'kg', litr: 'l', metr: 'm', blok: 'blok' };
 
 export const lineTotal = (i: CartItem) => Math.round(i.fixedTotal ?? i.qty * i.price);

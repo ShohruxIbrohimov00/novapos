@@ -381,9 +381,22 @@ async def pos_redirect():
     return RedirectResponse("/app/pos", status_code=302)
 app.get("/sales/history",           response_class=HTMLResponse)(_page("sales_history.html"))
 app.get("/sales",                   response_class=HTMLResponse)(_page("sales_history.html"))  # menyu shu manzilga olib boradi
-app.get("/products",                response_class=HTMLResponse)(_page("inventory.html"))
-app.get("/products/add",            response_class=HTMLResponse)(_page("add_product.html"))
-app.get("/products/supply-history", response_class=HTMLResponse)(_page("supply_history.html"))
+# ✅ Ombor React'ga ko'chirildi — eski manzillar yangisiga yo'naltiriladi
+@app.get("/products")
+async def products_redirect():
+    return RedirectResponse("/app/products", status_code=302)
+
+@app.get("/products/add")
+async def product_add_redirect():
+    return RedirectResponse("/app/products/new", status_code=302)
+
+@app.get("/products/supply-history")
+async def supply_history_redirect():
+    return RedirectResponse("/app/products/supply-history", status_code=302)
+
+@app.get("/products/edit/{product_id}")
+async def product_edit_redirect(product_id: int):
+    return RedirectResponse(f"/app/products/{product_id}", status_code=302)
 app.get("/reports",                 response_class=HTMLResponse)(_page("reports.html"))
 app.get("/settings",                response_class=HTMLResponse)(_page("settings.html"))
 # ✅ Mijozlar sahifasi React'ga ko'chirildi — eski manzil yangisiga yo'naltiriladi
@@ -408,10 +421,6 @@ async def page_ai_scan(request: Request):
     return templates.TemplateResponse("ai_scan.html", {"request": request})
 
 app.get("/ai-scan/confirm", response_class=HTMLResponse)(_page("ai_scan_confirm.html"))
-
-@app.get("/products/edit/{product_id}", response_class=HTMLResponse)
-async def page_edit_product(request: Request, product_id: int):
-    return templates.TemplateResponse("add_product.html", {"request": request, "product_id": product_id})
 
 app.get("/superadmin",          response_class=HTMLResponse)(_page("superadmin_dashboard.html"))
 app.get("/superadmin/requests", response_class=HTMLResponse)(_page("superadmin_requests.html"))

@@ -1,5 +1,6 @@
 export { Button, IconButton } from './Button';
 export { Field, TextArea } from './Field';
+export type { FieldProps } from './Field';
 export { Modal } from './Modal';
 export { ToastProvider, useToast } from './Toast';
 export { ConfirmProvider, useConfirm } from './Confirm';

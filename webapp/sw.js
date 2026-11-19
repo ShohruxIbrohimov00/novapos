@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.2.0';
+const VER      = '7.3.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -49,8 +49,7 @@ const STATIC_FILES = [
 
 const PAGES = [
   '/', '/login', '/register',
-  '/products', '/products/add', '/sales', '/sales/history',
-  '/reports', '/settings', '/products/supply-history', '/app/',
+  '/sales', '/sales/history', '/reports', '/settings', '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -152,18 +151,29 @@ async function _cacheFirst(req) {
   }
 }
 
+// Eski manzil → React manzili (server ham xuddi shunday yo'naltiradi; SW esa oflaynda ham)
+function _appPath(p) {
+  if (p === '/pos') return '/app/pos';
+  if (p === '/customers') return '/app/customers';
+  if (p === '/products') return '/app/products';
+  if (p === '/products/add') return '/app/products/new';
+  if (p === '/products/supply-history') return '/app/products/supply-history';
+  const m = p.match(/^\/products\/edit\/(\d+)$/);
+  return m ? `/app/products/${m[1]}` : null;
+}
+
 async function _swrPage(req) {
   const cache  = await caches.open(C_PAGES);
   const url    = new URL(req.url);
-  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz.
+  const moved  = _appPath(url.pathname);
+  if (moved) return Response.redirect(new URL(moved + url.search + url.hash, url.origin).href, 302);
   // React ilovasi (/app/...) — hamma manzil uchun bitta index.html → '/app/' kaliti.
-  const key    = url.pathname.startsWith('/products/edit/') ? null
-               : (url.pathname === '/app' || url.pathname.startsWith('/app/')) ? '/app/'
+  const key    = (url.pathname === '/app' || url.pathname.startsWith('/app/')) ? '/app/'
                : url.pathname;
-  const cached = key ? await cache.match(key) : null;
+  const cached = await cache.match(key);
 
   const net = fetch(req)
-    .then(res => { if (res.ok && key) cache.put(key, res.clone()); return res; })
+    .then(res => { if (res.ok && !res.redirected) cache.put(key, res.clone()); return res; })
     .catch(() => null);
 
   if (cached) { net.catch(() => {}); return cached; }   // darhol ochiladi
@@ -171,10 +181,6 @@ async function _swrPage(req) {
   const res = await net;
   if (res) return res;
 
-  if (url.pathname.startsWith('/products/edit/')) {
-    const add = await cache.match('/products/add');
-    if (add) return add;
-  }
   const app = await cache.match('/app/');
   if (app) return app;
   return new Response(_offlinePage(), {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/lib/api';
 import { getAll, replaceAll } from '@/lib/db';
-import type { Product } from './types';
+import type { Product } from './products';
 
 /**
  * Mahsulotlar: avval qurilma keshidan (darhol, oflayn ham), keyin serverdan.
@@ -15,7 +15,7 @@ export function useProducts() {
 
   const apply = useCallback((list: Product[]) => {
     const alive = list.filter((p) => !p.is_deleted);
-    const sig = alive.map((p) => `${p.id}|${p.name}|${p.quantity}|${p.price_out}|${p.barcode}|${p.short_code}`).join(';');
+    const sig = alive.map((p) => `${p.id}|${p.name}|${p.quantity}|${p.price_in}|${p.price_out}|${p.barcode}|${p.short_code}|${p.min_stock_limit}|${p.category_id}|${p.category_name}|${p.unit_type}`).join(';');
     if (sig !== sigRef.current) { sigRef.current = sig; setProducts(alive); }
   }, []);
 

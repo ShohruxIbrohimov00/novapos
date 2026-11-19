@@ -274,7 +274,8 @@ def delete_category(db: Session, cat_id: int) -> bool:
 # PRODUCT
 # ============================================================
 
-def create_product(db: Session, data: schemas.ProductCreate, store_id: int) -> models.Product:
+def create_product(db: Session, data: schemas.ProductCreate, store_id: int,
+                   created_by: Optional[int] = None) -> models.Product:
     d           = data.model_dump(exclude={"store_id"})
     d["store_id"] = store_id
     product       = models.Product(**d)
@@ -293,6 +294,7 @@ def create_product(db: Session, data: schemas.ProductCreate, store_id: int) -> m
             total_cost        = round(product.quantity * product.price_in, 2),
             is_paid           = True,
             notes             = "Mahsulot qo'shilganda boshlang'ich qoldiq",
+            created_by        = created_by,
         )
         db.add(batch)
 
@@ -400,7 +402,7 @@ def adjust_stock(
     db:           Session,
     product_id:   int,
     new_quantity: float,
-    reason:       Optional[str],
+    reason:       Optional["models.AdjustmentReason"],
     notes:        Optional[str],
     employee_id:  int,
     store_id:     int,
@@ -414,7 +416,7 @@ def adjust_stock(
         raise ValueError("Mahsulot topilmadi")
 
     old_qty = product.quantity
-    diff    = round(new_quantity - old_qty, 2)
+    diff    = round(new_quantity - old_qty, 3)
 
     # StockAdjustment log
     adj = models.StockAdjustment(
@@ -440,7 +442,7 @@ def adjust_stock(
             supply_price      = product.price_in,
             total_cost        = round(diff * product.price_in, 2),
             is_paid           = True,
-            notes             = notes or reason or "Inventarizatsiya tuzatish",
+            notes             = notes or (reason.value if hasattr(reason, "value") else reason) or "Inventarizatsiya tuzatish",
             created_by        = employee_id,
         )
         db.add(batch)

@@ -34,7 +34,7 @@ obuna to'laydi, siz esa **superadmin** sifatida hammasini boshqarasiz.
 | Bo'lim | Nima qiladi |
 |---|---|
 | **Kassa** | Shtrix-kod skaneri (USB yoki telefon kamerasi), PLU kod, nom bo'yicha qidiruv, kg/litr tovarlar, naqd / plastik / nasiya, qaytim hisobi, chek chop etish |
-| **Ombor** | Mahsulot qo'shish va tahrirlash, kategoriyalar, kirim (qayta to'ldirish), kam qolgan tovarlar, to'plam (variantlar), Excel'dan import |
+| **Ombor** | Mahsulot qo'shish va tahrirlash, kategoriyalar, kirim (blok bilan, ta'minotchidan qarzga), qoldiqni tuzatish (inventarizatsiya), kam qolgan tovarlar, ombor qiymati, to'plam (variantlar), kirim tarixi, Excel/AI orqali import |
 | **Sotuv tarixi** | Har bir chek, qisman qaytarish, chekni bekor qilish, chekni qayta chiqarish |
 | **Mijozlar** | Nasiya (qarz) hisobi, qarz to'lovlarini qabul qilish, xaridlar tarixi |
 | **Hisobot** | Savdo, foyda, kassadagi naqd pul, chiqimlar, sof foyda, top tovarlar, qarzdorlar, ta'minotchilar |
@@ -502,9 +502,23 @@ nomini ham shu yerda o'zgartirish mumkin.
 
 - **USB / Bluetooth skaner** — hech qanday sozlash shart emas, klaviatura kabi ishlaydi.
   Kassa sahifasi ochiq bo'lsa, skanerlangan tovar savatga tushadi.
-- **Telefon kamerasi** — kassada kamera belgisini bosing.
+  Ombor sahifasida skanerlansa: tovar bor bo'lsa — uning kirim sahifasi ochiladi,
+  yo'q bo'lsa — shu shtrix-kod bilan "Yangi tovar" formasi.
+- **Telefon kamerasi** — kassada va tovar formasida kamera belgisini bosing.
 
-### 8.4. Kassada tezkor ishlash
+### 8.4. Tovar qabul qilish (kirim)
+
+1. Ombor → tovarni skanerlang yoki bosing.
+2. **Tovar qabul qilish** bo'limida kelgan miqdorni yozing (blokda kelsa — "Blok bilan":
+   `2 blok × 12 = 24 dona`), kelish narxini tekshiring.
+3. Ta'minotchidan qarzga olingan bo'lsa — ta'minotchini tanlab **Qarzga** ni bosing:
+   uning qarziga avtomatik qo'shiladi (Hisobot → Ta'minotchilar).
+4. **Kirim qilish**. Hamma kirimlar: Ombor → **Kirim tarixi**.
+
+Sanoqda qoldiq boshqacha chiqsa — admin tovar sahifasida **Qoldiqni tuzatish** ni bosadi
+(sabab bilan saqlanadi).
+
+### 8.5. Kassada tezkor ishlash
 
 - Kg/litr tovar bosilganda miqdor oynasi ochiladi: klaviaturada `1.5` va `Enter`.
 - To'lov oynasida `Enter` — sotuvni yakunlaydi, `Esc` — yopadi.
@@ -519,7 +533,7 @@ nomini ham shu yerda o'zgartirish mumkin.
 | Sotuv, nasiya, qaytarish (bugungi chek) | ✅ | ✅ | — |
 | Eski chekdan qaytarish, chekni bekor qilish | ❌ | ✅ | — |
 | Mahsulot qo'shish, tovar qabul qilish (kirim) | ✅ | ✅ | — |
-| Narxni o'zgartirish, mahsulotni o'chirish, qoldiqni tuzatish | ❌ | ✅ | — |
+| Narxni o'zgartirish, mahsulotni yoki kategoriyani o'chirish, qoldiqni tuzatish | ❌ | ✅ | — |
 | Tannarxdan arzon sotish | ❌ | ✅ | — |
 | Hisobot, foyda, chiqimlar | ❌ | ✅ | — |
 | Xodimlar, do'kon ma'lumotlari | ❌ | ✅ | — |
@@ -675,11 +689,12 @@ shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va 
 | Sahifa | Holati |
 |---|---|
 | Kassa | ✅ React (`/app/pos`) |
+| Ombor, tovar qo'shish/tahrirlash, kirim tarixi | ✅ React (`/app/products`) |
 | Mijozlar | ✅ React (`/app/customers`) |
-| Ombor, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+| AI Scan, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
 
 Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
-Eski manzil (masalan `/pos`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+Eski manzil (masalan `/pos`, `/products`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
 
 ### Serverga o'rnatishda
 
