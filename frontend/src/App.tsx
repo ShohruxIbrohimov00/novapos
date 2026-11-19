@@ -19,8 +19,8 @@ import { ProductsPage } from '@/pages/products/ProductsPage';
 import { SupplyHistoryPage } from '@/pages/products/SupplyHistoryPage';
 
 /**
- * React ilovasi /app/... manzilida ishlaydi. Sahifalar bosqichma-bosqich ko'chiriladi;
- * hali ko'chirilmaganlari eski manzilda (menyu ularga oddiy havola bilan olib boradi).
+ * Butun ilova /app/... manzilida. Eski manzillar (/pos, /products, /login ...) server va
+ * Service Worker tomonidan shu yerga yo'naltiriladi.
  */
 /** Superadmin sahifalari faqat superadmin uchun (do'kon egasi kassaga qaytariladi) */
 function SuperOnly({ children }: { children: ReactNode }) {

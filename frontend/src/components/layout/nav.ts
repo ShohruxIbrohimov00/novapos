@@ -10,7 +10,7 @@ export interface NavLink {
   match: string[];
 }
 
-// Ko'chirilgan sahifalar `spa: true`. Qolganlari hozircha eski sahifaga oddiy havola.
+// Hamma sahifa React ichida (`spa: true` — sahifa qayta yuklanmaydi).
 export function navLinks(role: Role | undefined): NavLink[] {
   if (role === 'super_admin') {
     return [

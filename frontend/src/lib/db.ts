@@ -1,6 +1,6 @@
 // Qurilmadagi oflayn baza (IndexedDB).
-// ⚠️ Sxema va versiya webapp/static/js/offline-db.js va webapp/sw.js bilan BIR XIL bo'lishi SHART —
-// eski sahifalar, Service Worker va React bitta bazadan foydalanadi.
+// ⚠️ Sxema va versiya webapp/sw.js bilan BIR XIL bo'lishi SHART —
+// Service Worker va React bitta bazadan foydalanadi.
 
 const DB_NAME = 'novapos_db';
 const DB_VERSION = 6;
@@ -73,4 +73,21 @@ export async function put<T>(name: string, value: T): Promise<IDBValidKey> {
 
 export async function del(name: string, key: IDBValidKey): Promise<void> {
   await wrap((await store(name, 'readwrite')).delete(key));
+}
+
+/**
+ * Service Worker fonda oflayn sotuvlarni yuborishi uchun tokenni IDB'ga ham yozadi
+ * (SW localStorage'ni o'qiy olmaydi). Eski offline-db.js bilan bir xil kalit: 'access_token'.
+ */
+export async function setAuthToken(token: string | null): Promise<void> {
+  try {
+    const db = await openDb();
+    if (!db.objectStoreNames.contains('auth')) return;
+    await new Promise<void>((res) => {
+      const tx = db.transaction('auth', 'readwrite');
+      if (token) tx.objectStore('auth').put(token, 'access_token');
+      else tx.objectStore('auth').delete('access_token');
+      tx.oncomplete = () => res(); tx.onerror = () => res(); tx.onabort = () => res();
+    });
+  } catch { /* IDB yo'q */ }
 }

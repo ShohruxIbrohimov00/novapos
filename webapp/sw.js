@@ -2,7 +2,7 @@
  * NovaPOS — Service Worker v6.0
  * ==============================
  * v6.0:
- *   ✅ Barcha kutubxonalar (htmx, Font Awesome, shriftlar, QR skaner) LOKAL —
+ *   ✅ Barcha kutubxonalar (Font Awesome, shriftlar, QR skaner) LOKAL —
  *      internet bo'lmasa ham ilova to'liq ochiladi
  *   ✅ Barcha sahifalar o'rnatishda oldindan keshlanadi
  *   ✅ Sahifalar: keshdan darhol (tez ochiladi), fonda yangilanadi
@@ -11,27 +11,19 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '7.9.0';
+const VER      = '8.0.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
 const ALL_C    = [C_STATIC, C_PAGES, C_API];
 
 const STATIC_FILES = [
-  '/static/js/offline-db.js',
-  '/static/js/sync-manager.js',
-  '/static/js/api.js',
-  '/static/js/auth.js',
-  '/static/js/main.js',
-  '/static/js/cart.js',
   '/static/js/printer.js',
-  '/static/js/scanner.js',
   '/static/manifest.json',
   '/static/img/icon-192.png',
   '/static/img/icon-512.png',
   '/static/sounds/success.wav',
   '/static/sounds/error.wav',
-  '/static/vendor/htmx.min.js',
   '/static/vendor/html5-qrcode.min.js',
   '/static/vendor/fontawesome/css/all.min.css',
   '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
