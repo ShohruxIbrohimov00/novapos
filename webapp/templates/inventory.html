@@ -1087,24 +1087,21 @@ function renderFilters() {
 }
 
 function filterBy(mode) {
+    // ✅ Avval htmx.trigger('input') ishlatilardi — qidiruv maydoni "changed" sharti bilan
+    // sozlangani uchun so'rov umuman ketmasdi: filtrlar ishlamasdi.
     const searchInp = document.getElementById('inventory-search');
-    
-    // Qidiruv inputiga qaysi kategoriya yoki rejimligini yozib yuboramiz
-    // Buning uchun hx-vals dan foydalanamiz yoki URL-ga qo'shamiz
+    const values = {};
+    if (searchInp.value.trim()) values.search = searchInp.value.trim();
     if (mode === 'low') {
-        searchInp.setAttribute('hx-vals', '{"mode": "low"}');
+        searchInp.setAttribute('hx-vals', '{"mode": "low"}'); values.mode = 'low';
     } else if (mode === 'all') {
         searchInp.removeAttribute('hx-vals');
     } else {
-        searchInp.setAttribute('hx-vals', `{"category": "${mode}"}`);
+        searchInp.setAttribute('hx-vals', JSON.stringify({ category: mode })); values.category = mode;
     }
-    
-    // HTMX-ni qitiqlab qo'yamiz, u darhol serverga boradi
-    htmx.trigger('#inventory-search', 'input');
-    
-    // Aktiv chipni vizual o'zgartirish
-    document.querySelectorAll('.filter-chip, .sidebar-filter-btn').forEach(el => el.classList.remove('active'));
-    // (Aktivlikni belgilash mantiqi fragment yuklanganda serverdan kelsa ham bo'ladi)
+    currentMode = mode;
+    renderFilters();   // faol tugmani belgilash
+    htmx.ajax('GET', '/api/products/', { target: '#inventory-list', swap: 'innerHTML', values });
 }
 
 </script>

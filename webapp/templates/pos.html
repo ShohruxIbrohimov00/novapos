@@ -717,6 +717,9 @@
 /* ── New customer modal ── */
 #new-cust-modal { position: fixed; inset: 0; background: rgba(0,0,0,.48); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 16px; }
 #new-cust-modal.hidden { display: none !important; }
+/* ✅ Global oyna ham ekran ustida (avval CSS yo'q edi — to'lov oynasi orqasida, ko'rinmas joyda ochilardi) */
+#new-cust-modal-global { position: fixed; inset: 0; background: rgba(0,0,0,.48); z-index: 10002; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#new-cust-modal-global.hidden { display: none !important; }
 #new-cust-sheet { background: var(--surface); border-radius: 20px; padding: 20px; width: 100%; max-width: 380px; animation: coUp .2s ease; border: 1px solid var(--border); }
 .nc-title  { font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 14px; }
 .nc-fields { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -931,7 +934,7 @@
 ════════════════════════════════════════════════ -->
 
 <!-- ── CHECKOUT ── -->
-<div id="co-modal" class="hidden">
+<div id="co-modal" class="hidden" data-scanner-off>
     <div id="co-sheet">
         <div class="co-head">
             <span class="co-title">To'lovni tasdiqlash</span>
@@ -1077,7 +1080,7 @@
 </div>
 
 <!-- ── NEW CUSTOMER (global) ── -->
-<div id="new-cust-modal-global" class="hidden">
+<div id="new-cust-modal-global" class="hidden" data-scanner-off>
     <div id="new-cust-sheet-global" style="background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:380px;border:1px solid var(--border)">
         <h3 class="nc-title">Yangi mijoz</h3>
         <div class="nc-fields">
@@ -1092,7 +1095,7 @@
 </div>
 
 <!-- ── WEIGHT NUMPAD ── -->
-<div id="wnum-modal" class="hidden">
+<div id="wnum-modal" class="hidden" data-scanner-off>
     <div id="wnum-sheet">
         <div class="wnum-head">
             <div class="wnum-hinfo">
@@ -1904,7 +1907,7 @@ async function submitSale() {
 
         // 2) Sotuv saqlandi — endi chek va savatni tozalash
         closeCo();
-        _showRc({receipt_number:res?.receipt_number||'...',total_amount:res?.total_amount??total,paid_amount:paid},snap);
+        _showRc({receipt_number:res?.receipt_number||(offline?'OFFLINE':'...'),total_amount:res?.total_amount??total,paid_amount:paid,payment_method:saleData.payment_method},snap);
         const rcNum=document.getElementById('rc-num'); if(rcNum&&res?.receipt_number) rcNum.textContent=res.receipt_number;
         document.getElementById('rc-offline')?.classList.toggle('hidden',!offline);
         cart.clear(); _selId=null; _resetPayForm();
@@ -1963,8 +1966,45 @@ function _showRc(res, items) {
         </div>
         <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">${_footerTxt}</div>`;
     document.getElementById('rc-modal').classList.remove('hidden');
+    // ✅ Printer uchun matnli chek (avval _rcTxt hech qachon to'ldirilmasdi — chek bo'sh chiqardi)
+    _rcTxt = _buildRcText({ num, dt, items, tot, paid, chg, method: res.payment_method });
 }
-function printReceipt() { printer?.print(_rcTxt); }
+/* Termoprinter uchun matnli chek: 58mm = 32 belgi, 80mm = 48 belgi */
+function _buildRcText({ num, dt, items, tot, paid, chg, method }) {
+    const W = (typeof printer !== 'undefined' && printer.paperWidth) || 32;
+    const money = n => Math.round(n || 0).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+    const center = t => { t = String(t).slice(0, W); const pad = Math.max(0, Math.floor((W - t.length) / 2)); return ' '.repeat(pad) + t; };
+    const lr = (l, r) => { l = String(l); r = String(r); const sp = W - l.length - r.length; return sp >= 1 ? l + ' '.repeat(sp) + r : l.slice(0, Math.max(0, W - r.length - 1)) + ' ' + r; };
+    const wrap = t => { const out = []; t = String(t); while (t.length > W) { out.push(t.slice(0, W)); t = t.slice(W); } out.push(t); return out; };
+    const line = '-'.repeat(W);
+    const L = [];
+    wrap(_storeName.toUpperCase()).forEach(x => L.push(center(x)));
+    L.push(center(dt));
+    L.push(center('Chek #' + num));
+    L.push(line);
+    items.forEach(i => {
+        const q = parseFloat(i.quantity) || 0;
+        const sub = i.is_weight ? Math.round(i.total_price || q * i.price_out) : Math.round(q * i.price_out);
+        wrap(i.name).forEach(x => L.push(x));
+        const ql = i.is_weight ? `${_fmt3(q)} ${_unitLabel(i.unit_type)} x ${money(i.price_out)}` : `${q} x ${money(i.price_out)}`;
+        L.push(lr('  ' + ql, money(sub)));
+    });
+    L.push(line);
+    L.push(lr('JAMI:', money(tot) + " so'm"));
+    const mName = { naqd: 'Naqd', plastik: 'Plastik karta', nasiya: 'Nasiya (qarz)' }[method] || '';
+    if (mName) L.push(lr("To'lov:", mName));
+    if (paid > 0) L.push(lr("To'landi:", money(paid)));
+    if (chg > 0)  L.push(lr('Qaytim:', money(chg)));
+    if (method === 'nasiya' && tot - paid > 0) L.push(lr('Qarz:', money(tot - paid)));
+    L.push(line);
+    wrap(_footerTxt).forEach(x => L.push(center(x)));
+    L.push('', '');
+    return L.join('\n');
+}
+function printReceipt() {
+    if (!_rcTxt) { showToast("Chek ma'lumoti yo'q", 'error'); return; }
+    printer?.print(_rcTxt);
+}
 function closeRc()      { document.getElementById('rc-modal').classList.add('hidden'); }
 
 /* ════════════════════════════════════════════════════════
@@ -2014,19 +2054,30 @@ function _initCustSearch(){
 }
 function selCust(id,name){document.getElementById('co-cust-id').value=id;closeCustSearch();}
 function openNewCust(){
-    document.getElementById('new-cust-modal-global').classList.remove('hidden');
-    setTimeout(()=>document.getElementById('nc-name')?.focus(),100);
+    // To'lov oynasi ochiq bo'lsa — uning ichidagi oyna, aks holda global oyna
+    const inCo=!document.getElementById('co-modal').classList.contains('hidden');
+    document.getElementById(inCo?'new-cust-modal':'new-cust-modal-global').classList.remove('hidden');
+    setTimeout(()=>document.getElementById(inCo?'nc-name-co':'nc-name')?.focus(),100);
 }
-function closeNewCust(){document.getElementById('new-cust-modal-global').classList.add('hidden');}
+function closeNewCust(){
+    document.getElementById('new-cust-modal-global').classList.add('hidden');
+    document.getElementById('new-cust-modal')?.classList.add('hidden');
+}
 async function saveNewCust(){
-    const name=(document.getElementById('nc-name-co')||document.getElementById('nc-name'))?.value.trim();
-    const phone=(document.getElementById('nc-phone-co')||document.getElementById('nc-phone'))?.value.trim();
+    // ✅ Qaysi oyna ochiq bo'lsa — o'shaning maydonlari (avval doim yashirin nc-name-co o'qilardi → "Ismni kiriting")
+    const coOpen=!document.getElementById('new-cust-modal')?.classList.contains('hidden');
+    const name=document.getElementById(coOpen?'nc-name-co':'nc-name')?.value.trim();
+    const phone=document.getElementById(coOpen?'nc-phone-co':'nc-phone')?.value.trim();
     if(!name){showToast('Ismni kiriting','error');return;}
     try{
         const ui=JSON.parse(localStorage.getItem('user_info')||'{}');
         const res=await apiRequest('/api/customers/','POST',{store_id:parseInt(ui.store?.id||ui.store_id)||0,full_name:name,phone:phone});
-        if(res?.id){showToast('Mijoz saqlandi!','success');_selectCoCust(res.id,res.full_name);closeNewCust();}
-    }catch{showToast('Xatolik','error');}
+        if(res?.id){
+            showToast('Mijoz saqlandi!','success');_selectCoCust(res.id,res.full_name);closeNewCust();
+            document.getElementById('new-cust-modal')?.classList.add('hidden');
+            ['nc-name','nc-phone','nc-name-co','nc-phone-co'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+        }
+    }catch(e){showToast(e.offline?"Internet yo'q — mijoz saqlanmadi":(e.message||'Xatolik'),'error');}
 }
 
 /* ════════════════════════════════════════════════════════
@@ -2036,6 +2087,25 @@ function _beep(isErr) {
     const s=isErr?_sfxErr:_sfxOk;
     s.pause(); s.currentTime=0; s.play().catch(()=>{});
 }
+
+/* ✅ Jismoniy klaviatura: tarozi oynasida raqam/nuqta/Backspace/Enter, to'lov oynasida Enter */
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const wOpen = !document.getElementById('wnum-modal').classList.contains('hidden');
+    if (wOpen) {
+        if (/^[0-9]$/.test(e.key))            { wnumKey(e.key); e.preventDefault(); }
+        else if (e.key === '.' || e.key === ',') { wnumKey('.'); e.preventDefault(); }
+        else if (e.key === 'Backspace')       { wnumKey('⌫'); e.preventDefault(); }
+        else if (e.key === 'Delete')          { wnumKey('CLR'); e.preventDefault(); }
+        else if (e.key === 'Enter')           { wnumApply(); e.preventDefault(); }
+        return;
+    }
+    const coOpen = !document.getElementById('co-modal').classList.contains('hidden');
+    if (coOpen && e.key === 'Enter' && e.target?.id !== 'co-cust-search'
+        && !e.target?.closest?.('#new-cust-modal, #new-cust-modal-global')) {
+        e.preventDefault(); submitSale();
+    }
+});
 
 /* Escape klavishi */
 document.addEventListener('keydown', e => {

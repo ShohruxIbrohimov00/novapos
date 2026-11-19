@@ -81,10 +81,15 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
       resData = await response.json();
     }
 
-    // 401 — token muddati tugagan yoki noto'g'ri
+    // 401 — token muddati tugagan yoki noto'g'ri.
+    // ✅ Kirish so'rovlarida (noto'g'ri parol/PIN) bu oddiy xato — foydalanuvchiga ko'rsatiladi.
+    // Avval null qaytarilardi: xabar chiqmasdi va "Kirish" tugmasi abadiy aylanib qolardi.
     if (response.status === 401) {
-      _handleUnauthorized();
-      return null;
+      const isAuthCall = /^\/api\/auth\/(login|login-pin|register-store)/.test(url);
+      if (!isAuthCall) { _handleUnauthorized(); return null; }
+      const msg = _msg(resData?.detail) || "Login yoki parol noto'g'ri";
+      if (!silent) showToast(msg, 'error');
+      const err = new Error(msg); err.status = 401; throw err;
     }
 
     // 402 — obuna tugagan

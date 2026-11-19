@@ -79,6 +79,20 @@
     })();
     </script>
 
+    <script>
+    // Ekran klaviaturasi faqat sensorli planshet/terminalda o'zi ochiladi.
+    // Kompyuterda (sichqoncha + jismoniy klaviatura) maydonlar oddiy ishlaydi.
+    window.__useScreenKb = function () {
+        try { return matchMedia('(pointer: coarse)').matches && window.innerWidth >= 768; } catch (e) { return false; }
+    };
+    // Maydonni ekran klaviaturasiga bog'lash: fokus QOLADI (jismoniy klaviatura/skaner ishlaydi),
+    // faqat tizim klaviaturasi chiqmasligi uchun inputmode="none".
+    window.__kbAttach = function (el, onSync) {
+        el.setAttribute('inputmode', 'none');
+        if (onSync && !el.dataset.kbsync) { el.dataset.kbsync = '1'; el.addEventListener('input', onSync); }
+    };
+    </script>
+
     <!-- Sahifalar orasida silliq o'tish (Chrome/Edge/Safari 18+) va menyuga yaqinlashganda oldindan yuklash -->
     <script type="speculationrules">
     {"prefetch": [{"source": "document", "where": {"selector_matches": ".nav-link"}, "eagerness": "moderate"}]}

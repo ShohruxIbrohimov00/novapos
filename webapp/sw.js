@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '6.1.0';
+const VER      = '6.2.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;

@@ -21,6 +21,13 @@ from app.database import get_db
 from app.dependencies import get_current_employee
 from app.timezone_utils import now_tashkent
 
+def _admin_only(employee: models.Employee) -> None:
+    """✅ Foyda, chiqim va hisobotlar faqat do'kon egasi (admin) uchun"""
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin"):
+        raise HTTPException(403, "Hisobotlar faqat admin uchun")
+
+
 router = APIRouter(tags=["Reports"])
 
 
@@ -66,6 +73,7 @@ def get_dashboard(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _admin_only(employee)
     start_dt, end_dt = _time_range(period, start_date, end_date)
     store_id = employee.store_id
 
@@ -189,6 +197,7 @@ def get_top_products(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _admin_only(employee)
     start_dt, end_dt = _time_range(period, start_date, end_date)
     store_id = employee.store_id
 
@@ -273,6 +282,7 @@ def get_expenses(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _admin_only(employee)
     start_dt, end_dt = _time_range(period, start_date, end_date)
     expenses = crud.get_store_expenses(db, employee.store_id, start_dt, end_dt)
     return [
@@ -293,6 +303,7 @@ def delete_expense(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _admin_only(employee)
     exp = db.query(models.Expense).filter(
         models.Expense.id       == expense_id,
         models.Expense.store_id == employee.store_id,

@@ -292,6 +292,10 @@ class GlobalScanner {
             // Modifier tugmalar (Ctrl+C, Alt+Tab va hokazo) — ignor
             if (e.ctrlKey || e.metaKey || e.altKey) return;
 
+            // ✅ Raqam kiritiladigan oyna ochiq (vazn, to'lov summasi, yangi mijoz) — skaner jim turadi.
+            // Aks holda tez yozilgan "1.5"+Enter yoki "50000"+Enter shtrix-kod deb ushlanardi.
+            if (document.querySelector('[data-scanner-off]:not(.hidden)')) { this._hwBuffer = ''; return; }
+
             const key = e.key;
             if (!key) return;
 
@@ -482,8 +486,10 @@ class GlobalScanner {
 
         const now = Date.now();
 
-        // Anti-duplicate: bir xil kodni ketma-ket o'qishni cheklash
-        if (code === this._lastScanned && (now - this._lastScanAt) < GlobalScanner.DEBOUNCE_MS) {
+        // Anti-duplicate FAQAT KAMERA uchun (kamera bitta kodni ketma-ket ko'p marta o'qiydi).
+        // ✅ USB skanerda har bir bosish = bitta tovar: kassir 2 ta bir xil suvni tez skanerlasa,
+        // ikkalasi ham qo'shilishi shart (avval 1.5 soniya ichidagi ikkinchisi yo'qolardi).
+        if (source === 'camera' && code === this._lastScanned && (now - this._lastScanAt) < GlobalScanner.DEBOUNCE_MS) {
             return;
         }
 

@@ -57,6 +57,16 @@ def _fmt(p: models.Product) -> dict:
 # MAHSULOTLAR RO'YXATI + QIDIRUV
 # ============================================================
 
+def _is_admin(employee: models.Employee) -> bool:
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    return role in ("admin", "super_admin")
+
+
+def _require_admin(employee: models.Employee, what: str) -> None:
+    if not _is_admin(employee):
+        raise HTTPException(403, f"{what} faqat admin uchun")
+
+
 @router.get("/", response_class=Response)
 async def get_products(
     request:  Request,
@@ -86,7 +96,9 @@ async def get_products(
         query = query.filter(models.Product.quantity <= models.Product.min_stock_limit)
 
     # 3. Kategoriya bo'yicha filtr
-    if category:
+    if category in ("Kategoriyasiz", "Boshqa"):
+        query = query.filter(models.Product.category_id == None)   # noqa: E711
+    elif category:
         query = query.join(models.Category).filter(models.Category.name == category)
 
     products = query.all()
@@ -317,6 +329,11 @@ async def update_product(
 
     # short_code o'zgarsa — bandligini tekshirish
     d = data.model_dump(exclude_unset=True)
+    # ✅ Kassir narx va qoldiqni o'zgartira olmaydi (o'zgarmagan qiymatlar yuborilsa — ruxsat)
+    if not _is_admin(employee):
+        for f in ("price_in", "price_out", "quantity", "min_stock_limit"):
+            if f in d and d[f] is not None and float(d[f]) != float(getattr(p, f) or 0):
+                raise HTTPException(403, "Narx va qoldiqni faqat admin o'zgartira oladi")
     if "short_code" in d and d["short_code"]:
         exist = db.query(models.Product).filter(
             models.Product.store_id   == employee.store_id,
@@ -360,7 +377,8 @@ async def delete_product(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
-    """Soft delete + WebSocket broadcast"""
+    """Soft delete + WebSocket broadcast. ✅ Faqat admin."""
+    _require_admin(employee, "Mahsulotni o'chirish")
     p = db.query(models.Product).filter(
         models.Product.id       == product_id,
         models.Product.store_id == employee.store_id,
@@ -401,6 +419,10 @@ async def create_supply_batch(
     ).first()
     if not p:
         raise HTTPException(404, "Mahsulot topilmadi")
+    # ✅ Kassir tovar qabul qila oladi, lekin sotuv narxini o'zgartira olmaydi
+    if (not _is_admin(employee) and data.price_out
+            and float(data.price_out) != float(p.price_out or 0)):
+        raise HTTPException(403, "Sotuv narxini faqat admin o'zgartira oladi")
 
     try:
         batch = crud.create_supply_batch(
@@ -510,6 +532,7 @@ def bulk_update_limits(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
+    _require_admin(employee, "Limitlarni o'zgartirish")
     products = db.query(models.Product).filter(
         models.Product.store_id   == employee.store_id,
         models.Product.unit_type  == unit,

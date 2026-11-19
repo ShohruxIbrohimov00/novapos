@@ -1571,9 +1571,10 @@ let kb = { open: false, mode: 'text', target: null, shift: false };
 const isDesktop = () => window.innerWidth >= 768;
 
 function kbFocus(el) {
-    if (!isDesktop()) return;
-    el.blur();
-    el.style.caretColor = 'transparent';
+    // ✅ Kompyuterda ekran klaviaturasi o'zi ochilmaydi va maydondan fokus olinmaydi
+    // (avval el.blur() tufayli jismoniy klaviatura bilan umuman yozib bo'lmasdi)
+    if (!isDesktop() || !window.__useScreenKb()) return;
+    window.__kbAttach(el, _kbSyncTyped);
     kb.target = el;
     kb.mode   = el.dataset.kbmode || 'text';
     const hint = document.getElementById('kb-active-field');
@@ -2082,17 +2083,18 @@ async function submitGroup() {
 /* ── EDIT MODE ── */
 async function loadEditData(id) {
     try {
+        // ✅ Avval serverdan (eng yangi narx/qoldiq) — kesh faqat internet bo'lmasa.
+        // Avval keshdan olinardi: boshqa qurilmada o'zgargan narx eskisi bilan qayta yozilardi.
         let p=null;
-        if(window.NovaPOS_DB)p=await NovaPOS_DB.products.getById(parseInt(id));
-        if(!p){const list=await apiRequest('/api/products?limit=9999');p=list?.find(x=>x.id==id);}
+        try { p=await apiRequest(`/api/products/${parseInt(id)}`,'GET',null,true); } catch {}
+        if(!p?.id && window.NovaPOS_DB) p=await NovaPOS_DB.products.getById(parseInt(id));
         if(!p){showToast('Mahsulot topilmadi','error');return;}
         document.getElementById('prod-id').value=p.id;
+        // ✅ Tahrirlashda nom va shtrix-kodni tuzatish mumkin (avval faqat o'qish uchun edi)
         document.getElementById('name').value=p.name;
-        document.getElementById('name').readOnly=true;
-        document.getElementById('name').dataset.kbmode='';
+        document.getElementById('name').readOnly=false;
         document.getElementById('barcode').value=p.barcode||'';
-        document.getElementById('barcode').readOnly=true;
-        document.getElementById('barcode').dataset.kbmode='';
+        document.getElementById('barcode').readOnly=false;
         document.getElementById('short_code').value=p.short_code||'';
         document.getElementById('price_in').value=p.price_in||'';
         document.getElementById('price_out').value=p.price_out||'';
