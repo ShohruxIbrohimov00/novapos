@@ -659,16 +659,16 @@ def get_sales_history(
     employee_id:    Optional[int]      = None,
     limit:          int                = 100,
     skip:           int                = 0,
+    include_cancelled: bool            = False,
 ) -> List[models.Sale]:
     q = db.query(models.Sale).options(
-        joinedload(models.Sale.items),
+        joinedload(models.Sale.items).joinedload(models.SaleItem.product),
         joinedload(models.Sale.employee),
         joinedload(models.Sale.customer),
         joinedload(models.Sale.returns),
-    ).filter(
-        models.Sale.store_id     == store_id,
-        models.Sale.is_cancelled == False,
-    )
+    ).filter(models.Sale.store_id == store_id)
+    if not include_cancelled:
+        q = q.filter(models.Sale.is_cancelled == False)  # noqa: E712
     if start_date:
         q = q.filter(models.Sale.created_at >= start_date)
     if end_date:

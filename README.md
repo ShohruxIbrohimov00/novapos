@@ -35,7 +35,7 @@ obuna to'laydi, siz esa **superadmin** sifatida hammasini boshqarasiz.
 |---|---|
 | **Kassa** | Shtrix-kod skaneri (USB yoki telefon kamerasi), PLU kod, nom bo'yicha qidiruv, kg/litr tovarlar, naqd / plastik / nasiya, qaytim hisobi, chek chop etish |
 | **Ombor** | Mahsulot qo'shish va tahrirlash, kategoriyalar, kirim (blok bilan, ta'minotchidan qarzga), qoldiqni tuzatish (inventarizatsiya), kam qolgan tovarlar, ombor qiymati, to'plam (variantlar), kirim tarixi, Excel/AI orqali import |
-| **Sotuv tarixi** | Har bir chek, qisman qaytarish, chekni bekor qilish, chekni qayta chiqarish |
+| **Sotuv tarixi** | Davr bo'yicha jami (naqd / plastik / nasiya / qaytarilgan), chek raqami, mijoz yoki tovar bo'yicha qidiruv, qisman qaytarish, chekni bekor qilish, chekni qayta chiqarish, qaytarishlar ro'yxati |
 | **Mijozlar** | Nasiya (qarz) hisobi, qarz to'lovlarini qabul qilish, xaridlar tarixi |
 | **Hisobot** | Savdo, foyda, kassadagi naqd pul, chiqimlar, sof foyda, top tovarlar, qarzdorlar, ta'minotchilar |
 | **Xodimlar** | 1 ta admin + 3 tagacha kassir, PIN bilan tezkor kirish |
@@ -518,7 +518,14 @@ nomini ham shu yerda o'zgartirish mumkin.
 Sanoqda qoldiq boshqacha chiqsa — admin tovar sahifasida **Qoldiqni tuzatish** ni bosadi
 (sabab bilan saqlanadi).
 
-### 8.5. Kassada tezkor ishlash
+### 8.5. Tovarni qaytarish
+
+Tarix → chekni toping (chek raqami, mijoz yoki tovar nomini yozing) → tovar yonidagi
+**Qaytarish** → miqdor va sabab. Tovar omborga qaytadi, chek summasi kamayadi; nasiya
+bo'lsa, mijoz qarzi kamayadi. Kassir faqat bugungi chekdan qaytara oladi, eskisidan — admin.
+Chekni butunlay bekor qilish — faqat admin.
+
+### 8.6. Kassada tezkor ishlash
 
 - Kg/litr tovar bosilganda miqdor oynasi ochiladi: klaviaturada `1.5` va `Enter`.
 - To'lov oynasida `Enter` — sotuvni yakunlaydi, `Esc` — yopadi.
@@ -690,11 +697,12 @@ shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va 
 |---|---|
 | Kassa | ✅ React (`/app/pos`) |
 | Ombor, tovar qo'shish/tahrirlash, kirim tarixi | ✅ React (`/app/products`) |
+| Sotuv tarixi | ✅ React (`/app/sales`) |
 | Mijozlar | ✅ React (`/app/customers`) |
-| AI Scan, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+| AI Scan, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
 
 Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
-Eski manzil (masalan `/pos`, `/products`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+Eski manzil (masalan `/pos`, `/products`, `/sales`, `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
 
 ### Serverga o'rnatishda
 

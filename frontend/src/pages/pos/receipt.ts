@@ -39,6 +39,8 @@ export interface ReceiptData {
   method: 'naqd' | 'plastik' | 'nasiya';
   customer?: string | null;
   offline?: boolean;
+  /** Qayta chiqarilgan chek */
+  copy?: boolean;
 }
 
 export function storeName(): string {
@@ -65,6 +67,7 @@ export function receiptText(r: ReceiptData): string {
   wrap(storeName().toUpperCase()).forEach((x) => L.push(center(x)));
   L.push(center(dateTime(r.date)), center(`Chek #${r.number}`));
   if (r.offline) L.push(center('(internetsiz)'));
+  if (r.copy) L.push(center('(nusxa)'));
   L.push(line);
   for (const i of r.items) {
     wrap(i.name).forEach((x) => L.push(x));
