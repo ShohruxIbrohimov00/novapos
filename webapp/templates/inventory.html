@@ -15,7 +15,7 @@
 #inv-root {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background: var(--bg);
     overflow: hidden;
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -241,9 +241,9 @@
     grid-template-columns: 1fr;
     gap: 10px;
 }
-@media (min-width: 640px)  { .product-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1280px) { .product-grid { grid-template-columns: repeat(4, 1fr); } }
+/* ✅ Ustunlar konteyner kengligiga qarab (yon menyu kengligi har xil — ekran kengligiga emas) */
+@media (min-width: 560px) { .product-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); } }
+.product-grid > * { min-width: 0; }
 
 .max-w-screen-2xl { max-width: 1536px; margin: 0 auto; }
 
@@ -661,15 +661,15 @@
                 </div>
                 <!-- Tugmalar -->
                 <div class="inv-actions">
-                    <a href="/products/supply-history" hx-get="/products/supply-history" hx-target="#page-content" hx-push-url="true" class="btn btn-success">
+                    <a href="/products/supply-history" class="btn btn-success">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         <span class="btn-label">Kirim tarixi</span>
                     </a>
-                    <a href="/ai-scan" hx-get="/ai-scan" hx-target="#page-content" hx-push-url="true" class="ai-scan-btn btn btn-violet" title="AI orqali mahsulot qo'shish">
+                    <a href="/ai-scan" class="ai-scan-btn btn btn-violet" title="AI orqali mahsulot qo'shish">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                         <span class="btn-label">AI Qo'shish</span>
                     </a>
-                    <a href="/products/add" hx-get="/products/add" hx-target="#page-content" hx-push-url="true" class="btn btn-primary">
+                    <a href="/products/add" class="btn btn-primary">
                         <i class="fa-solid fa-plus" style="font-size:12px"></i>
                         <span class="btn-label">Qo'shish</span>
                     </a>
@@ -686,7 +686,7 @@
                     hx-get="/api/products/"
                     hx-trigger="input changed delay:300ms, search"
                     hx-target="#inventory-list"
-                    hx-indicator="#global-loader"
+                   
                     placeholder="Nomi, barcode yoki PLU...">
             </div>
         </div>
@@ -725,7 +725,7 @@
                 <p class="ai-box-desc">
                     Jadvalni rasmga oling yoki Excel yuklang — AI avtomatik taniydi
                 </p>
-                <a href="/ai-scan" hx-get="/ai-scan" hx-target="#page-content" hx-push-url="true" class="ai-scan-btn btn btn-violet" style="width:100%;justify-content:center">
+                <a href="/ai-scan" class="ai-scan-btn btn btn-violet" style="width:100%;justify-content:center">
                     <i class="fa-solid fa-robot" style="font-size:12px"></i> AI orqali qo'shish
                 </a>
             </div>
@@ -739,7 +739,7 @@
                         class="product-grid"
                         hx-get="/api/products/" 
                         hx-trigger="load once"
-                        hx-indicator="#global-loader">
+                       >
 
                         <!-- Skeleton cards -->
                         {% for i in range(8) %}
@@ -802,6 +802,15 @@ async function initInventoryPage() {
     // Klaviatura holatini tozalash
     _invKbOpen = false;
     document.getElementById('inv-kb-panel').classList.remove('open');
+
+    // ✅ Filtrlar, son va minimal limitlar uchun mahsulotlar ro'yxati
+    // (avval umuman yuklanmasdi — "0 ta", bo'sh filtr va abadiy skeleton)
+    try {
+        const list = await apiRequest('/api/products/', 'GET', null, true);
+        allProducts = Array.isArray(list) ? list : [];
+    } catch { allProducts = []; }
+    _refreshUI();
+    _updateCounters();
 }
 
 // Sahifa yuklanganda ishga tushirish
@@ -1078,24 +1087,21 @@ function renderFilters() {
 }
 
 function filterBy(mode) {
+    // ✅ Avval htmx.trigger('input') ishlatilardi — qidiruv maydoni "changed" sharti bilan
+    // sozlangani uchun so'rov umuman ketmasdi: filtrlar ishlamasdi.
     const searchInp = document.getElementById('inventory-search');
-    
-    // Qidiruv inputiga qaysi kategoriya yoki rejimligini yozib yuboramiz
-    // Buning uchun hx-vals dan foydalanamiz yoki URL-ga qo'shamiz
+    const values = {};
+    if (searchInp.value.trim()) values.search = searchInp.value.trim();
     if (mode === 'low') {
-        searchInp.setAttribute('hx-vals', '{"mode": "low"}');
+        searchInp.setAttribute('hx-vals', '{"mode": "low"}'); values.mode = 'low';
     } else if (mode === 'all') {
         searchInp.removeAttribute('hx-vals');
     } else {
-        searchInp.setAttribute('hx-vals', `{"category": "${mode}"}`);
+        searchInp.setAttribute('hx-vals', JSON.stringify({ category: mode })); values.category = mode;
     }
-    
-    // HTMX-ni qitiqlab qo'yamiz, u darhol serverga boradi
-    htmx.trigger('#inventory-search', 'input');
-    
-    // Aktiv chipni vizual o'zgartirish
-    document.querySelectorAll('.filter-chip, .sidebar-filter-btn').forEach(el => el.classList.remove('active'));
-    // (Aktivlikni belgilash mantiqi fragment yuklanganda serverdan kelsa ham bo'ladi)
+    currentMode = mode;
+    renderFilters();   // faol tugmani belgilash
+    htmx.ajax('GET', '/api/products/', { target: '#inventory-list', swap: 'innerHTML', values });
 }
 
 </script>

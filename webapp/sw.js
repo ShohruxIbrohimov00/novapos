@@ -1,24 +1,23 @@
 /**
- * NovaPOS — Service Worker v5.0
+ * NovaPOS — Service Worker v6.0
  * ==============================
- * v5.0 o'zgarishlar:
- *   ✅ IDB version = 5 (offline-db.js bilan mos)
- *   ✅ STATIC_FILES ga main.js, printer.js, scanner.js qo'shildi
- *   ✅ PAGES ga /register qo'shildi
- *   ✅ TTL endpointlar backend v2.2 ga moslashtirildi
- *   ✅ SW hech qachon stock kamaytirmaydi — faqat signal yuboradi
- *   ✅ 206 range request o'tkazilmaydi
- *   ✅ localStorage ishlatilmaydi — faqat IDB auth store
+ * v6.0:
+ *   ✅ Barcha kutubxonalar (htmx, Font Awesome, shriftlar, QR skaner) LOKAL —
+ *      internet bo'lmasa ham ilova to'liq ochiladi
+ *   ✅ Barcha sahifalar o'rnatishda oldindan keshlanadi
+ *   ✅ Sahifalar: keshdan darhol (tez ochiladi), fonda yangilanadi
+ *   ✅ API: avval tarmoq (doim yangi ma'lumot), tarmoq yo'q bo'lsa — kesh,
+ *      u ham bo'lmasa 503 + X-SW-Offline (api.js IndexedDB dan oladi)
+ *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '5.0.62';
+const VER      = '6.2.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
 const ALL_C    = [C_STATIC, C_PAGES, C_API];
 
 const STATIC_FILES = [
-  // '/static/css/fa.min.css', 
   '/static/js/offline-db.js',
   '/static/js/sync-manager.js',
   '/static/js/api.js',
@@ -27,51 +26,49 @@ const STATIC_FILES = [
   '/static/js/cart.js',
   '/static/js/printer.js',
   '/static/js/scanner.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+  '/static/manifest.json',
+  '/static/img/icon-192.png',
+  '/static/img/icon-512.png',
+  '/static/sounds/success.wav',
+  '/static/sounds/error.wav',
+  '/static/vendor/htmx.min.js',
+  '/static/vendor/html5-qrcode.min.js',
+  '/static/vendor/fontawesome/css/all.min.css',
+  '/static/vendor/fontawesome/webfonts/fa-solid-900.woff2',
+  '/static/vendor/fontawesome/webfonts/fa-regular-400.woff2',
+  '/static/vendor/fontawesome/webfonts/fa-brands-400.woff2',
+  '/static/vendor/fonts/fonts.css',
+  '/static/vendor/fonts/plus-jakarta-sans-latin-400-normal.woff2',
+  '/static/vendor/fonts/plus-jakarta-sans-latin-500-normal.woff2',
+  '/static/vendor/fonts/plus-jakarta-sans-latin-600-normal.woff2',
+  '/static/vendor/fonts/plus-jakarta-sans-latin-700-normal.woff2',
+  '/static/vendor/fonts/plus-jakarta-sans-latin-800-normal.woff2',
+  '/static/vendor/fonts/jetbrains-mono-latin-400-normal.woff2',
+  '/static/vendor/fonts/jetbrains-mono-latin-600-normal.woff2',
 ];
 
 const PAGES = [
-  '/login', '/register',
-  '/pos', '/products', '/sales/history',
-  '/reports', '/settings', '/products/supply-history',
+  '/', '/login', '/register',
+  '/pos', '/products', '/products/add', '/sales', '/sales/history',
+  '/reports', '/settings', '/products/supply-history', '/customers',
 ];
 
-// API kesh muddatlari (soniya) — backend v2.2 endpointlari
-const TTL = {
-  // Hisobotlar — har doim yangi bo'lishi shart (0 - keshni chetlab o'tishga yaqin)
-  '/api/reports':                       0,   // Doim tarmoqdan olishga urinadi (Network First)
-  
-  '/api/products/pos/':                 0,
-  '/api/products':                      2,   // 2 sekunddan keyin eskirgan hisoblanadi
-  
-  // Mijoz va Ta'minotchilar — nisbatan kamroq o'zgaradi
-  '/api/customers':                     5,   
-  '/api/suppliers':                     5,   
-  
-  // Xodimlar va Do'kon sozlamalari
-  '/api/employees':                    10,   
-  '/api/stores':                       10,   
-
-  // Profil ma'lumotlari — juda kam o'zgaradi
-  '/api/auth/me':                      30,   
-
-  // Superadmin qismi — sekundma-sekund yangilanish shart emas
-  '/api/superadmin/tarifs':           120,   // 2 daqiqa
-  '/api/superadmin/settings':         120,
-  '/api/superadmin/stores':            60,
-  '/api/superadmin/requests':          30,
-};
+// Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
+const API_CACHEABLE = [
+  '/api/reports', '/api/products', '/api/customers', '/api/suppliers',
+  '/api/employees', '/api/stores', '/api/auth/me', '/api/subscriptions',
+  '/api/sales/history', '/api/superadmin',
+];
 
 // ─── INSTALL ─────────────────────────────────────────────────
 self.addEventListener('install', e => {
-  console.log(`[SW ${VER}] Install`);
   e.waitUntil(
     Promise.all([
       caches.open(C_STATIC).then(c =>
-        Promise.allSettled(STATIC_FILES.map(u => c.add(u).catch(() => {})))
+        Promise.allSettled(STATIC_FILES.map(u => c.add(u)))
       ),
       caches.open(C_PAGES).then(c =>
-        Promise.allSettled(PAGES.map(u => c.add(u).catch(() => {})))
+        Promise.allSettled(PAGES.map(u => c.add(u)))
       ),
     ]).then(() => self.skipWaiting())
   );
@@ -90,139 +87,93 @@ self.addEventListener('activate', e => {
 
 // ─── FETCH ───────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
-  const { request: req } = e;
+  const req = e.request;
   const url = new URL(req.url);
 
-  // 1. API FRAGMENTLARINI SW DAN MUSTASNO QILISH
-  if (url.pathname.startsWith('/api/products/')) {
-    e.respondWith(fetch(req)); 
-    return;
-  }
-  const isFont = req.destination === 'font' || 
-                 url.pathname.includes('webfonts') || 
-                 url.pathname.endsWith('.woff2') || 
-                 url.pathname.endsWith('.woff');
-
-  if (isFont) {
-    e.respondWith(_cacheFirst(req));
-    return;
-  }
   if (!url.protocol.startsWith('http')) return;
+  if (req.method !== 'GET') return;            // POST/PUT — doim to'g'ridan-to'g'ri
   if (req.headers.get('range')) return;
-  if (req.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/ws/')) return;
 
   if (url.pathname.startsWith('/api/')) {
-    e.respondWith(_apiStrategy(req, url)); return;
+    e.respondWith(_apiNetworkFirst(req, url)); return;
   }
-
-  // 2. Statik fayllar (CDN ham)
-  if (
-    url.pathname.startsWith('/static/') ||
-    url.hostname.includes('cdnjs.cloudflare.com') ||
-    url.hostname.includes('cdn.tailwindcss.com') ||
-    url.hostname.includes('fonts.googleapis.com') ||
-    url.hostname.includes('fonts.gstatic.com') ||
-    url.hostname.includes('unpkg.com') ||
-    url.hostname.includes('cdn.jsdelivr.net')
-  ) {
+  if (url.pathname.startsWith('/static/')) {
     e.respondWith(_cacheFirst(req)); return;
   }
-
-  // 3. HTML sahifalar — stale-while-revalidate
-  if (req.headers.get('accept')?.includes('text/html')) {
+  if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
     e.respondWith(_swrPage(req)); return;
   }
 });
 
 // ─── STRATEGIYALAR ───────────────────────────────────────────
 
-async function _apiStrategy(req, url) {
-  const cache  = await caches.open(C_API);
-  const cached = await cache.match(req);
-
-  if (cached) {
-    // ✅ QO'SHILDI: Agar keshda 403 yoki 401 bo'lsa, uni o'chirib yuboramiz
-    if (cached.status === 403 || cached.status === 401) {
-      await cache.delete(req);
-    } else {
-      const at  = parseInt(cached.headers.get('x-sw-at') || '0');
-      const ttl = _getTTL(url.pathname) * 1000;
-      if (Date.now() - at < ttl) return cached;
-    }
-  }
-
-  try {
-    // ✅ req.clone() ishlatamiz, headerlar (Authorization) yo'qolmasligi uchun
-    return await _fetchAndCache(req.clone(), cache, url.pathname);
-  } catch {
-    if (cached) return cached;
-    return new Response('[]', { headers: { 'Content-Type': 'application/json', 'X-SW-Offline': '1' } });
-  }
+function _offlineJson() {
+  return new Response(JSON.stringify({ detail: "Internet aloqasi yo'q" }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json', 'X-SW-Offline': '1' },
+  });
 }
 
-async function _fetchAndCache(req, cache, pathname) {
-  // ✅ clone() orqali barcha headerlarni serverga yetkazamiz
-  const res = await fetch(req); 
-  
-  // ✅ FAQAT status 200 bo'lsagina saqlaymiz. 403/404/500 hech qachon keshga kirmaydi!
-  if (res.status === 200 && _shouldCache(pathname)) {
-    const resClone = res.clone();
-    const body = await resClone.blob();
-    const headers = new Headers(resClone.headers);
-    headers.set('x-sw-at', String(Date.now()));
-    
-    cache.put(req, new Response(body, {
-      status: resClone.status,
-      statusText: resClone.statusText,
-      headers: headers
-    }));
+async function _apiNetworkFirst(req, url) {
+  const cacheable = API_CACHEABLE.some(p => url.pathname.startsWith(p));
+  try {
+    const res = await fetch(req);
+    if (cacheable && res.status === 200) {
+      const cache = await caches.open(C_API);
+      cache.put(req, res.clone());
+    }
+    return res;
+  } catch {
+    if (cacheable) {
+      const cached = await caches.match(req, { cacheName: C_API });
+      if (cached) {
+        const h = new Headers(cached.headers); h.set('X-SW-Cache', '1');
+        return new Response(await cached.blob(), { status: 200, headers: h });
+      }
+    }
+    return _offlineJson();
   }
-  return res;
 }
 
 async function _cacheFirst(req) {
-  const cached = await caches.match(req);
+  const cached = await caches.match(req, { ignoreSearch: true });
   if (cached) return cached;
-
   try {
-    // Agar tashqi manba bo'lsa (CDN), uni keshga olish uchun maxsus request yuboramiz
-    const fetchRequest = req.clone();
-    const res = await fetch(fetchRequest);
-
-    // Faqat to'g'ri kelgan javoblarni keshga olamiz
-    if (res && (res.status === 200 || res.status === 0)) {
+    const res = await fetch(req);
+    if (res && res.status === 200) {
       const cache = await caches.open(C_STATIC);
       cache.put(req, res.clone());
-      return res;
     }
     return res;
-  } catch (err) {
-    console.error("[SW] Fetch failed for:", req.url);
+  } catch {
     return new Response('', { status: 503 });
   }
 }
-async function _swrPage(req) {
-  const cache = await caches.open(C_PAGES);
-  const cached = await cache.match(req);
 
-  const netPromise = fetch(req.clone())
-    .then(res => { if (res.ok) cache.put(req, res.clone()); return res; })
+async function _swrPage(req) {
+  const cache  = await caches.open(C_PAGES);
+  const url    = new URL(req.url);
+  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz
+  const key    = url.pathname.startsWith('/products/edit/') ? null : url.pathname;
+  const cached = key ? await cache.match(key) : null;
+
+  const net = fetch(req)
+    .then(res => { if (res.ok && key) cache.put(key, res.clone()); return res; })
     .catch(() => null);
 
-  // Keshda bor — darhol qaytaramiz, background da yangilanadi
-  if (cached) {
-    netPromise.catch(() => {});
-    return cached; 
-  }
+  if (cached) { net.catch(() => {}); return cached; }   // darhol ochiladi
 
-  // Keshda yo'q — tarmoqdan olamiz
-  const res = await netPromise;
+  const res = await net;
   if (res) return res;
 
-  // Tarmoq ham yo'q — login sahifasini qaytaramiz
-  const login = await cache.match('/login');
-  if (login) return login;
-
+  if (url.pathname.startsWith('/products/edit/')) {
+    const add = await cache.match('/products/add');
+    if (add) return add;
+  }
+  const pos = await cache.match('/pos');
+  if (pos) return pos;
   return new Response(_offlinePage(), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   });
@@ -322,17 +273,6 @@ self.addEventListener('message', e => {
 });
 
 // ─── YORDAMCHI FUNKSIYALAR ────────────────────────────────────
-
-function _getTTL(path) {
-  for (const [k, v] of Object.entries(TTL)) {
-    if (path.startsWith(k)) return v;
-  }
-  return 30; // default 30 soniya
-}
-
-function _shouldCache(path) {
-  return Object.keys(TTL).some(k => path.startsWith(k));
-}
 
 async function _notify(msg) {
   const list = await clients.matchAll({ includeUncontrolled: true, type: 'window' });

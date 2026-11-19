@@ -345,60 +345,8 @@ function renderNavigation() {
   if (elUser)  elUser.textContent  = fullName;
   if (elRole)  elRole.textContent  = roleLabel;
 
-  let links = [];
-  if (role === 'super_admin') {
-    links = [
-      { href:'/superadmin',          icon:'fa-chart-pie',           label:'Dashboard'  },
-      { href:'/superadmin/stores',   icon:'fa-shop',                label:"Do'konlar"  },
-      { href:'/superadmin/requests', icon:'fa-hand-holding-dollar', label:"To'lovlar"  },
-    ];
-  } else {
-    links = [
-      { href:'/pos',           icon:'fa-cash-register', label:'Kassa'   },
-      { href:'/sales/history', icon:'fa-receipt',       label:'Tarix'   },
-      { href:'/products',      icon:'fa-box-archive',   label:'Ombor'   },
-      ...(role === 'admin' ? [{ href:'/reports', icon:'fa-chart-column', label:'Hisobot' }] : []),
-      { href:'/settings',      icon:'fa-gears',         label:'Sozlama' },
-    ];
-  }
-
-  const isActive = href =>
-    (href === '/superadmin' || href === '/pos') ? path === href : path.startsWith(href);
-
-  /* Desktop sidebar */
-  const side = document.getElementById('nav-sidebar');
-  if (side) {
-    side.innerHTML = links.map(l => `
-      <a href="${l.href}"
-         class="nav-link${isActive(l.href) ? ' active' : ''}"
-         hx-get="${l.href}"
-         hx-target="#page-content"
-         hx-select="#page-content"
-         hx-push-url="true"
-         title="${l.label}">
-        <i class="fa-solid ${l.icon} nl-icon"></i>
-      </a>`).join('');
-      
-    if (typeof htmx !== 'undefined') htmx.process(side);
-  }
-
-  /* Mobil bottom nav */
-  const mob = document.getElementById('nav-mobile');
-  if (mob) {
-    mob.innerHTML = links.map(l => `
-      <a href="${l.href}"
-         class="nav-link nav-link--mobile${isActive(l.href) ? ' active' : ''}"
-         hx-get="${l.href}"
-         hx-target="#page-content"
-         hx-select="#page-content"
-         hx-push-url="true"
-         title="${l.label}">
-        <i class="fa-solid ${l.icon} nl-icon"></i>
-      </a>`).join('');
-      
-    // HTMX yangi qo'shilgan linklarni tanishi uchun "process" qilamiz
-    if (typeof htmx !== 'undefined') htmx.process(mob);
-  }
+  // Menyu tugmalari base.html <head> da birinchi chizishdayoq quriladi — bu yerda qayta qurilmaydi
+  // (aks holda ikonkalar almashib "lip" etadi).
 }
 
 // ============================================================

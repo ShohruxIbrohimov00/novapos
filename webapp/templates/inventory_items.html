@@ -16,9 +16,9 @@
         </div>
         <div class="prod-qty-block">
             <div class="qty-display" style="color: {% if p.quantity <= p.min_stock_limit %}var(--danger){% else %}var(--text){% endif %}">
-                {{ p.quantity|round(2) }}
+                {{ '%g' % (p.quantity|round(3)) }}
             </div>
-            <div class="prod-unit">{{ p.unit_type or 'dona' }}</div>
+            <div class="prod-unit">{{ p.unit_type.value if p.unit_type and p.unit_type.value is defined else (p.unit_type or 'dona') }}</div>
             {% if p.quantity <= p.min_stock_limit %}
             <div class="low-badge">Kam qoldi!</div>
             {% endif %}

@@ -2,30 +2,47 @@
   "name": "NovaPOS Smart System",
   "short_name": "NovaPOS",
   "description": "Modern PWA Point of Sale System for Retail",
-  "start_url": "/login",
+  "start_url": "/pos",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "lang": "uz",
   "dir": "ltr",
-  "categories": ["business", "finance", "productivity"],
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
+  ],
   "shortcuts": [
     {
       "name": "Kassa",
       "short_name": "POS",
       "description": "Kassaga o'tish",
       "url": "/pos",
-      "icons": [{ "src": "/static/img/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/static/img/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Sotuvlar tarixi",
       "short_name": "Tarix",
       "description": "Sotuvlar tarixini ko'rish",
       "url": "/sales/history",
-      "icons": [{ "src": "/static/img/icon-96.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "/static/img/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
   "icons": [
@@ -77,22 +94,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/static/img/screenshot-pos.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "label": "NovaPOS Kassa sahifasi",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/static/img/screenshot-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "label": "NovaPOS Tizimi",
-      "form_factor": "wide"
     }
   ]
 }

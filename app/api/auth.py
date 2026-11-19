@@ -162,12 +162,14 @@ async def login(
     if not crud.verify_password(password, employee.hashed_password):
         logger.warning(f"Login failure: Wrong password for {clean_username}")
         raise HTTPException(401, "Login yoki parol noto'g'ri")
+    if not employee.is_active:
+        raise HTTPException(403, "Hisobingiz bloklangan. Do'kon admini bilan bog'laning.")
 
     # Obunani tekshirish
     role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
-    if role_val != "super_admin" and employee.store:
-        _check_subscription(employee.store)
-
+    # ✅ Obuna tugagan bo'lsa ham kirishga ruxsat beriladi — aks holda do'kon
+    # egasi Sozlamalar sahifasiga kirib to'lov chekini yubora olmaydi.
+    # Boshqa barcha API so'rovlari dependencies._check_store_subscription da 402 qaytaradi.
     return _make_token_response(employee)
 
 
@@ -189,10 +191,14 @@ async def login_pin(
     if not employee:
         raise HTTPException(401, "Username yoki PIN noto'g'ri")
 
-    role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
-    if role_val != "super_admin" and employee.store:
-        _check_subscription(employee.store)
+    # ✅ Superadmin faqat parol bilan kiradi (avtomatik PIN 0000 edi — xavfli)
+    if (employee.role.value if hasattr(employee.role, "value") else str(employee.role)) == "super_admin":
+        raise HTTPException(401, "Username yoki PIN noto'g'ri")
 
+    role_val = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    # ✅ Obuna tugagan bo'lsa ham kirishga ruxsat beriladi — aks holda do'kon
+    # egasi Sozlamalar sahifasiga kirib to'lov chekini yubora olmaydi.
+    # Boshqa barcha API so'rovlari dependencies._check_store_subscription da 402 qaytaradi.
     return _make_token_response(employee)
 
 

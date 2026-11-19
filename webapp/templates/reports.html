@@ -12,7 +12,7 @@
 /* ── Sahifa ── */
 #rpt-page {
     background: var(--bg);
-    min-height: 100vh;
+    min-height: var(--app-h);
     transition: background .2s;
 }
 
@@ -677,7 +677,7 @@
    PASTKI KLAVIATURA (desktop)
    ════════════════════════════════════════════════════════════ */
 #rpt-kb-bar {
-    position: fixed; bottom: 0; left: 64px; right: 0;
+    position: fixed; bottom: 0; left: var(--sidebar-w); right: 0;
     background: var(--surface); border-top: 1px solid var(--border);
     z-index: 300; transform: translateY(100%);
     transition: transform .28s cubic-bezier(.4,0,.2,1), background .2s;
@@ -1437,7 +1437,13 @@ const _mkbShift = {};
 function mKbFocus(inpId, dispId, npId, mode) {
     if (window.innerWidth < 640) return;
     const inp = document.getElementById(inpId); if (!inp) return;
-    inp.blur(); rptKbClose();
+    rptKbClose();
+    // ✅ Fokus qoladi: jismoniy klaviatura bilan ham yoziladi (avval inp.blur() yozishni bloklardi).
+    // Sensorli qurilmada tizim klaviaturasi chiqmasligi uchun inputmode="none".
+    const syncDisp = () => { const d = dispId && document.getElementById(dispId); if (d) d.textContent = inp.value || '0'; };
+    if (window.__useScreenKb && window.__useScreenKb()) window.__kbAttach(inp, syncDisp);
+    else if (!inp.dataset.kbsync) { inp.dataset.kbsync = '1'; inp.addEventListener('input', syncDisp); }
+    if (document.activeElement !== inp) inp.focus({ preventScroll: true });
     if (dispId) { const d = document.getElementById(dispId); if (d) { d.style.display = 'block'; d.textContent = inp.value || '0'; } }
     const npEl = document.getElementById(npId);
     if (mode === 'num') _buildModalNumpad(npEl, dispId, inpId);
@@ -1588,9 +1594,9 @@ function _initSearch() {
 let rptKb = { open:false, mode:'text', target:null, shift:false };
 const isDesktop = () => window.innerWidth >= 768;
 function rptKbFocus(el) {
-    if(!isDesktop()) return;
+    if(!isDesktop() || !window.__useScreenKb()) return;   // ✅ kompyuterda oddiy klaviatura
     if(document.querySelector('.m-overlay2.show')) return;
-    el.blur(); el.style.caretColor='transparent';
+    window.__kbAttach(el, () => _rptKbSync());
     rptKb.target=el; rptKb.mode=el.dataset.kbmode||'text';
     const field=document.getElementById('rpt-kb-field'); if(field) field.textContent=el.dataset.kblabel?`▶ ${el.dataset.kblabel}`:'';
     const disp=document.getElementById('rpt-kb-display'); if(disp) disp.style.display='flex';

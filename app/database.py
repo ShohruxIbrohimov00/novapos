@@ -154,6 +154,7 @@ def _auto_migrate_sqlite():
         ("sales",     "is_cancelled",            "BOOLEAN",      "0"),
         ("sales",     "cancelled_by",            "INTEGER",      "NULL"),
         ("sales",     "notes",                   "TEXT",         "NULL"),
+        ("sales",     "client_uid",              "VARCHAR(64)",  "NULL"),
         # sale_items — ✅ YANGI: returned_quantity
         ("sale_items","product_name",            "VARCHAR(255)", "''"),
         ("sale_items","barcode",                 "VARCHAR(100)", "NULL"),
@@ -399,6 +400,20 @@ def _auto_migrate_sqlite():
 # INIT DB
 # ============================================================
 
+def _auto_migrate_postgres():
+    """PostgreSQL uchun yangi ustunlar (create_all mavjud jadvalga ustun qo'shmaydi)"""
+    if IS_SQLITE:
+        return
+    stmts = [
+        "ALTER TABLE sales ADD COLUMN IF NOT EXISTS client_uid VARCHAR(64)",
+        "CREATE INDEX IF NOT EXISTS ix_sales_client_uid ON sales (client_uid)",
+        "CREATE UNIQUE INDEX IF NOT EXISTS ux_sales_store_client_uid ON sales (store_id, client_uid)",
+    ]
+    with engine.begin() as conn:
+        for sql in stmts:
+            conn.execute(text(sql))
+
+
 def init_db():
     try:
         _auto_migrate_sqlite()
@@ -406,6 +421,10 @@ def init_db():
         from app.models import Base
         logger.info("Jadvallar yaratilmoqda...")
         Base.metadata.create_all(bind=engine)
+        _auto_migrate_postgres()
+        if IS_SQLITE:
+            with engine.begin() as conn:
+                conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_sales_store_client_uid ON sales (store_id, client_uid)"))
         logger.info("✅ Baza tayyor!")
 
     except Exception as e:

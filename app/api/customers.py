@@ -162,7 +162,10 @@ def delete_customer(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
-    """Soft delete — qarz bo'lsa ruxsat yo'q"""
+    """Soft delete — qarz bo'lsa ruxsat yo'q. ✅ Faqat admin."""
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin"):
+        raise HTTPException(403, "Mijozni faqat admin o'chira oladi")
     c = crud.get_customer(db, customer_id)
     _check_store(c, employee.store_id)
 

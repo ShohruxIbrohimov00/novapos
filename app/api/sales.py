@@ -21,6 +21,7 @@ from app import schemas, models, crud
 from app.database import get_db
 from app.dependencies import get_current_employee
 from app.websocket_manager import ws_manager
+from app.timezone_utils import now_tashkent
 
 router = APIRouter(tags=["Sales"])
 
@@ -94,8 +95,20 @@ async def create_sale(
     Yangi sotuv yaratish.
     ✅ WebSocket: sale_created + stock_updated barcha kasslarga broadcast
     """
+    # ✅ Do'kon ID har doim tokendan olinadi (brauzer yuborgan qiymatga ishonilmaydi)
+    sale_data.store_id = employee.store_id
+
+    # ✅ Shu sotuv avval yozilganmi? (oflayn navbat qayta yuborgan bo'lishi mumkin)
+    existing = crud.find_sale_by_client_uid(db, employee.store_id, sale_data.client_uid)
+    if existing:
+        return _fmt(crud.get_sale(db, existing.id))
+
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
     try:
-        sale = crud.create_sale(db, sale_data, employee.id)
+        sale = crud.create_sale(
+            db, sale_data, employee.id,
+            can_sell_below_cost = role in ("admin", "super_admin"),
+        )
     except ValueError as e:
         raise HTTPException(400, str(e))
 
@@ -266,7 +279,10 @@ async def cancel_sale(
     db:       Session         = Depends(get_db),
     employee: models.Employee = Depends(get_current_employee),
 ):
-    """Sotuvni to'liq bekor qilish (mahsulotlar qaytariladi)"""
+    """Sotuvni to'liq bekor qilish (mahsulotlar qaytariladi). ✅ Faqat admin."""
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin"):
+        raise HTTPException(403, "Sotuvni faqat admin bekor qila oladi")
     sale = crud.get_sale(db, sale_id)
     if not sale or sale.store_id != employee.store_id:
         raise HTTPException(404, "Sotuv topilmadi")
@@ -319,6 +335,11 @@ async def return_item(
     sale = crud.get_sale(db, sale_id)
     if not sale or sale.store_id != employee.store_id:
         raise HTTPException(404, "Sotuv topilmadi")
+
+    # ✅ Kassir faqat bugungi chekdan qaytara oladi; eski cheklar — faqat admin
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role not in ("admin", "super_admin") and sale.created_at.date() != now_tashkent().date():
+        raise HTTPException(403, "Eski chekdan qaytarishni faqat admin qila oladi")
 
     try:
         ret = crud.return_sale_item(

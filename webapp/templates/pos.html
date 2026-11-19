@@ -138,7 +138,8 @@
     flex: 1;
     min-height: 0;
 }
-@media (min-width: 1024px) {
+/* ✅ Planshet (tik holatda ham) — mahsulotlar to'ri + savat yonma-yon */
+@media (min-width: 768px) {
     #desk-view { display: flex; flex: 1; min-height: 0; }
     #mob-view  { display: none; }
 }
@@ -189,14 +190,15 @@
 .cat-label:first-child { padding-top: 2px; }
 .plu-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 7px; margin-bottom: 4px;
+    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    gap: 8px; margin-bottom: 4px;
 }
+@media (min-width: 1440px) { .plu-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; } }
 
 .pcard {
     background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: 12px; padding: 8px 9px;
-    cursor: pointer; min-height: 62px;
+    border-radius: 12px; padding: 10px 11px;
+    cursor: pointer; min-height: 76px;
     display: flex; flex-direction: column; justify-content: space-between;
     position: relative; overflow: hidden;
     transition: border-color .12s, transform .1s;
@@ -209,7 +211,7 @@
 
 .pcard-qty {
     position: absolute; top: 5px; right: 5px;
-    font-size: 8px; font-weight: 900; padding: 1px 5px;
+    font-size: 10px; font-weight: 900; padding: 1px 6px;
     border-radius: 5px; background: var(--surface2); color: var(--text3);
 }
 .pcard.low .pcard-qty { background: #fef3c7; color: #92400e; }
@@ -222,11 +224,12 @@
     border-radius: 4px; background: var(--primary); color: #fff; text-transform: uppercase;
 }
 .pcard-name {
-    font-size: 11px; font-weight: 800; color: var(--text); line-height: 1.2;
+    font-size: 13px; font-weight: 800; color: var(--text); line-height: 1.2;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     margin-right: 22px;
 }
-.pcard-price { font-size: 11px; font-weight: 900; color: var(--primary); margin-top: 3px; }
+.pcard-price { font-size: 13px; font-weight: 900; color: var(--primary); margin-top: 4px; }
+@media (min-width: 1440px) { .pcard { min-height: 88px; } .pcard-name, .pcard-price { font-size: 14px; } }
 
 .area-empty { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 12px; font-weight: 700; }
 
@@ -285,7 +288,7 @@
 
 
 #desk-right {
-    width: 300px; flex-shrink: 0;
+    width: clamp(270px, 30vw, 380px); flex-shrink: 0;
     display: flex; flex-direction: column;
     background: var(--surface);
 }
@@ -365,6 +368,27 @@
 
 
 
+
+
+/* ══ Savat — barmoq bilan qulay o'lchamlar (planshet/kompyuter) ══ */
+#cart-head h2 { font-size: 15px; }
+.cbadge { font-size: 11px; }
+.clr-btn { width: 34px; height: 34px; border-radius: 10px; }
+#cart-list { padding: 8px 10px; }
+.citem { padding: 10px 12px; margin-bottom: 8px; }
+.ci-name { font-size: 13px; }
+.qty-ctrl { border-radius: 10px; }
+.qbtn { width: 36px; height: 36px; font-size: 16px; }
+.qval { min-width: 34px; font-size: 14px; }
+.ci-price { font-size: 11px; }
+.ci-sub { font-size: 14px; }
+.ci-weight-info { font-size: 12px; }
+.ci-weight-edit { height: 32px; font-size: 11px; padding: 0 10px; }
+#cart-total { padding: 12px 14px 8px; }
+.total-lbl { font-size: 11px; }
+#total-val { font-size: 24px; }
+#checkout-btn { height: 56px; font-size: 15px; margin: 8px 10px 10px; border-radius: 14px; }
+@media (min-width: 1440px) { .ci-name { font-size: 14px; } #total-val { font-size: 28px; } }
 
 #mob-quick-wrap {
     padding: 7px 11px 5px; border-bottom: 1px solid var(--border);
@@ -693,6 +717,9 @@
 /* ── New customer modal ── */
 #new-cust-modal { position: fixed; inset: 0; background: rgba(0,0,0,.48); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 16px; }
 #new-cust-modal.hidden { display: none !important; }
+/* ✅ Global oyna ham ekran ustida (avval CSS yo'q edi — to'lov oynasi orqasida, ko'rinmas joyda ochilardi) */
+#new-cust-modal-global { position: fixed; inset: 0; background: rgba(0,0,0,.48); z-index: 10002; display: flex; align-items: center; justify-content: center; padding: 16px; }
+#new-cust-modal-global.hidden { display: none !important; }
 #new-cust-sheet { background: var(--surface); border-radius: 20px; padding: 20px; width: 100%; max-width: 380px; animation: coUp .2s ease; border: 1px solid var(--border); }
 .nc-title  { font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 14px; }
 .nc-fields { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -733,7 +760,7 @@
 {% endblock %}
 
 {% block content %}
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="/static/vendor/html5-qrcode.min.js"></script>
 
 <div id="pos-root">
 
@@ -783,12 +810,7 @@
             </div>
 
             <div id="plu-area">
-                <div id="plu-grid-wrap" 
-                    hx-get="/api/products/pos/products-fragment" 
-                    hx-trigger="load delay:50ms" 
-                    hx-target="this" 
-                    hx-swap="innerHTML">
-                </div>
+                <div id="plu-grid-wrap"></div>
             </div>
 
             <div id="kb-toggle-bar" onclick="toggleKb()">
@@ -912,7 +934,7 @@
 ════════════════════════════════════════════════ -->
 
 <!-- ── CHECKOUT ── -->
-<div id="co-modal" class="hidden">
+<div id="co-modal" class="hidden" data-scanner-off>
     <div id="co-sheet">
         <div class="co-head">
             <span class="co-title">To'lovni tasdiqlash</span>
@@ -1058,7 +1080,7 @@
 </div>
 
 <!-- ── NEW CUSTOMER (global) ── -->
-<div id="new-cust-modal-global" class="hidden">
+<div id="new-cust-modal-global" class="hidden" data-scanner-off>
     <div id="new-cust-sheet-global" style="background:var(--surface);border-radius:20px;padding:20px;width:100%;max-width:380px;border:1px solid var(--border)">
         <h3 class="nc-title">Yangi mijoz</h3>
         <div class="nc-fields">
@@ -1073,7 +1095,7 @@
 </div>
 
 <!-- ── WEIGHT NUMPAD ── -->
-<div id="wnum-modal" class="hidden">
+<div id="wnum-modal" class="hidden" data-scanner-off>
     <div id="wnum-sheet">
         <div class="wnum-head">
             <div class="wnum-hinfo">
@@ -1205,12 +1227,13 @@ async function initPosPage() {
 
     // 4. Mahsulotlarni yuklash
     try {
-        await _loadProds();
-        _renderProds(); // Eski PLU chizish
-        _renderFreeProducts(); // Yangi qo'shilgan barcode'sizlar uchun
+        await _loadProds();          // 1) keshdan — darhol
+        _renderProds();
+        _renderFreeProducts();
     } catch(err) {
         console.warn("[POS] Load error:", err);
     }
+    _refreshProdsFromServer();       // 2) serverdan yangilash (yangi qurilmada kesh bo'sh bo'ladi)
 
     // 5. Interaktiv qismlar
     if (typeof _initSearch === 'function') _initSearch();
@@ -1275,14 +1298,31 @@ document.body.addEventListener('htmx:beforeCleanup', () => {
 });
 
 /* HTMX bilan ishlash */
-document.body.addEventListener('htmx:afterOnLoad', function() {
-    if (window.location.pathname === '/pos' || document.getElementById('pos-root')) initPosPage();
-});
+// ✅ Sahifa yuklanganda ishga tushadi (avval faqat htmx fragmenti yuklanganda ishlardi)
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initPosPage);
+else initPosPage();
 
 function _loadSettings() {
     const ui = JSON.parse(localStorage.getItem('user_info') || '{}');
     _storeName  = localStorage.getItem('receipt_store_name') || ui.store?.name || ui.store_name || 'NovaPOS';
     _footerTxt  = localStorage.getItem('receipt_footer') || 'Rahmat! Qaytib keling!';
+}
+
+/* Serverdan yangi ro'yxat — faqat o'zgargan bo'lsa qayta chiziladi (lip etmasligi uchun) */
+let _prodsSynced = false;
+async function _refreshProdsFromServer() {
+    if (!navigator.onLine) return;
+    try {
+        const list = await apiRequest('/api/products/', 'GET', null, true);
+        if (!Array.isArray(list)) return;
+        const first = !_prodsSynced; _prodsSynced = true;
+        const sig = l => l.map(p => [p.id, p.name, p.quantity, p.price_out, p.barcode, p.short_code, p.is_deleted].join('|')).join(';');
+        if (first || sig(list) !== sig(_prods || [])) {
+            _prods = list;
+            _renderProds();
+            _renderFreeProducts();
+        }
+    } catch (e) { /* oflayn — keshdagi ro'yxat qoladi */ }
 }
 
 async function _loadProds() {
@@ -1318,7 +1358,10 @@ function _renderProds() {
     /* PLU grid */
     const wrap = document.getElementById('plu-grid-wrap');
     if (wrap) {
-        if (!plu.length) {
+        if (!plu.length && !_prodsSynced && navigator.onLine) {
+            // Server javobi kelguncha — skelet (bo'sh "topilmadi" yozuvi lip etmasin)
+            wrap.innerHTML = `<div class="plu-grid">${'<div class="pcard skeleton" style="pointer-events:none"></div>'.repeat(8)}</div>`;
+        } else if (!plu.length) {
             wrap.innerHTML = `<div class="area-empty">Mahsulotlar topilmadi</div>`;
         } else {
             const cats = {};
@@ -1331,7 +1374,7 @@ function _renderProds() {
                             <span class="pcard-qty">${p.quantity}</span>
                             ${_isWeight(p.unit_type)?`<span class="pcard-unit">${p.unit_type}</span>`:''}
                             <span class="pcard-name">${p.name}</span>
-                            <div class="pcard-price">${Number(p.price_out).toLocaleString()}${p.short_code?`<small style="display:block;font-size:9px;opacity:.6">PLU:${p.short_code}</small>`:''}</div>
+                            <div class="pcard-price">${Number(p.price_out).toLocaleString('ru-RU')}${p.short_code?`<small style="display:block;font-size:9px;opacity:.6">PLU:${p.short_code}</small>`:''}</div>
                         </div>`).join('')}
                 </div>`).join('');
         }
@@ -1839,23 +1882,47 @@ async function submitSale() {
     const ui=JSON.parse(localStorage.getItem('user_info')||'{}');
     const storeId=ui.store?.id||ui.store_id;
     if(!storeId){showToast("Do'kon ID topilmadi!",'error');return;}
-    const snap=cart.getItems().map(i=>({...i}));
-    const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
-    closeCo();
-    _showRc({receipt_number:'...',total_amount:total,paid_amount:paid},snap);
-    cart.clear(); _selId=null; _resetPayForm();
-    if(window.NovaPOS_DB){await NovaPOS_DB.products.batchDecreaseStock(snap.map(i=>({product_id:i.id,quantity:i.quantity})));await _loadProds();_renderProds();}
+    if(_saleSubmitting)return;  // ikki marta bosilsa, ikki marta sotilmasin
+    _saleSubmitting=true;
     try {
-        if(!navigator.onLine) throw new Error('offline');
-        const res=await apiRequest('/api/sales/checkout','POST',saleData);
-        if(res?.receipt_number){const el=document.getElementById('rc-num');if(el)el.textContent=res.receipt_number;}
-        document.getElementById('rc-offline')?.classList.add('hidden');
-        showToast(_payMethod==='nasiya'?'Qarzga yozildi! 📝':'Sotuv yakunlandi! ✅','success');
-        try{new BroadcastChannel('pos_data_sync').postMessage({type:'UPDATE_DATA',time:Date.now()});}catch{}
-    } catch {
-        if(window.NovaPOS_DB){await NovaPOS_DB.offlineSales.add(saleData);document.getElementById('rc-offline')?.classList.remove('hidden');showToast('Oflayn saqlandi! 📦','warning');}
-        else showToast('Xatolik: Lokal baza yo\'q','error');
-    }
+        const snap=cart.getItems().map(i=>({...i}));
+        const saleData={store_id:parseInt(storeId),customer_id:custId?parseInt(custId):null,payment_method:_payMethod,paid_amount:paid,client_uid:_newSaleUid(),items:snap.map(i=>({product_id:parseInt(i.id),quantity:parseFloat(i.quantity),price_out:parseFloat(i.price_out)}))};
+
+        // 1) Avval serverga yuboramiz. Faqat INTERNET YO'Q bo'lsa oflayn saqlaymiz.
+        //    Server rad etsa (qoldiq yetarli emas, obuna tugagan va h.k.) —
+        //    sotuv O'TMAGAN: chek chiqarilmaydi, savat saqlanib qoladi.
+        let res=null, offline=!navigator.onLine;
+        if(!offline){
+            try { res=await apiRequest('/api/sales/checkout','POST',saleData,true); }
+            catch(e){
+                if(!e.offline){ showToast(e.message||'Sotuv saqlanmadi!','error'); return; }
+                offline=true;
+            }
+            if(!offline&&!res){ showToast('Sotuv saqlanmadi! Qaytadan tizimga kiring.','error'); return; }
+        }
+        if(offline){
+            if(!window.NovaPOS_DB){ showToast('Internet yo\'q va lokal baza ishlamayapti — sotuv saqlanmadi!','error'); return; }
+            await NovaPOS_DB.offlineSales.add(saleData);
+        }
+
+        // 2) Sotuv saqlandi — endi chek va savatni tozalash
+        closeCo();
+        _showRc({receipt_number:res?.receipt_number||(offline?'OFFLINE':'...'),total_amount:res?.total_amount??total,paid_amount:paid,payment_method:saleData.payment_method},snap);
+        const rcNum=document.getElementById('rc-num'); if(rcNum&&res?.receipt_number) rcNum.textContent=res.receipt_number;
+        document.getElementById('rc-offline')?.classList.toggle('hidden',!offline);
+        cart.clear(); _selId=null; _resetPayForm();
+        if(window.NovaPOS_DB){await NovaPOS_DB.products.batchDecreaseStock(snap.map(i=>({product_id:i.id,quantity:i.quantity})));await _loadProds();_renderProds();}
+        if(offline) showToast('Internet yo\'q — sotuv oflayn saqlandi, internet kelganda yuboriladi 📦','warning');
+        else {
+            showToast(_payMethod==='nasiya'?'Qarzga yozildi! 📝':'Sotuv yakunlandi! ✅','success');
+            try{new BroadcastChannel('pos_data_sync').postMessage({type:'UPDATE_DATA',time:Date.now()});}catch{}
+        }
+    } finally { _saleSubmitting=false; }
+}
+let _saleSubmitting=false;
+function _newSaleUid(){
+    try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch{}
+    return 'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
 }
 
 function _resetPayForm() {
@@ -1899,8 +1966,45 @@ function _showRc(res, items) {
         </div>
         <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">${_footerTxt}</div>`;
     document.getElementById('rc-modal').classList.remove('hidden');
+    // ✅ Printer uchun matnli chek (avval _rcTxt hech qachon to'ldirilmasdi — chek bo'sh chiqardi)
+    _rcTxt = _buildRcText({ num, dt, items, tot, paid, chg, method: res.payment_method });
 }
-function printReceipt() { printer?.print(_rcTxt); }
+/* Termoprinter uchun matnli chek: 58mm = 32 belgi, 80mm = 48 belgi */
+function _buildRcText({ num, dt, items, tot, paid, chg, method }) {
+    const W = (typeof printer !== 'undefined' && printer.paperWidth) || 32;
+    const money = n => Math.round(n || 0).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+    const center = t => { t = String(t).slice(0, W); const pad = Math.max(0, Math.floor((W - t.length) / 2)); return ' '.repeat(pad) + t; };
+    const lr = (l, r) => { l = String(l); r = String(r); const sp = W - l.length - r.length; return sp >= 1 ? l + ' '.repeat(sp) + r : l.slice(0, Math.max(0, W - r.length - 1)) + ' ' + r; };
+    const wrap = t => { const out = []; t = String(t); while (t.length > W) { out.push(t.slice(0, W)); t = t.slice(W); } out.push(t); return out; };
+    const line = '-'.repeat(W);
+    const L = [];
+    wrap(_storeName.toUpperCase()).forEach(x => L.push(center(x)));
+    L.push(center(dt));
+    L.push(center('Chek #' + num));
+    L.push(line);
+    items.forEach(i => {
+        const q = parseFloat(i.quantity) || 0;
+        const sub = i.is_weight ? Math.round(i.total_price || q * i.price_out) : Math.round(q * i.price_out);
+        wrap(i.name).forEach(x => L.push(x));
+        const ql = i.is_weight ? `${_fmt3(q)} ${_unitLabel(i.unit_type)} x ${money(i.price_out)}` : `${q} x ${money(i.price_out)}`;
+        L.push(lr('  ' + ql, money(sub)));
+    });
+    L.push(line);
+    L.push(lr('JAMI:', money(tot) + " so'm"));
+    const mName = { naqd: 'Naqd', plastik: 'Plastik karta', nasiya: 'Nasiya (qarz)' }[method] || '';
+    if (mName) L.push(lr("To'lov:", mName));
+    if (paid > 0) L.push(lr("To'landi:", money(paid)));
+    if (chg > 0)  L.push(lr('Qaytim:', money(chg)));
+    if (method === 'nasiya' && tot - paid > 0) L.push(lr('Qarz:', money(tot - paid)));
+    L.push(line);
+    wrap(_footerTxt).forEach(x => L.push(center(x)));
+    L.push('', '');
+    return L.join('\n');
+}
+function printReceipt() {
+    if (!_rcTxt) { showToast("Chek ma'lumoti yo'q", 'error'); return; }
+    printer?.print(_rcTxt);
+}
 function closeRc()      { document.getElementById('rc-modal').classList.add('hidden'); }
 
 /* ════════════════════════════════════════════════════════
@@ -1950,19 +2054,30 @@ function _initCustSearch(){
 }
 function selCust(id,name){document.getElementById('co-cust-id').value=id;closeCustSearch();}
 function openNewCust(){
-    document.getElementById('new-cust-modal-global').classList.remove('hidden');
-    setTimeout(()=>document.getElementById('nc-name')?.focus(),100);
+    // To'lov oynasi ochiq bo'lsa — uning ichidagi oyna, aks holda global oyna
+    const inCo=!document.getElementById('co-modal').classList.contains('hidden');
+    document.getElementById(inCo?'new-cust-modal':'new-cust-modal-global').classList.remove('hidden');
+    setTimeout(()=>document.getElementById(inCo?'nc-name-co':'nc-name')?.focus(),100);
 }
-function closeNewCust(){document.getElementById('new-cust-modal-global').classList.add('hidden');}
+function closeNewCust(){
+    document.getElementById('new-cust-modal-global').classList.add('hidden');
+    document.getElementById('new-cust-modal')?.classList.add('hidden');
+}
 async function saveNewCust(){
-    const name=(document.getElementById('nc-name-co')||document.getElementById('nc-name'))?.value.trim();
-    const phone=(document.getElementById('nc-phone-co')||document.getElementById('nc-phone'))?.value.trim();
+    // ✅ Qaysi oyna ochiq bo'lsa — o'shaning maydonlari (avval doim yashirin nc-name-co o'qilardi → "Ismni kiriting")
+    const coOpen=!document.getElementById('new-cust-modal')?.classList.contains('hidden');
+    const name=document.getElementById(coOpen?'nc-name-co':'nc-name')?.value.trim();
+    const phone=document.getElementById(coOpen?'nc-phone-co':'nc-phone')?.value.trim();
     if(!name){showToast('Ismni kiriting','error');return;}
     try{
         const ui=JSON.parse(localStorage.getItem('user_info')||'{}');
         const res=await apiRequest('/api/customers/','POST',{store_id:parseInt(ui.store?.id||ui.store_id)||0,full_name:name,phone:phone});
-        if(res?.id){showToast('Mijoz saqlandi!','success');_selectCoCust(res.id,res.full_name);closeNewCust();}
-    }catch{showToast('Xatolik','error');}
+        if(res?.id){
+            showToast('Mijoz saqlandi!','success');_selectCoCust(res.id,res.full_name);closeNewCust();
+            document.getElementById('new-cust-modal')?.classList.add('hidden');
+            ['nc-name','nc-phone','nc-name-co','nc-phone-co'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+        }
+    }catch(e){showToast(e.offline?"Internet yo'q — mijoz saqlanmadi":(e.message||'Xatolik'),'error');}
 }
 
 /* ════════════════════════════════════════════════════════
@@ -1972,6 +2087,25 @@ function _beep(isErr) {
     const s=isErr?_sfxErr:_sfxOk;
     s.pause(); s.currentTime=0; s.play().catch(()=>{});
 }
+
+/* ✅ Jismoniy klaviatura: tarozi oynasida raqam/nuqta/Backspace/Enter, to'lov oynasida Enter */
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const wOpen = !document.getElementById('wnum-modal').classList.contains('hidden');
+    if (wOpen) {
+        if (/^[0-9]$/.test(e.key))            { wnumKey(e.key); e.preventDefault(); }
+        else if (e.key === '.' || e.key === ',') { wnumKey('.'); e.preventDefault(); }
+        else if (e.key === 'Backspace')       { wnumKey('⌫'); e.preventDefault(); }
+        else if (e.key === 'Delete')          { wnumKey('CLR'); e.preventDefault(); }
+        else if (e.key === 'Enter')           { wnumApply(); e.preventDefault(); }
+        return;
+    }
+    const coOpen = !document.getElementById('co-modal').classList.contains('hidden');
+    if (coOpen && e.key === 'Enter' && e.target?.id !== 'co-cust-search'
+        && !e.target?.closest?.('#new-cust-modal, #new-cust-modal-global')) {
+        e.preventDefault(); submitSale();
+    }
+});
 
 /* Escape klavishi */
 document.addEventListener('keydown', e => {

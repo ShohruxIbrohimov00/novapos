@@ -386,6 +386,15 @@ const NovaPOS_DB = (() => {
       const storeId = saleData.store_id ||
         JSON.parse(localStorage.getItem('user_info') || '{}')?.store_id;
 
+      // Oflayn sotuv belgilari: server qoldiq yetmasa ham qabul qiladi,
+      // haqiqiy sotilgan vaqt bilan yozadi, client_uid bo'yicha ikki marta yozmaydi
+      saleData = { ...saleData, is_offline: true };
+      if (!saleData.offline_created_at) saleData.offline_created_at = new Date().toISOString();
+      if (!saleData.client_uid) {
+        saleData.client_uid = (self.crypto?.randomUUID?.()) ||
+          ('u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+      }
+
       const record = {
         data:          saleData,
         store_id:      storeId,

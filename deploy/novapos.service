@@ -1,0 +1,20 @@
+# /etc/systemd/system/novapos.service
+# O'rnatish:
+#   sudo cp deploy/novapos.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now novapos
+# Loglar:  journalctl -u novapos -f
+[Unit]
+Description=NovaPOS
+After=network.target
+
+[Service]
+User=novapos
+WorkingDirectory=/opt/novapos
+EnvironmentFile=/opt/novapos/.env
+# SQLite bilan 1 ta worker (bitta jarayon bazaga yozadi, WebSocket xonalari ham bitta jarayonda)
+ExecStart=/opt/novapos/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

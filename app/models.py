@@ -199,6 +199,7 @@ class Sale(Base):
     paid_amount     = Column(Float, nullable=False, default=0.0)
     change_amount   = Column(Float, default=0.0)
     receipt_number  = Column(String(50), unique=True, index=True)
+    client_uid      = Column(String(64), nullable=True, index=True)  # oflayn sotuv takrorlanmasligi uchun
     notes           = Column(Text, nullable=True)
     is_cancelled    = Column(Boolean, default=False, index=True)
     cancelled_by    = Column(Integer, ForeignKey("employees.id"), nullable=True)

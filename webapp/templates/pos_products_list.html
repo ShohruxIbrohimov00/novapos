@@ -25,9 +25,10 @@
     <div class="pcard {% if p.quantity <= 0 %}out{% elif p.quantity <= 5 %}low{% endif %}"
          onclick="addProd({{ p.id }})"
          data-pid="{{ p.id }}">
-        <span class="pcard-qty">{{ p.quantity }}</span>
-        {% if p.unit_type and p.unit_type != 'dona' %}
-            <span class="pcard-unit">{{ p.unit_type }}</span>
+        <span class="pcard-qty">{{ '%g' % (p.quantity|round(3)) }}</span>
+        {% set _u = p.unit_type.value if p.unit_type and p.unit_type.value is defined else (p.unit_type or 'dona') %}
+        {% if _u != 'dona' %}
+            <span class="pcard-unit">{{ _u }}</span>
         {% endif %}
         <span class="pcard-name">{{ p.name }}</span>
         <div class="pcard-price">

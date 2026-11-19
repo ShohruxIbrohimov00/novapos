@@ -8,7 +8,7 @@ NovaPOS — Dependencies v2.0
   ✅ require_super_admin  — faqat super_admin
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -19,14 +19,56 @@ from app.database import get_db
 from app import models
 
 # ─── Config ───────────────────────────────────────────────────
-SECRET_KEY = os.getenv("SECRET_KEY", "novapos-super-secret-change-in-production-2024")
+_DEFAULT_SECRET = "novapos-super-secret-change-in-production-2024"
+SECRET_KEY = os.getenv("SECRET_KEY", _DEFAULT_SECRET)
+if SECRET_KEY == _DEFAULT_SECRET:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "⚠️  SECRET_KEY .env da berilmagan! Standart kalit ishlatilmoqda — "
+        "bu bilan istalgan odam soxta token yasay oladi. Serverda albatta o'rnating."
+    )
 ALGORITHM  = "HS256"
 
 security = HTTPBearer()
 
 
 # ─── HTTP: JWT → Employee ─────────────────────────────────────
+# Obuna tugagan bo'lsa ham ochiq qoladigan yo'llar (to'lov qilish va holatni ko'rish uchun)
+_SUBSCRIPTION_FREE_PREFIXES = (
+    "/api/auth/",
+    "/api/subscriptions/",
+    "/api/superadmin/payment-settings",
+    "/api/superadmin/settings/payment",
+    "/api/stores/me",
+)
+
+
+def _check_store_subscription(employee: models.Employee, path: str) -> None:
+    """
+    ✅ Obuna HAR BIR so'rovda tekshiriladi (avval faqat login paytida edi,
+    token esa 30 kun amal qilgani uchun to'lamagan do'kon ishlayverardi).
+    """
+    role = employee.role.value if hasattr(employee.role, "value") else str(employee.role)
+    if role == "super_admin" or path.startswith(_SUBSCRIPTION_FREE_PREFIXES):
+        return
+    store = employee.store
+    if not store:
+        return
+    if not store.is_active:
+        raise HTTPException(403, "Do'kon bloklangan. Administrator bilan bog'laning.")
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if store.subscription_expires_at and store.subscription_expires_at < now:
+        code = ("SUBSCRIPTION_EXPIRED_PENDING" if store.payment_status == "pending"
+                else "SUBSCRIPTION_EXPIRED")
+        raise HTTPException(402, {
+            "code":       code,
+            "message":    "Obuna muddati tugagan! Iltimos, to'lovni amalga oshiring.",
+            "expires_at": store.subscription_expires_at.isoformat(),
+        })
+
+
 async def get_current_employee(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> models.Employee:
@@ -51,6 +93,8 @@ async def get_current_employee(
 
     if not employee:
         raise exc
+
+    _check_store_subscription(employee, request.url.path)
 
     # last_seen_at yangilash (background task sifatida — endpoint ni sekinlashtirmaydi)
     try:

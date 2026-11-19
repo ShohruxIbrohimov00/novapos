@@ -23,10 +23,11 @@ from datetime import datetime, timedelta
 import string
 import random
 import hashlib
+import hmac
 import logging
 
 from app import models, schemas
-from app.timezone_utils import now_tashkent, start_of_day, end_of_day
+from app.timezone_utils import now_tashkent, start_of_day, end_of_day, to_tashkent
 from passlib.context import CryptContext
 
 logger = logging.getLogger(__name__)
@@ -61,15 +62,31 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
+_LEGACY_PIN_SALT = "novapos_2024_secure_pin_salt"
+
+
+def _legacy_pin_hash(pin: str) -> str:
+    return hashlib.sha256((pin + _LEGACY_PIN_SALT).encode()).hexdigest()
+
+
 def hash_pin(pin: str) -> str:
-    salt = "novapos_2024_secure_pin_salt"
-    return hashlib.sha256((pin + salt).encode()).hexdigest()
+    """✅ PIN bcrypt bilan (avval oddiy SHA-256 edi — 4 raqamli PIN bir zumda topilardi)"""
+    return pwd_context.hash(pin)
+
+
+def pin_needs_rehash(hashed: str) -> bool:
+    return not (hashed or "").startswith("$2")
 
 
 def verify_pin(plain: str, hashed: str) -> bool:
     if not plain or not hashed:
         return False
-    return hash_pin(plain) == hashed
+    if pin_needs_rehash(hashed):                       # eski SHA-256 format
+        return hmac.compare_digest(_legacy_pin_hash(plain), hashed)
+    try:
+        return pwd_context.verify(plain, hashed)
+    except Exception:
+        return False
 
 
 def _generate_receipt_number() -> str:
@@ -154,8 +171,15 @@ def verify_employee_credentials(db: Session, username: str, password: str) -> Op
 
 def verify_employee_pin(db: Session, username: str, pin: str) -> Optional[models.Employee]:
     emp = get_employee_by_username(db, username)
-    if not emp or not verify_pin(pin, emp.pin_code):
+    if not emp or not emp.is_active or not verify_pin(pin, emp.pin_code):
         return None
+    # Eski formatdagi PIN — birinchi muvaffaqiyatli kirishda bcrypt ga o'tkaziladi
+    if pin_needs_rehash(emp.pin_code):
+        try:
+            emp.pin_code = hash_pin(pin)
+            db.commit()
+        except Exception:
+            db.rollback()
     return emp
 
 
@@ -432,10 +456,20 @@ def adjust_stock(
 # SALE
 # ============================================================
 
+def find_sale_by_client_uid(db: Session, store_id: int, client_uid: Optional[str]) -> Optional[models.Sale]:
+    if not client_uid:
+        return None
+    return db.query(models.Sale).filter(
+        models.Sale.store_id   == store_id,
+        models.Sale.client_uid == client_uid,
+    ).first()
+
+
 def create_sale(
     db:          Session,
     sale_data:   schemas.SaleCreate,
     employee_id: int,
+    can_sell_below_cost: bool = False,
 ) -> models.Sale:
     """
     Sotuv yaratish.
@@ -453,23 +487,38 @@ def create_sale(
 
     for item in sale_data.items:
         product = get_product(db, item.product_id)
-        if not product:
+        # ✅ Mahsulot aynan shu do'konniki va o'chirilmagan bo'lishi shart
+        if (not product
+                or product.store_id != sale_data.store_id
+                or getattr(product, "is_deleted", False)):
             raise ValueError(f"Mahsulot topilmadi: ID={item.product_id}")
 
         qty = round(float(item.quantity), 3)
 
-        if round(product.quantity, 3) < qty:
+        # Oflayn sotuv allaqachon bo'lib o'tgan (tovar mijozda) — qoldiq yetmasa ham
+        # yoziladi (qoldiq minusga tushadi, inventarizatsiyada ko'rinadi).
+        if not sale_data.is_offline and round(product.quantity, 3) < qty:
             raise ValueError(
                 f"'{product.name}' yetarli emas. "
                 f"Mavjud: {product.quantity}, So'ralgan: {qty}"
             )
 
-        unit_price      = round(float(item.price_out or product.price_out), 2)
+        unit_price      = round(float(item.price_out if item.price_out is not None else product.price_out), 2)
+        if unit_price < 0:
+            raise ValueError("Narx manfiy bo'lishi mumkin emas")
+        # ✅ Kassir tovarni tannarxdan arzon sota olmaydi (faqat admin)
+        if (not can_sell_below_cost and not sale_data.is_offline
+                and unit_price < round(float(product.price_in or 0), 2)):
+            raise ValueError(
+                f"'{product.name}' narxi tannarxdan ({product.price_in:,.0f}) past. "
+                f"Bunday narxda faqat admin sota oladi."
+            )
         subtotal        = round(qty * unit_price, 2)
         discount_pct    = round(float(getattr(item, "discount_percent", 0) or 0), 2)
         discount_amount = round(subtotal * discount_pct / 100, 2)
         final_amount    = round(subtotal - discount_amount, 2)
-        item_profit     = round((unit_price - product.price_in) * qty, 2)
+        # ✅ Foyda chegirmadan KEYINGI summadan hisoblanadi
+        item_profit     = round(final_amount - product.price_in * qty, 2)
 
         items_data.append({
             "product":          product,
@@ -496,6 +545,14 @@ def create_sale(
     if _safe_val(sale_data.payment_method) == "nasiya":
         if not sale_data.customer_id:
             raise ValueError("Nasiya sotuvda mijoz tanlanishi shart")
+    # ✅ Mijoz aynan shu do'konniki bo'lishi shart
+    if sale_data.customer_id:
+        cust = db.query(models.Customer).filter(
+            models.Customer.id       == sale_data.customer_id,
+            models.Customer.store_id == sale_data.store_id,
+        ).first()
+        if not cust:
+            raise ValueError("Mijoz topilmadi")
 
     # ── 3. Receipt number — 3x retry ─────────────────────────
     db_sale = None
@@ -513,17 +570,30 @@ def create_sale(
                 change_amount  = change_amount,
                 notes          = sale_data.notes,
                 receipt_number = _generate_receipt_number(),
+                client_uid     = sale_data.client_uid,
             )
+            # Oflayn sotuv — haqiqiy sotilgan vaqt bilan yoziladi (kelajak va 30 kundan eski emas)
+            if sale_data.is_offline and sale_data.offline_created_at:
+                t = to_tashkent(sale_data.offline_created_at).replace(tzinfo=None)
+                now = now_tashkent()
+                if now - timedelta(days=30) <= t <= now + timedelta(minutes=5):
+                    db_sale.created_at = t
             db.add(db_sale)
             db.flush()
             break
         except Exception as e:
             db.rollback()
+            # Shu client_uid bilan parallel so'rov allaqachon yozgan bo'lsa — o'shani qaytaramiz
+            dup = find_sale_by_client_uid(db, sale_data.store_id, sale_data.client_uid)
+            if dup:
+                return dup
+            logger.error(f"Sale insert error (attempt {attempt + 1}): {e}")
             if attempt == 2:
-                raise ValueError(f"Chek raqami yaratib bo'lmadi: {e}")
+                raise ValueError("Sotuvni saqlab bo'lmadi. Qaytadan urinib ko'ring.")
             logger.warning(f"Receipt collision, retry {attempt + 1}")
 
     # ── 4. SaleItem va qoldiq kamaytirish ────────────────────
+    shortage_notes = []
     for d in items_data:
         db.add(models.SaleItem(
             sale_id           = db_sale.id,
@@ -540,8 +610,17 @@ def create_sale(
             final_amount      = d["final_amount"],
             item_profit       = d["item_profit"],
         ))
-        d["product"].quantity   = round(d["product"].quantity - d["quantity"], 3)
+        left = round(d["product"].quantity - d["quantity"], 3)
+        if left < 0:
+            # Faqat oflayn sotuvda bo'lishi mumkin — qoldiq 0 da to'xtaydi, kamomad izohga yoziladi
+            shortage_notes.append(f"{d['product'].name}: {abs(left):g} yetmagan")
+            left = 0.0
+        d["product"].quantity   = left
         d["product"].updated_at = now_tashkent()
+
+    if shortage_notes:
+        note = "⚠ Oflayn sotuv, omborda yetmagan: " + "; ".join(shortage_notes)
+        db_sale.notes = f"{db_sale.notes}\n{note}" if db_sale.notes else note
 
     # ── 5. Nasiya → qarz qo'shish ────────────────────────────
     if _safe_val(sale_data.payment_method) == "nasiya" and sale_data.customer_id:
@@ -705,7 +784,9 @@ def return_sale_item(
     # refund_amount: mijozga qaytariladigan pul (sotuv narxi bo'yicha)
     # cost_back: qaytayotgan tovarning tannarxi
     # profit_back: ushbu qaytayotgan tovardan qilingan foyda
-    refund_amount = round(sale_item.unit_price * quantity, 2)
+    # ✅ Chegirma hisobga olinadi: mijoz haqiqatda to'lagan narx bo'yicha qaytariladi
+    unit_paid     = (sale_item.final_amount / sale_item.quantity) if sale_item.quantity else 0.0
+    refund_amount = round(unit_paid * quantity, 2)
     cost_back     = round(sale_item.cost_price * quantity, 2)
     profit_back   = round(refund_amount - cost_back, 2)
 

@@ -1,0 +1,22 @@
+# Muhit va maxfiy sozlamalar
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Baza fayllari (har bir server o'zining bazasiga ega)
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+
+# Foydalanuvchi yuklagan fayllar
+webapp/static/uploads/
+
+# Zaxira nusxalar
+backups/

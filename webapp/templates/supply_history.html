@@ -9,7 +9,7 @@
 #sh-page {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background: var(--bg);
     overflow: hidden;
 }
@@ -283,6 +283,9 @@
 
 {% block scripts %}
 <script>
+// ✅ Mahalliy (Toshkent) sana — UTC emas
+function _localDate(d) { const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
+
 // ════════════════════════════════════════════════════════════
 //  SUPPLY HISTORY LOGIC (HTMX/SPA READY)
 // ════════════════════════════════════════════════════════════
@@ -305,13 +308,13 @@ async function load() {
         url += `&start_date=${_dateFrom}`;
         if (_dateTo) url += `&end_date=${_dateTo}`;
     } else if (_period === 'today') {
-        const d = t.toISOString().split('T')[0];
+        const d = _localDate(t);
         url += `&start_date=${d}&end_date=${d}`;
     } else if (_period === 'week') {
-        const d = new Date(t - 7*864e5).toISOString().split('T')[0];
+        const d = _localDate(new Date(t - 7*864e5));
         url += `&start_date=${d}`;
     } else if (_period === 'month') {
-        const d = new Date(t.getFullYear(), t.getMonth(), 1).toISOString().split('T')[0];
+        const d = _localDate(new Date(t.getFullYear(), t.getMonth(), 1));
         url += `&start_date=${d}`;
     }
 

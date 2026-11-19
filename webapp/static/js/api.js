@@ -69,6 +69,11 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
   try {
     const response = await fetch(url, cfg);
 
+    // Service Worker: "internet yo'q" — bu server xatosi emas, tarmoq xatosi
+    if (response.headers.get('X-SW-Offline')) {
+      throw new TypeError('offline (service worker)');
+    }
+
     // JSON javob olish
     let resData = null;
     const ct = response.headers.get('content-type') || '';
@@ -76,10 +81,15 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
       resData = await response.json();
     }
 
-    // 401 — token muddati tugagan yoki noto'g'ri
+    // 401 — token muddati tugagan yoki noto'g'ri.
+    // ✅ Kirish so'rovlarida (noto'g'ri parol/PIN) bu oddiy xato — foydalanuvchiga ko'rsatiladi.
+    // Avval null qaytarilardi: xabar chiqmasdi va "Kirish" tugmasi abadiy aylanib qolardi.
     if (response.status === 401) {
-      _handleUnauthorized();
-      return null;
+      const isAuthCall = /^\/api\/auth\/(login|login-pin|register-store)/.test(url);
+      if (!isAuthCall) { _handleUnauthorized(); return null; }
+      const msg = _msg(resData?.detail) || "Login yoki parol noto'g'ri";
+      if (!silent) showToast(msg, 'error');
+      const err = new Error(msg); err.status = 401; throw err;
     }
 
     // 402 — obuna tugagan
@@ -114,10 +124,15 @@ async function apiRequest(endpoint, method = 'GET', data = null, silent = false)
       throw error;
     }
     // Network xatosi (fetch throw qildi)
-    console.warn('[API] Network xato, IDB fallback:', url, error.message);
-    const cached = await _offlineGet(url);
-    if (cached !== null) return cached;
+    // Keshdan javob faqat GET uchun! POST/PUT/DELETE uchun eski kesh
+    // "muvaffaqiyatli" javob bo'lib qaytsa, saqlanmagan narsa saqlandi deb ko'rinadi.
+    if (method === 'GET') {
+      console.warn('[API] Network xato, IDB fallback:', url, error.message);
+      const cached = await _offlineGet(url);
+      if (cached !== null) return cached;
+    }
     if (!silent) showToast("Internet aloqasi yo'q", 'warning');
+    error.offline = true;
     throw error;
   }
 }
@@ -274,8 +289,19 @@ function _handleUnauthorized() {
 
 // ── Auth: 402 (paywall) ───────────────────────────────────────
 function _handlePaywall(code) {
-  const pw = document.getElementById('paywall-screen');
-  if (pw) pw.classList.remove('hidden');
+  // Obuna tugagan: to'lov Sozlamalar → "Obuna & To'lov" bo'limida qilinadi
+  if (!location.pathname.startsWith('/settings')) {
+    location.href = '/settings#obuna';
+    return;
+  }
+  if (!window._paywallToastShown) {
+    window._paywallToastShown = true;
+    const msg = code === 'SUBSCRIPTION_EXPIRED_PENDING'
+      ? "Obuna muddati tugagan. To'lovingiz tekshirilmoqda (24 soat ichida)."
+      : "Obuna muddati tugagan! Davom etish uchun to'lov qiling.";
+    if (typeof showToast === 'function') showToast(msg, 'warning');
+    document.getElementById('obuna')?.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 // ── Device ID (har qurilma uchun yagona) ──────────────────────
