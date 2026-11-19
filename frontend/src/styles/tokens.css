@@ -1,0 +1,94 @@
+/* ═══════════════════════════════════════════════════════════
+   NovaPOS dizayn tokenlari — eski base.html dagi qiymatlar bilan bir xil.
+   Hamma komponentlar faqat shu o'zgaruvchilardan foydalanadi.
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* Ranglar */
+  --bg:        #f1f5f9;
+  --surface:   #ffffff;
+  --surface2:  #f8fafc;
+  --surface3:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border2:   #cbd5e1;
+  --text:      #0f172a;
+  --text2:     #475569;
+  --text3:     #94a3b8;
+  --primary:   #2563eb;
+  --primary-h: #1d4ed8;
+  --primary-s: #eff6ff;
+  --primary-t: rgba(37, 99, 235, .08);
+  --success:   #10b981;
+  --success-s: rgba(16, 185, 129, .12);
+  --danger:    #ef4444;
+  --danger-s:  rgba(239, 68, 68, .10);
+  --warning:   #f59e0b;
+  --warning-s: rgba(245, 158, 11, .12);
+
+  /* Soyalar */
+  --sh-sm:  0 2px 8px rgba(0, 0, 0, .06);
+  --sh-md:  0 4px 16px rgba(0, 0, 0, .08);
+  --sh-lg:  0 8px 32px rgba(0, 0, 0, .10);
+  --sh-xl:  0 16px 48px rgba(0, 0, 0, .12);
+  --sh-pri: 0 4px 16px rgba(37, 99, 235, .3);
+  --sh-suc: 0 4px 16px rgba(16, 185, 129, .3);
+  --sh-dan: 0 4px 16px rgba(239, 68, 68, .3);
+
+  /* Burchaklar — ierarxiya bo'yicha: kichik element < maydon < karta < oyna */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  /* Masofalar (4px qadam) */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px;
+
+  /* Matn o'lchamlari */
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+
+  /* Layout */
+  --nav-h: 60px;
+  --nav-safe: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  --sidebar-w: 0px;
+  --app-h: calc(100dvh - var(--nav-safe));
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Planshet: ixcham yon menyu; Kompyuter: keng yon menyu */
+@media (min-width: 768px)  { :root { --sidebar-w: 84px;  --app-h: 100dvh; } }
+@media (min-width: 1440px) { :root { --sidebar-w: 224px; } }
+
+[data-theme='dark'] {
+  --bg:        #0a0f1e;
+  --surface:   #111827;
+  --surface2:  #1a2236;
+  --surface3:  #1e293b;
+  --border:    #1e293b;
+  --border2:   #2d3f57;
+  --text:      #f0f4ff;
+  --text2:     #8899b4;
+  --text3:     #4a5a72;
+  --primary:   #3b82f6;
+  --primary-h: #60a5fa;
+  --primary-s: rgba(59, 130, 246, .12);
+  --primary-t: rgba(59, 130, 246, .10);
+  --success:   #22c55e;
+  --success-s: rgba(34, 197, 94, .14);
+  --danger:    #f87171;
+  --danger-s:  rgba(248, 113, 113, .14);
+  --warning:   #fbbf24;
+  --warning-s: rgba(251, 191, 36, .14);
+  --sh-sm:  0 0 0 1px rgba(255, 255, 255, .04);
+  --sh-md:  0 0 0 1px rgba(255, 255, 255, .05);
+  --sh-lg:  0 0 0 1px rgba(255, 255, 255, .06);
+  --sh-xl:  0 0 0 1px rgba(255, 255, 255, .06);
+  --sh-pri: 0 4px 20px rgba(59, 130, 246, .25);
+  --sh-suc: 0 4px 20px rgba(34, 197, 94, .20);
+  --sh-dan: 0 4px 20px rgba(248, 113, 113, .20);
+  color-scheme: dark;
+}

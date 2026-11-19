@@ -25,6 +25,7 @@ obuna to'laydi, siz esa **superadmin** sifatida hammasini boshqarasiz.
 12. [Zaxira nusxa va tiklash](#12-zaxira-nusxa-va-tiklash)
 13. [Muammolar va yechimlar](#13-muammolar-va-yechimlar)
 14. [Muhim eslatmalar (qonun, soliq)](#14-muhim-eslatmalar-qonun-soliq)
+15. [Frontend (React) bilan ishlash](#15-frontend-react-bilan-ishlash)
 
 ---
 
@@ -55,8 +56,15 @@ novapos/
 │   ├── dependencies.py     # Token, obuna tekshiruvi
 │   ├── sanitize.py         # Kiruvchi matnni tozalash (XSS himoyasi)
 │   └── api/                # API manzillari (products, sales, reports ...)
+├── frontend/               # Yangi frontend (React + Vite + TypeScript) — 15-bo'lim
+│   └── src/
+│       ├── components/ui/  # Tugma, maydon, oyna, bildirishnoma... (yagona dizayn)
+│       ├── components/layout/  # Menyu: telefon / planshet / kompyuter
+│       ├── lib/            # API, sessiya, formatlar, tema
+│       └── pages/          # Sahifalar (React'ga ko'chirilganlari)
 ├── webapp/
-│   ├── templates/          # HTML sahifalar
+│   ├── templates/          # Eski HTML sahifalar (bosqichma-bosqich React'ga ko'chirilmoqda)
+│   ├── static/app/         # React build natijasi (repoga qo'shiladi — serverda Node.js shart emas)
 │   ├── static/js/          # Kassa, oflayn baza, sinxronizatsiya, printer, skaner
 │   ├── static/vendor/      # htmx, ikonkalar, shriftlar (internetsiz ishlashi uchun)
 │   └── sw.js               # Service Worker (oflayn rejim)
@@ -655,6 +663,68 @@ PIN esda bo'lsa, PIN bilan kirish ham mumkin (Kirish → PIN).
   etiladi.
 - **Foydalanish shartlari.** Do'konlarga berishdan oldin ommaviy oferta va maxfiylik siyosatini
   tayyorlang.
+
+---
+
+## 15. Frontend (React) bilan ishlash
+
+Frontend bosqichma-bosqich **React + Vite + TypeScript** ga ko'chirilmoqda. Ko'rinish (ranglar,
+shrift, tungi rejim) eski sahifalar bilan bir xil, lekin hamma tugma, maydon va oyna endi
+**bitta komponentlar to'plamidan** (`frontend/src/components/ui/`) foydalanadi.
+
+| Sahifa | Holati |
+|---|---|
+| Mijozlar | ✅ React (`/app/customers`) |
+| Kassa, Ombor, Tarix, Hisobot, Sozlamalar, Superadmin | ⏳ eski sahifa (navbatda) |
+
+Eski va yangi sahifalar birga ishlaydi: login, tema va oflayn kesh umumiy, menyu ikkalasida bir xil.
+Eski manzil (masalan `/customers`) ko'chirilgandan keyin yangisiga yo'naltiriladi.
+
+### Serverga o'rnatishda
+
+Hech narsa qilish shart emas — tayyor build `webapp/static/app/` da, repoda turibdi.
+**Serverda Node.js kerak emas.**
+
+### Frontend'ni o'zgartirish (dasturchi uchun)
+
+Kerak: **Node.js 20+** (https://nodejs.org).
+
+Bir marta:
+
+```bash
+cd frontend
+```
+
+```bash
+npm install
+```
+
+Ishlab chiqish rejimi (o'zgarishlar darhol ko'rinadi). Avval backend'ni 8000-portda ishga
+tushiring (3.5-bo'lim), keyin:
+
+```bash
+npm run dev
+```
+
+Brauzerda: http://localhost:5173/app/customers
+
+Tayyor bo'lgach build qiling va natijani commit qiling:
+
+```bash
+npm run build
+```
+
+```bash
+git add webapp/static/app frontend && git commit -m "Frontend: ..."
+```
+
+### Qoidalar
+
+- Yangi tugma, maydon yoki oyna kerak bo'lsa — `components/ui/` dagi tayyor komponentdan
+  foydalaning. Sahifada alohida uslub yozmang.
+- Ranglar va o'lchamlar faqat `styles/tokens.css` dagi o'zgaruvchilar orqali.
+- Server so'rovlari faqat `lib/api.ts` orqali (token, xatolar, oflayn shu yerda).
+- Pul — `money()`, sana — `dateTime()` / `localDate()` (`lib/format.ts`).
 
 ---
 

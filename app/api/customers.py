@@ -170,7 +170,7 @@ def delete_customer(
     _check_store(c, employee.store_id)
 
     if abs(c.current_debt or 0) > 0.01:
-        raise HTTPException(400, f"Qarzi bor: {c.current_debt:,.0f} so'm. Avval qarzingizni oling.")
+        raise HTTPException(400, f"Mijozning {c.current_debt:,.0f} so'm qarzi bor. Avval qarzni yoping.".replace(",", " "))
 
     c.is_active = False
     db.commit()

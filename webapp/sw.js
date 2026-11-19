@@ -11,7 +11,7 @@
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
  */
 
-const VER      = '6.2.0';
+const VER      = '7.0.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -50,7 +50,7 @@ const STATIC_FILES = [
 const PAGES = [
   '/', '/login', '/register',
   '/pos', '/products', '/products/add', '/sales', '/sales/history',
-  '/reports', '/settings', '/products/supply-history', '/customers',
+  '/reports', '/settings', '/products/supply-history', '/app/',
 ];
 
 // Tarmoq yo'q bo'lganda qaysi API javoblari keshdan berilishi mumkin
@@ -155,8 +155,11 @@ async function _cacheFirst(req) {
 async function _swrPage(req) {
   const cache  = await caches.open(C_PAGES);
   const url    = new URL(req.url);
-  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz
-  const key    = url.pathname.startsWith('/products/edit/') ? null : url.pathname;
+  // /products/edit/5 → bitta shablon (add_product) — keshdagi /products/add ni ishlatamiz.
+  // React ilovasi (/app/...) — hamma manzil uchun bitta index.html → '/app/' kaliti.
+  const key    = url.pathname.startsWith('/products/edit/') ? null
+               : (url.pathname === '/app' || url.pathname.startsWith('/app/')) ? '/app/'
+               : url.pathname;
   const cached = key ? await cache.match(key) : null;
 
   const net = fetch(req)

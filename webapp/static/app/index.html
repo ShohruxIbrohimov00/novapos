@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>NovaPOS</title>
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png" />
+  <link rel="icon" type="image/png" href="/static/img/icon-96.png" />
+  <!-- Lokal shrift va ikonkalar (internetsiz ishlashi uchun) -->
+  <link rel="preload" href="/static/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/static/vendor/fonts/plus-jakarta-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/static/vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="/static/vendor/fontawesome/css/all.min.css" />
+  <script>
+    // Birinchi chizishdan OLDIN: tema va kirish tekshiruvi (lip-lip qilmasligi uchun)
+    (function () {
+      var d = document.documentElement, t = null, tok = null, ok = false;
+      try { t = localStorage.getItem('pos_theme'); tok = localStorage.getItem('access_token'); } catch (e) {}
+      d.setAttribute('data-theme', t || 'light');
+      try {
+        if (tok) {
+          var pl = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+          ok = Date.now() < pl.exp * 1000 - 30000;
+        }
+      } catch (e) {}
+      if (!ok) location.replace('/login');
+    })();
+  </script>
+  <script type="module" crossorigin src="/static/app/assets/index-COEWHbXg.js"></script>
+  <link rel="stylesheet" crossorigin href="/static/app/assets/index-Bb_recsz.css">
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

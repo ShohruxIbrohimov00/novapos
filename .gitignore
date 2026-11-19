@@ -20,3 +20,6 @@ webapp/static/uploads/
 
 # Zaxira nusxalar
 backups/
+
+# Frontend
+frontend/node_modules/

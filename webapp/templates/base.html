@@ -57,13 +57,14 @@
             ['/pos',           'fa-cash-register',  'Kassa'],
             ['/sales/history', 'fa-receipt',        'Tarix'],
             ['/products',      'fa-boxes-stacked',  'Ombor'],
-            ['/customers',     'fa-users',          'Mijozlar'],
+            ['/app/customers', 'fa-users',          'Mijozlar'],
         ].concat(r === 'admin' ? [['/reports', 'fa-chart-column', 'Hisobot']] : [])
          .concat([['/settings', 'fa-gear', 'Sozlama']]);
         function active(h) {
             if (h === '/pos' || h === '/superadmin') return p === h;
             if (h === '/sales/history') return p.indexOf('/sales') === 0;
             if (h === '/products') return p.indexOf('/products') === 0 || p.indexOf('/ai-scan') === 0;
+            if (h === '/app/customers') return p.indexOf('/customers') === 0;
             return p.indexOf(h) === 0;
         }
         window.__navHTML = LINKS.map(function (l) {
@@ -1168,6 +1169,11 @@ function confirmLogout() {
         onConfirm: doLogout,
     });
 }
+
+// React ilovasidan chiqish so'rovi: /settings#chiqish
+document.addEventListener('DOMContentLoaded', function () {
+    if (location.hash === '#chiqish') { history.replaceState(null, '', location.pathname); doLogout(); }
+});
 
 async function doLogout() {
     // Yuborilmagan oflayn sotuvlar bo'lsa — chiqishga ruxsat yo'q
