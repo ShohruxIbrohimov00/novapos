@@ -724,6 +724,26 @@ Ekranlar: **telefon** (< 768 px) — pastki menyu; **planshet** (768+) — ixcha
 Hech narsa qilish shart emas — tayyor build `webapp/static/app/` da, repoda turibdi.
 **Serverda Node.js kerak emas.**
 
+### Yangilanish do'kondagi telefonlarga qanday yetib boradi
+
+Ilova telefonda keshdan ochiladi (tez va internetsiz ishlashi uchun). Shuning uchun:
+
+- Har build `webapp/static/app/version.json` yozadi (versiya + hamma fayllar ro'yxati).
+- Ochiq ilova versiyani tekshiradi: ochilganda, har 30 daqiqada, oynaga qaytilganda va
+  internet tiklanganda. Farq bo'lsa — pastda **"Yangi versiya chiqdi — Yangilash"** chiqadi.
+- "Yangilash" bosilganda yangi fayllar avval keshga olinadi, keyin sahifa qayta yuklanadi.
+  Savat va oflayn sotuvlar saqlanib qoladi.
+- `version.json` keshlanmasligi kerak — `deploy/nginx.conf` dagi alohida `location` bunga
+  javob beradi (nginx sozlamasi yangilangan bo'lsa, serverga qayta nusxalab
+  `sudo nginx -t && sudo systemctl reload nginx` qiling).
+
+Sahifada kutilmagan xato bo'lsa, oq ekran o'rniga "Xatolik — qayta yuklash" oynasi chiqadi,
+menyu ishlab turadi. Xato matni server logiga yoziladi (`novapos.client`):
+
+```bash
+sudo journalctl -u novapos | grep novapos.client
+```
+
 ### Frontend'ni o'zgartirish (dasturchi uchun)
 
 Kerak: **Node.js 20+** (https://nodejs.org).

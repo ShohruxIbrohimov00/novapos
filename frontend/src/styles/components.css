@@ -200,3 +200,57 @@ textarea.ui-input { height: auto; min-height: 88px; padding: var(--s3) var(--s4)
 .period-tabs { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .period-tabs::-webkit-scrollbar { display: none; }
 .period-dates { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); }
+
+/* ── "Yangi versiya chiqdi" ── */
+.update-banner {
+  position: fixed; z-index: 9500; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--nav-safe) + var(--s3));
+  width: max-content; max-width: calc(100vw - 2 * var(--s4));
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s2) var(--s2) var(--s2) var(--s4);
+  background: var(--text); color: var(--surface); border-radius: var(--r-lg); box-shadow: var(--sh-xl);
+  font-size: var(--fs-sm); font-weight: 700;
+  animation: update-in .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+.update-banner > .fa-solid { color: var(--primary); font-size: var(--fs-lg); }
+.update-banner__text { white-space: nowrap; }
+.update-banner__btn {
+  display: inline-flex; align-items: center; gap: var(--s2); min-height: 40px; padding: 0 var(--s4);
+  background: var(--primary); color: #fff; border: 0; border-radius: var(--r-md);
+  font: inherit; font-weight: 800; cursor: pointer;
+}
+.update-banner__btn:disabled { opacity: .8; cursor: wait; }
+.update-banner__btn .ui-spinner { width: 14px; height: 14px; border-color: rgba(255, 255, 255, .4); border-top-color: #fff; }
+.update-banner__close {
+  width: 36px; height: 36px; border: 0; border-radius: var(--r-sm); background: transparent;
+  color: inherit; opacity: .7; cursor: pointer;
+}
+.update-banner__close:hover { opacity: 1; }
+@media (min-width: 768px) { .update-banner { bottom: var(--s5); } }
+@keyframes update-in { from { transform: translate(-50%, 20px); opacity: 0; } }
+
+/* ── Xatolik oynasi (ErrorBoundary) ── */
+.ui-crash {
+  min-height: var(--app-h); display: flex; align-items: center; justify-content: center;
+  padding: var(--s6) var(--s4); background: var(--bg);
+}
+.ui-crash__card {
+  width: 100%; max-width: 380px; text-align: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-xl);
+  padding: var(--s8) var(--s6); box-shadow: var(--sh-lg);
+}
+.ui-crash__icon {
+  width: 64px; height: 64px; margin: 0 auto var(--s4); border-radius: var(--r-lg);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--danger-s); color: var(--danger); font-size: 26px;
+}
+.ui-crash__icon--info { background: var(--primary-s); color: var(--primary); }
+.ui-crash__title { font-size: var(--fs-lg); font-weight: 900; margin-bottom: var(--s2); }
+.ui-crash__text { color: var(--text2); font-size: var(--fs-sm); line-height: 1.55; margin-bottom: var(--s5); }
+.ui-crash__actions { display: flex; flex-direction: column; gap: var(--s2); }
+.ui-crash__details { margin-top: var(--s4); text-align: left; font-size: var(--fs-xs); color: var(--text3); }
+.ui-crash__details summary { cursor: pointer; text-align: center; }
+.ui-crash__details pre {
+  margin-top: var(--s2); padding: var(--s3); background: var(--surface2); border-radius: var(--r-sm);
+  white-space: pre-wrap; word-break: break-word; font-family: var(--mono); max-height: 160px; overflow: auto;
+}

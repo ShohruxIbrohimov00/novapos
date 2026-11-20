@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { UpdateBanner } from '@/components/UpdateBanner';
 import { ConfirmProvider, ToastProvider } from '@/components/ui';
 import { AuthPage } from '@/pages/auth/AuthPage';
 import { CustomersPage } from '@/pages/customers/CustomersPage';
@@ -29,7 +31,9 @@ function SuperOnly({ children }: { children: ReactNode }) {
 
 export function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter basename="/app">
+      <UpdateBanner />
       <ToastProvider>
         <ConfirmProvider>
           <Routes>
@@ -56,5 +60,6 @@ export function App() {
         </ConfirmProvider>
       </ToastProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }

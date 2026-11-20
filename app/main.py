@@ -31,11 +31,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, RedirectResponse
 from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, Field
 
 from app.database import init_db, check_db_health, SessionLocal
 from app.websocket_manager import ws_manager, WSEvent
 from app.dependencies import decode_ws_token
-from app.rate_limiter import limiter, rate_limit_handler
+from app.rate_limiter import limiter, rate_limit_handler, client_error_limit
 from app.timezone_utils import now_tashkent
 from slowapi.errors import RateLimitExceeded
 
@@ -248,6 +249,28 @@ async def manifest():
     if os.path.exists(path):
         return FileResponse(path, media_type="application/manifest+json")
     raise HTTPException(404, "manifest.json topilmadi")
+
+
+# ─── Brauzerdagi xatolar (React ErrorBoundary) ────────────────
+# Do'kondagi telefonda sahifa xato bersa — serverning logida ko'rinadi.
+# Kirishsiz ham ishlaydi (xato kirish sahifasida bo'lishi mumkin), shuning uchun
+# qat'iy cheklangan: IP bo'yicha 10/daqiqa, matnlar qisqartiriladi, bazaga yozilmaydi.
+client_logger = logging.getLogger("novapos.client")
+
+class ClientError(BaseModel):
+    message: str = Field("", max_length=500)
+    stack:   str = Field("", max_length=4000)
+    url:     str = Field("", max_length=300)
+    version: str = Field("", max_length=40)
+
+@app.post("/api/client-errors", status_code=204, include_in_schema=False)
+@client_error_limit
+async def client_error(request: Request, err: ClientError):
+    client_logger.warning(
+        "[client] %s | url=%s version=%s ua=%s\n%s",
+        err.message, err.url, err.version or "-",
+        (request.headers.get("user-agent") or "")[:200], err.stack,
+    )
 
 
 # ============================================

@@ -9,9 +9,13 @@
  *   ✅ API: avval tarmoq (doim yangi ma'lumot), tarmoq yo'q bo'lsa — kesh,
  *      u ham bo'lmasa 503 + X-SW-Offline (api.js IndexedDB dan oladi)
  *   ✅ Oflayn sotuvlar client_uid bilan — ikki marta yozilmaydi
+ * v8.1:
+ *   ✅ React ilovasining HAMMA fayllari (version.json ro'yxati) oldindan keshlanadi
+ *   ✅ Eski build fayllari tozalanadi (joriy + bitta oldingi versiya saqlanadi)
+ *   ✅ UPDATE_APP: "Yangilash" tugmasi bosilganda yangi versiya keshga olinadi
  */
 
-const VER      = '8.0.0';
+const VER      = '8.1.0';
 const C_STATIC = `nova-static-${VER}`;
 const C_PAGES  = `nova-pages-${VER}`;
 const C_API    = `nova-api-${VER}`;
@@ -63,19 +67,66 @@ self.addEventListener('install', e => {
       ),
     ])
       // React ilovasining JS/CSS fayllari ham oldindan — aks holda oflaynda bo'sh sahifa ochilishi mumkin
-      .then(() => caches.match('/app/', { cacheName: C_PAGES }))
-      .then(res => res ? res.clone().text().then(_cacheAppAssets) : null)
+      .then(() => _precacheApp())
       .catch(() => {})
       .then(() => self.skipWaiting())
   );
 });
 
-// index.html ichidagi /static/app/assets/... fayllarini keshga olish
-async function _cacheAppAssets(html) {
-  const urls = [...new Set((html.match(/\/static\/app\/assets\/[^"'\s>]+/g) || []))];
-  if (!urls.length) return;
+// ─── REACT ILOVASI FAYLLARI ──────────────────────────────────
+// version.json — build ro'yxati: { version, assets: ['/static/app/assets/...'] }.
+// Sahifalarga bo'lingan ilovada hamma bo'laklar oldindan keshlanishi shart, aks holda
+// oflaynda hali ochilmagan sahifa yuklanmaydi.
+const APP_VERSION_URL = '/static/app/version.json';
+const APP_MANIFEST_KEY = '/__nova/app-manifest';   // keshdagi joriy ro'yxat nusxasi
+
+async function _fetchAppManifest() {
+  try {
+    const res = await fetch(APP_VERSION_URL, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const m = await res.json();
+    return Array.isArray(m?.assets) ? m : null;
+  } catch { return null; }
+}
+
+/**
+ * Yangi build fayllarini keshga oladi va eskilarini tozalaydi.
+ * Bitta oldingi versiya fayllari qoldiriladi: hali yangilanmagan ochiq oyna o'z
+ * bo'laklarini (sahifalarini) yuklay olishi uchun.
+ */
+async function _precacheApp(manifest) {
+  const m = manifest || await _fetchAppManifest();
+  if (!m) return false;
   const cache = await caches.open(C_STATIC);
-  await Promise.allSettled(urls.map(async u => { if (!(await cache.match(u))) await cache.add(u); }));
+  const results = await Promise.allSettled(
+    m.assets.map(async u => { if (!(await cache.match(u))) await cache.add(u); })
+  );
+  if (results.some(r => r.status === 'rejected')) return false;   // to'liq bo'lmasa — tozalamaymiz
+
+  const prevRes = await cache.match(APP_MANIFEST_KEY);
+  const prev = prevRes ? await prevRes.json().catch(() => null) : null;
+  if (prev?.version !== m.version) {
+    const keep = new Set([...m.assets, ...(prev?.assets || [])]);
+    for (const req of await cache.keys()) {
+      const p = new URL(req.url).pathname;
+      if (p.startsWith('/static/app/assets/') && !keep.has(p)) await cache.delete(req);
+    }
+    await cache.put(APP_MANIFEST_KEY, new Response(JSON.stringify(m), {
+      headers: { 'Content-Type': 'application/json' },
+    }));
+  }
+  return true;
+}
+
+/** "Yangilash" tugmasi: yangi index.html va uning hamma fayllari keshga olinadi */
+async function _updateApp() {
+  const m = await _fetchAppManifest();
+  if (!m) return false;
+  if (!(await _precacheApp(m))) return false;
+  const res = await fetch('/app/', { cache: 'no-store' });
+  if (!res.ok) return false;
+  await (await caches.open(C_PAGES)).put('/app/', res);
+  return true;
 }
 
 // ─── ACTIVATE ────────────────────────────────────────────────
@@ -99,6 +150,7 @@ self.addEventListener('fetch', e => {
   if (req.headers.get('range')) return;
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/ws/')) return;
+  if (url.pathname === APP_VERSION_URL) return;   // versiya doim serverdan (keshsiz)
 
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(_apiNetworkFirst(req, url)); return;
@@ -187,9 +239,14 @@ async function _swrPage(req) {
   const net = fetch(req)
     .then(res => {
       if (res.ok && !res.redirected) {
-        cache.put(key, res.clone());
-        // Yangi build chiqqan bo'lsa — uning fayllari ham darhol keshga (keyingi oflayn ochilish uchun)
-        if (key === '/app/') res.clone().text().then(_cacheAppAssets).catch(() => {});
+        if (key === '/app/') {
+          // Yangi index.html faqat uning HAMMA fayllari keshga tushgandan keyin saqlanadi —
+          // aks holda oflaynda yangi sahifa eski (yo'q) fayllarni so'rab bo'sh qolardi.
+          const copy = res.clone();
+          _precacheApp().then(ok => { if (ok || !cached) return cache.put(key, copy); }).catch(() => {});
+        } else {
+          cache.put(key, res.clone());
+        }
       }
       return res;
     })
@@ -295,6 +352,11 @@ async function _syncOps() {
 self.addEventListener('message', e => {
   const { type } = e.data || {};
   if (type === 'SKIP_WAITING') self.skipWaiting();
+  if (type === 'UPDATE_APP') {
+    // Javob MessageChannel porti orqali (sahifa kutib turadi, keyin qayta yuklaydi)
+    const reply = msg => (e.ports?.[0] || e.source)?.postMessage(msg);
+    e.waitUntil(_updateApp().catch(() => false).then(ok => reply({ type: 'APP_UPDATED', ok })));
+  }
   if (type === 'CLEAR_API_CACHE')
     caches.delete(C_API)
       .then(() => e.source?.postMessage({ type: 'API_CACHE_CLEARED' }));

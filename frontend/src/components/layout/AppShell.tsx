@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { useConfirm, useToast } from '@/components/ui';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { isImpersonating, logout as doLogout } from '@/lib/session';
 import { isActive, navLinks, type NavLink } from './nav';
 import './shell.css';
@@ -98,7 +99,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="shell__main">
         {!online && <div className="offline-bar" role="status"><i className="fa-solid fa-wifi" aria-hidden="true" /> Internet yo'q — ma'lumotlar keshdan</div>}
-        {children}
+        {/* Sahifadagi xato faqat sahifani almashtiradi — menyu ishlab turadi */}
+        <ErrorBoundary resetKey={loc.pathname}>{children}</ErrorBoundary>
       </div>
 
       <nav className="bottomnav" aria-label="Asosiy menyu">

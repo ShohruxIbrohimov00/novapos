@@ -35,6 +35,17 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    // Ilova umuman ishga tushmasa (fayl yuklanmadi, eski brauzer) — oq ekran o'rniga xabar
+    setTimeout(function () {
+      var r = document.getElementById('root');
+      if (!r || r.childNodes.length) return;
+      r.innerHTML = '<div style="min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:system-ui,sans-serif">'
+        + '<div><div style="font-size:20px;font-weight:800;margin-bottom:8px">Ilova yuklanmadi</div>'
+        + '<div style="color:#64748b;margin-bottom:20px">Internetni tekshirib, qayta urinib ko\'ring.</div>'
+        + '<button onclick="location.reload()" style="padding:14px 28px;border:0;border-radius:14px;background:#2563eb;color:#fff;font-size:16px;font-weight:700">Qayta yuklash</button></div></div>';
+    }, 10000);
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>

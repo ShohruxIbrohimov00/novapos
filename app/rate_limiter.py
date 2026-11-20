@@ -29,6 +29,7 @@ _api_rate    = "9999/minute" if IS_TEST else "200/minute"
 _upload_rate = "9999/minute" if IS_TEST else "3/minute"
 _ai_rate     = "9999/minute" if IS_TEST else "10/minute"
 _reg_rate    = "9999/minute" if IS_TEST else "3/minute"
+_clerr_rate  = "9999/minute" if IS_TEST else "10/minute"
 
 login_limit  = limiter.limit(_login_rate)
 pin_limit    = limiter.limit(_pin_rate)
@@ -36,6 +37,7 @@ api_limit    = limiter.limit(_api_rate)
 upload_limit = limiter.limit(_upload_rate)
 ai_limit     = limiter.limit(_ai_rate)
 reg_limit    = limiter.limit(_reg_rate)
+client_error_limit = limiter.limit(_clerr_rate)
 
 
 # ─── Exception handler ────────────────────────────────────────
