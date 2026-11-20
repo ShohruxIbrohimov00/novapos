@@ -1,50 +1,25 @@
-import { useId, useState } from 'react';
-import { cleanNumInput, money, parseNum, qty as fmtQty } from '@/lib/format';
+import { useState } from 'react';
+import { money, parseNum, qty as fmtQty } from '@/lib/format';
 import { UNITS, type Category, type Unit } from '@/lib/products';
 import { CameraScanner } from '@/components/CameraScanner';
-import { Field, IconButton, type FieldProps } from '@/components/ui';
+import { Button, Chips, Field, IconButton, NumField, Select, Switch } from '@/components/ui';
 import { CategoriesModal } from './CategoriesModal';
 
-/** Son maydoni: telefonda raqamli klaviatura, vergul ham qabul qilinadi, pul bo'lsa ostida "12 500 so'm" */
-export function NumField({ value, onValue, isMoney, decimals = true, hint, ...rest }:
-  Omit<FieldProps, 'value' | 'onChange'> & { value: string; onValue: (v: string) => void; isMoney?: boolean; decimals?: boolean }) {
-  const n = parseNum(value);
-  const auto = isMoney && n >= 1000 ? money(n) : undefined;
-  return (
-    <Field inputMode={decimals ? 'decimal' : 'numeric'} autoComplete="off" value={value}
-           onChange={(e) => onValue(cleanNumInput(e.target.value, decimals))}
-           hint={hint ?? auto} {...rest} />
-  );
-}
-
-export function UnitPills({ value, onChange, disabled }: { value: Unit; onChange: (u: Unit) => void; disabled?: boolean }) {
-  return (
-    <div className="pf-units" role="radiogroup" aria-label="O'lchov birligi">
-      {UNITS.map((u) => (
-        <button key={u.value} type="button" role="radio" aria-checked={value === u.value} disabled={disabled}
-                className="pf-unit" onClick={() => onChange(u.value)}>{u.label}</button>
-      ))}
-    </div>
-  );
+export function UnitPills({ value, onChange }: { value: Unit; onChange: (u: Unit) => void }) {
+  return <Chips ariaLabel="O'lchov birligi" value={value} onChange={(u) => { if (u) onChange(u); }} options={UNITS} />;
 }
 
 export function CategorySelect({ value, onChange, categories, onCreated }:
   { value: number | null; onChange: (id: number | null) => void; categories: Category[]; onCreated: () => Promise<void> | void }) {
-  const id = useId();
   const [open, setOpen] = useState(false);
   return (
-    <div className="ui-field">
-      <label className="ui-field__label" htmlFor={id}>Kategoriya</label>
-      <div className="pf-row">
-        <select id={id} className="ui-input" value={value ?? ''} onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}>
-          <option value="">— Kategoriyasiz —</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <IconButton icon="fa-plus" label="Yangi kategoriya" className="pf-sqbtn" onClick={() => setOpen(true)} />
-      </div>
+    <>
+      <Select label="Kategoriya" icon="fa-tag" value={value} onChange={onChange} clearable placeholder="Kategoriyasiz"
+              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              footer={(close) => <Button variant="ghost" size="sm" icon="fa-plus" onClick={() => { close(); setOpen(true); }}>Yangi kategoriya</Button>} />
       <CategoriesModal open={open} onClose={() => setOpen(false)} categories={categories} onChanged={onCreated}
                        onPick={(c) => onChange(c.id)} />
-    </div>
+    </>
   );
 }
 
@@ -79,11 +54,7 @@ export function QtyInput({ label, value, onValue, unit, autoFocus }:
   return (
     <div className="pf-qty">
       {canBulk && (
-        <label className="pf-switch">
-          <input type="checkbox" checked={bulk} onChange={(e) => { setBulk(e.target.checked); if (!e.target.checked) { setPacks(''); setPer(''); } }} />
-          <span className="pf-switch__track" aria-hidden="true" />
-          Blok bilan
-        </label>
+        <Switch label="Blok bilan" checked={bulk} onChange={(v) => { setBulk(v); if (!v) { setPacks(''); setPer(''); } }} />
       )}
       {bulk && canBulk ? (
         <div className="pf-bulk">

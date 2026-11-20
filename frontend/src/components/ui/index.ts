@@ -7,3 +7,8 @@ export { ConfirmProvider, useConfirm } from './Confirm';
 export { Spinner, Skeleton } from './Spinner';
 export { Card, Badge, Stat, EmptyState, Tabs, Page } from './misc';
 export type { TabItem } from './misc';
+export { NumField } from './NumField';
+export { Select } from './Select';
+export type { SelectOption, SelectProps } from './Select';
+export { Switch, Segmented, Chips } from './Choice';
+export type { SegmentOption, ChipOption } from './Choice';

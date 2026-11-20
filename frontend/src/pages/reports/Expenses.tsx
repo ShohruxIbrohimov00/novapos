@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { dateTime, money, parseNum } from '@/lib/format';
 import { useAsync } from '@/lib/useAsync';
-import { Button, EmptyState, Field, IconButton, Modal, Skeleton, useConfirm, useToast } from '@/components/ui';
-import { NumField } from '@/pages/products/fields';
+import { Button, Chips, EmptyState, Field, IconButton, Modal, NumField, Skeleton, useConfirm, useToast } from '@/components/ui';
 import { EXPENSE_CATS, expenseIcon, type Expense } from './types';
 
 export function Expenses({ qs, label }: { qs: string; label: string }) {
@@ -86,16 +85,8 @@ function ExpenseModal({ open, onClose, onSaved }: { open: boolean; onClose: () =
       <form className="pf-form" onSubmit={(e) => { e.preventDefault(); save(); }} noValidate>
         <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         <NumField label="Summa" isMoney required autoFocus value={amount} onValue={(v) => { setAmount(v); setErr(null); }} error={err} className="pf-big" placeholder="0" />
-        <div className="ui-field">
-          <span className="ui-field__label">Turi</span>
-          <div className="sl-reasons">
-            {EXPENSE_CATS.map((c) => (
-              <button key={c.value} type="button" className="sl-reason" aria-pressed={cat === c.value} onClick={() => setCat(c.value)}>
-                <i className={`fa-solid ${c.icon}`} aria-hidden="true" /> {c.value}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Chips label="Turi" value={cat} onChange={(v) => setCat(v ?? 'Boshqa')}
+               options={EXPENSE_CATS.map((c) => ({ value: c.value, label: c.value, icon: c.icon }))} />
         <Field label="Izoh" placeholder="Ixtiyoriy" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={200} />
       </form>
     </Modal>

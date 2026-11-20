@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { money } from '@/lib/format';
 import { useAsync } from '@/lib/useAsync';
-import { Button, Field, IconButton, Page, Skeleton, useConfirm, useToast } from '@/components/ui';
-import { NumField } from '@/pages/products/fields';
+import { Button, Field, IconButton, Page, Skeleton, useConfirm, useToast, NumField } from '@/components/ui';
 import './superadmin.css';
 
 interface Stats { total_stores: number; active_stores: number; pending_requests: number; total_revenue: number }

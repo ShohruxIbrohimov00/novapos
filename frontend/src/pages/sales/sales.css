@@ -105,9 +105,6 @@
 .sl-stepper input { width: 80px; height: 52px; text-align: center; font-size: 22px; font-weight: 900; border: 2px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text); }
 .sl-stepper input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-t); }
 .sl-stepper__all { min-height: 40px; padding: 0 var(--s3); border: none; border-radius: var(--r-sm); background: var(--primary-s); color: var(--primary); font-weight: 800; font-size: var(--fs-sm); }
-.sl-reasons { display: flex; flex-wrap: wrap; gap: var(--s2); margin-bottom: var(--s2); }
-.sl-reason { min-height: 36px; padding: 0 var(--s3); border-radius: 99px; border: 1px solid var(--border); background: var(--surface2); font-weight: 700; font-size: var(--fs-sm); color: var(--text2); }
-.sl-reason[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: #fff; }
 .sl-refund { display: flex; justify-content: space-between; align-items: center; padding: var(--s4); border-radius: var(--r-md); background: var(--danger-s); color: var(--danger); font-weight: 700; }
 .sl-refund b { font-size: var(--fs-xl); font-weight: 900; }
 .sl-refund.is-off { opacity: .5; }

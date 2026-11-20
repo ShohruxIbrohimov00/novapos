@@ -5,7 +5,7 @@ import { money, qty } from '@/lib/format';
 import { categoryOf, isLow, NO_CATEGORY, UNIT_SHORT, type Product } from '@/lib/products';
 import { useProducts } from '@/lib/useProducts';
 import { useScanner } from '@/lib/useScanner';
-import { Button, EmptyState, Field, IconButton, Modal, Page, Skeleton } from '@/components/ui';
+import { Button, Chips, EmptyState, Field, IconButton, Modal, Page, Skeleton } from '@/components/ui';
 import { CategoriesModal } from './CategoriesModal';
 import { LimitsPanel } from './LimitsPanel';
 import { useCategories } from './data';
@@ -99,13 +99,9 @@ export function ProductsPage() {
           <IconButton icon="fa-tags" label="Kategoriyalar" className="inv-only-narrow" onClick={() => setCatsOpen(true)} />
           {admin && <IconButton icon="fa-sliders" label='"Kam qoldi" chegarasi' className="inv-only-narrow" onClick={() => setLimitsOpen(true)} />}
         </div>
-        <div className="inv-chips inv-only-narrow" role="tablist" aria-label="Filtr">
-          {filters.map((f) => (
-            <button key={f.key} type="button" role="tab" aria-selected={activeFilter === f.key}
-                    className={`inv-chip${f.danger ? ' inv-chip--danger' : ''}`} onClick={() => setFilter(f.key)}>
-              {f.label}<span className="inv-chip__n">{f.count}</span>
-            </button>
-          ))}
+        <div className="inv-only-narrow">
+          <Chips ariaLabel="Filtr" scroll value={activeFilter} onChange={(v) => { if (v) setFilter(v); }}
+                 options={filters.map((f) => ({ value: f.key, label: f.label, count: f.count, tone: f.danger ? 'danger' as const : undefined }))} />
         </div>
       </>}
     >

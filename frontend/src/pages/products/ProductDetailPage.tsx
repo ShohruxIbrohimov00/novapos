@@ -6,9 +6,9 @@ import { dateTime, money, parseNum, qty as fmtQty } from '@/lib/format';
 import { categoryOf, isLow, UNIT_SHORT, type Product, type Unit } from '@/lib/products';
 import { useProducts } from '@/lib/useProducts';
 import { useScanner } from '@/lib/useScanner';
-import { Badge, Button, EmptyState, Field, IconButton, Modal, Page, Skeleton, useConfirm, useToast } from '@/components/ui';
+import { Badge, Button, EmptyState, Field, IconButton, Modal, Page, Skeleton, useConfirm, useToast, NumField, Segmented, Select } from '@/components/ui';
 import { SUPPLY_TYPE, useCategories, useSuppliers, type SupplyRow } from './data';
-import { BarcodeField, CategorySelect, Margin, NumField, QtyInput, UnitPills } from './fields';
+import { BarcodeField, CategorySelect, Margin, QtyInput, UnitPills } from './fields';
 import './products.css';
 
 // Qiymatlar backend'dagi AdjustmentReason bilan bir xil
@@ -224,22 +224,12 @@ export function ProductDetailPage() {
             )}
             {suppliers.length > 0 && (
               <div className="pf-grid2">
-                <div className="ui-field">
-                  <label className="ui-field__label" htmlFor="pd-sup">Ta'minotchi</label>
-                  <select id="pd-sup" className="ui-input" value={supplier ?? ''}
-                          onChange={(e) => { const v = e.target.value ? Number(e.target.value) : null; setSupplier(v); if (!v) setPaid(true); }}>
-                    <option value="">— Tanlanmagan —</option>
-                    {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </div>
+                <Select id="pd-sup" label="Ta'minotchi" icon="fa-truck" value={supplier} clearable placeholder="Tanlanmagan"
+                        onChange={(v) => { setSupplier(v); if (!v) setPaid(true); }}
+                        options={suppliers.map((s) => ({ value: s.id, label: s.name, hint: s.current_debt ? `qarz: ${money(s.current_debt)}` : undefined }))} />
                 {supplier && (
-                  <div className="ui-field">
-                    <span className="ui-field__label">To'lov</span>
-                    <div className="pf-seg" role="radiogroup" aria-label="To'lov">
-                      <button type="button" role="radio" aria-checked={paid} onClick={() => setPaid(true)}>To'landi</button>
-                      <button type="button" role="radio" aria-checked={!paid} onClick={() => setPaid(false)}>Qarzga</button>
-                    </div>
-                  </div>
+                  <Segmented label="To'lov" value={paid ? 'paid' : 'debt'} onChange={(v) => setPaid(v === 'paid')}
+                             options={[{ value: 'paid', label: "To'landi" }, { value: 'debt', label: 'Qarzga', tone: 'danger' }]} />
                 )}
               </div>
             )}
@@ -354,12 +344,7 @@ function AdjustModal({ open, onClose, product, onDone }: { open: boolean; onClos
             {product.price_in > 0 && <> ({diff > 0 ? '+' : '−'}{money(Math.abs(diff) * product.price_in)} kelish narxida)</>}
           </div>
         )}
-        <div className="ui-field">
-          <label className="ui-field__label" htmlFor="adj-reason">Sabab</label>
-          <select id="adj-reason" className="ui-input" value={reason} onChange={(e) => setReason(e.target.value)}>
-            {ADJUST_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-          </select>
-        </div>
+        <Select id="adj-reason" label="Sabab" value={reason} onChange={(v) => setReason(v ?? ADJUST_REASONS[0].value)} options={ADJUST_REASONS} />
         <Field label="Izoh" placeholder="Ixtiyoriy" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={200} />
       </form>
     </Modal>

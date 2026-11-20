@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { dateTime, money, parseNum, qty as fmtQty } from '@/lib/format';
 import { useAsync } from '@/lib/useAsync';
-import { Badge, Button, EmptyState, Field, Modal, Skeleton, Stat, Tabs, useConfirm, useToast } from '@/components/ui';
-import { NumField } from '@/pages/products/fields';
+import { Badge, Button, EmptyState, Field, Modal, NumField, Segmented, Skeleton, Stat, Tabs, useConfirm, useToast } from '@/components/ui';
 import type { Supplier, SupplierHistoryRow } from './types';
 
 export function Suppliers() {
@@ -137,13 +136,11 @@ function SupplierModal({ supplier, onClose, onChanged, onEdit }: { supplier: Sup
           {act === 'debt' && <p className="rp-hint">Tovar omborga kiritilmagan bo'lsa ham qarzni yozib qo'yish uchun. Tovar bilan birga qarz — Ombor → tovar → Kirim → "Qarzga".</p>}
           <NumField label="Summa" isMoney value={amount} onValue={(v) => { setAmount(v); setErr(null); }} error={err} placeholder="0" className="pf-big" />
           {act === 'pay' && debt > 0.01 && (
-            <div className="rp-quick"><button type="button" className="sl-reason" onClick={() => setAmount(String(Math.round(debt)))}>Hammasi: {money(debt)}</button></div>
+            <div className="rp-quick"><button type="button" className="ui-chip" onClick={() => setAmount(String(Math.round(debt)))}>Hammasi: {money(debt)}</button></div>
           )}
           {act === 'pay' && (
-            <div className="pf-seg" role="radiogroup" aria-label="To'lov usuli">
-              <button type="button" role="radio" aria-checked={method === 'naqd'} onClick={() => setMethod('naqd')}>Naqd</button>
-              <button type="button" role="radio" aria-checked={method === 'plastik'} onClick={() => setMethod('plastik')} className="rp-seg-plain">Plastik</button>
-            </div>
+            <Segmented ariaLabel="To'lov usuli" value={method} onChange={setMethod}
+                       options={[{ value: 'naqd', label: 'Naqd', icon: 'fa-money-bill-wave' }, { value: 'plastik', label: 'Plastik', icon: 'fa-credit-card' }]} />
           )}
           <Field placeholder="Izoh (ixtiyoriy)" aria-label="Izoh" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} />
           <Button type="submit" block loading={busy} variant={act === 'pay' ? 'success' : 'primary'} icon={act === 'pay' ? 'fa-check' : 'fa-plus'}

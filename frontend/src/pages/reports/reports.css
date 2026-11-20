@@ -92,7 +92,6 @@
 .rp-sup__stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 480px) { .rp-sup__stats { grid-template-columns: 1fr 1fr; } .rp-sup__stats > :first-child { grid-column: 1 / -1; } }
 .rp-quick { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.pf-seg button[aria-checked='true'].rp-seg-plain { color: var(--primary); }
 @media (max-width: 639px) {
   .rp-kpis--main { grid-template-columns: 1fr 1fr; gap: var(--s2); }
   .rp-kpis--main .rp-kpi--main { grid-column: 1 / -1; }

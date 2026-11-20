@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getUser } from '@/lib/auth';
-import { Button, Field, useToast } from '@/components/ui';
+import { Button, Field, Segmented, useToast } from '@/components/ui';
 import { printText, reloadPrinterSettings } from '@/pages/pos/receipt';
 
 type Method = 'auto' | 'rawbt' | 'bluetooth' | 'qztray' | 'browser';
@@ -67,13 +67,8 @@ export function Printer() {
         ))}
       </div>
       {method === 'bluetooth' && <p className="st-muted">"Sinov cheki" bosilganda printer tanlash oynasi chiqadi. {s0.bt_device_name && <>Oxirgi printer: <b>{s0.bt_device_name}</b></>}</p>}
-      <div className="ui-field">
-        <span className="ui-field__label">Qog'oz kengligi</span>
-        <div className="pf-seg" role="radiogroup" aria-label="Qog'oz kengligi">
-          <button type="button" role="radio" aria-checked={paper === 32} className="rp-seg-plain" onClick={() => setPaper(32)}>58 mm</button>
-          <button type="button" role="radio" aria-checked={paper === 48} className="rp-seg-plain" onClick={() => setPaper(48)}>80 mm</button>
-        </div>
-      </div>
+      <Segmented label="Qog'oz kengligi" value={paper} onChange={setPaper}
+                 options={[{ value: 32, label: '58 mm' }, { value: 48, label: '80 mm' }]} />
       <Field label="Chek tepasidagi nom" value={name} maxLength={40} onChange={(e) => setName(e.target.value)} />
       <Field label="Chek pastidagi matn" value={footer} maxLength={80} onChange={(e) => setFooter(e.target.value)} />
       <div className="st-btns st-btns--row">

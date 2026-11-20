@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/lib/api';
 import { isAdmin } from '@/lib/auth';
-import { cleanNumInput, dateTime, money, parseNum } from '@/lib/format';
+import { dateTime, money, parseNum } from '@/lib/format';
 import { UNITS, type Product, type Unit } from '@/lib/products';
 import { useProducts } from '@/lib/useProducts';
-import { Badge, Button, EmptyState, IconButton, Modal, Page, Skeleton, Tabs, useToast } from '@/components/ui';
+import { Badge, Button, EmptyState, IconButton, Modal, Page, Skeleton, Tabs, useToast, Field, NumField, Select } from '@/components/ui';
 import './products.css';
 import './ai.css';
 
@@ -221,15 +221,14 @@ export function AiScanPage() {
                                   onClick={() => setRows((rs) => rs && rs.filter((x) => x.key !== r.key))} />
                     </div>
                     <div className="ai-grid">
-                      <label className="ai-f ai-f--name"><span>Nomi</span><input className="ui-input" value={r.name} onChange={(e) => set(r.key, { name: e.target.value })} /></label>
-                      <label className="ai-f"><span>Shtrix-kod</span><input className="ui-input pf-mono" inputMode="numeric" value={r.barcode} onChange={(e) => set(r.key, { barcode: e.target.value.replace(/\s/g, '') })} /></label>
-                      <label className="ai-f"><span>Miqdor</span><input className="ui-input" inputMode="decimal" value={r.qty} onChange={(e) => set(r.key, { qty: cleanNumInput(e.target.value) })} /></label>
-                      <label className="ai-f"><span>Birlik</span>
-                        <select className="ui-input" value={r.unit} onChange={(e) => set(r.key, { unit: e.target.value as Unit })}>{UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}</select></label>
-                      <label className="ai-f"><span>Kelish narxi</span><input className="ui-input" inputMode="decimal" value={r.pin} onChange={(e) => set(r.key, { pin: cleanNumInput(e.target.value) })} placeholder={m ? money(m.price_in, false) : '0'} /></label>
-                      <label className="ai-f"><span>Sotuv narxi{isNew(r) && ' *'}</span><input className={`ui-input${noPrice(r) ? ' ui-input--error' : ''}`} inputMode="decimal" value={r.pout}
-                             disabled={!!m && !admin} onChange={(e) => set(r.key, { pout: cleanNumInput(e.target.value) })} placeholder={m ? money(m.price_out, false) : 'Majburiy'} /></label>
-                      {isNew(r) && <label className="ai-f"><span>Kategoriya</span><input className="ui-input" value={r.cat} onChange={(e) => set(r.key, { cat: e.target.value })} placeholder="Ixtiyoriy" /></label>}
+                      <div className="ai-f--name"><Field label="Nomi" value={r.name} onChange={(e) => set(r.key, { name: e.target.value })} /></div>
+                      <Field label="Shtrix-kod" className="pf-mono" inputMode="numeric" value={r.barcode} onChange={(e) => set(r.key, { barcode: e.target.value.replace(/\s/g, '') })} />
+                      <NumField label="Miqdor" value={r.qty} onValue={(v) => set(r.key, { qty: v })} />
+                      <Select label="Birlik" size="sm" value={r.unit} onChange={(v) => set(r.key, { unit: v ?? 'dona' })} options={UNITS} />
+                      <NumField label="Kelish narxi" hint="" value={r.pin} onValue={(v) => set(r.key, { pin: v })} placeholder={m ? money(m.price_in, false) : '0'} />
+                      <NumField label="Sotuv narxi" hint="" required={isNew(r)} value={r.pout} error={noPrice(r) ? "Narx yo'q" : null}
+                                disabled={!!m && !admin} onValue={(v) => set(r.key, { pout: v })} placeholder={m ? money(m.price_out, false) : 'Majburiy'} />
+                      {isNew(r) && <Field label="Kategoriya" value={r.cat} onChange={(e) => set(r.key, { cat: e.target.value })} placeholder="Ixtiyoriy" />}
                     </div>
                   </li>
                 );

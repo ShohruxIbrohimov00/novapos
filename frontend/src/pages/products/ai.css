@@ -38,10 +38,9 @@
 .ai-match--off { color: var(--text3); }
 .ai-grid { display: grid; gap: var(--s2); grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 768px) { .ai-grid { grid-template-columns: 2.4fr 1.4fr 0.9fr 0.9fr 1.1fr 1.1fr 1.2fr; } }
-.ai-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.ai-f span { font-size: var(--fs-xs); font-weight: 700; color: var(--text3); }
-.ai-f .ui-input { height: 42px; padding: 0 var(--s3); }
-.ai-f select.ui-input { padding-right: 30px; background-position: right 10px center; }
+.ai-grid .ui-field { gap: 4px; }
+.ai-grid .ui-field__label { font-size: var(--fs-xs); color: var(--text3); }
+.ai-grid .ui-input { height: 42px; padding: 0 var(--s3); }
 .ai-f--name { grid-column: 1 / -1; }
 @media (min-width: 768px) { .ai-f--name { grid-column: auto; } }
 .ai-done { display: flex; flex-direction: column; align-items: center; gap: var(--s3); text-align: center; }

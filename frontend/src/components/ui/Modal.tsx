@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, footer, wide, persistent
     lastFocus.current = document.activeElement as HTMLElement;
     const el = ref.current;
     // Birinchi maydonga fokus (yo'q bo'lsa — oynaning o'ziga)
-    const first = el?.querySelector<HTMLElement>('input, textarea, select, [data-autofocus]');
+    const first = el?.querySelector<HTMLElement>('input:not(.sr-only), textarea, select, [role="combobox"], [data-autofocus]');
     (first ?? el)?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {

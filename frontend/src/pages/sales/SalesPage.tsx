@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { dateTime, localDate, money, qty as fmtQty } from '@/lib/format';
 import { useAsync } from '@/lib/useAsync';
-import { Badge, Button, EmptyState, Field, Modal, Page, Skeleton, Tabs } from '@/components/ui';
+import { Badge, Button, Chips, EmptyState, Field, Modal, Page, Skeleton, Tabs } from '@/components/ui';
 import { SaleDetail } from './SaleDetail';
 import { METHOD, shortReceipt, type Method, type Sale, type SaleReturn, type Summary } from './types';
 import '../products/products.css';
@@ -190,13 +190,9 @@ export function SalesPage() {
         </div>
       )}
       {view === 'sales' && !receiptQ && (
-        <div className="inv-chips sl-chips" role="tablist" aria-label="To'lov turi">
-          {methodChips.map((c) => (
-            <button key={c.key} type="button" role="tab" aria-selected={method === c.key}
-                    className={`inv-chip${c.key === 'cancelled' ? ' inv-chip--danger' : ''}`} onClick={() => { setMethod(c.key); setOpenId(null); }}>
-              {c.label}{c.n !== undefined && <span className="inv-chip__n">{c.n}</span>}
-            </button>
-          ))}
+        <div className="sl-chips">
+          <Chips ariaLabel="To'lov turi" scroll value={method} onChange={(v) => { if (v) { setMethod(v); setOpenId(null); } }}
+                 options={methodChips.map((c) => ({ value: c.key, label: c.label, count: c.n, tone: c.key === 'cancelled' ? 'danger' as const : undefined }))} />
         </div>
       )}
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError } from '@/lib/api';
 import { cleanNumInput, money, parseNum, qty as fmtQty } from '@/lib/format';
 import { isWeight, UNIT_SHORT } from '@/lib/products';
-import { Button, Field, Modal, useToast } from '@/components/ui';
+import { Button, Chips, Field, Modal, useToast } from '@/components/ui';
 import type { Sale, SaleItem } from './types';
 
 const REASONS = ['Sifatsiz / buzuq', "Mijoz fikrini o'zgartirdi", 'Xato urilgan', 'Muddati o\'tgan'];
@@ -68,12 +68,8 @@ export function ReturnModal({ sale, item, onClose, onDone }: { sale: Sale; item:
           </div>
         )}
         <div className="ui-field">
-          <span className="ui-field__label">Sabab</span>
-          <div className="sl-reasons">
-            {REASONS.map((r) => (
-              <button key={r} type="button" className="sl-reason" aria-pressed={reason === r} onClick={() => setReason(reason === r ? '' : r)}>{r}</button>
-            ))}
-          </div>
+          <Chips label="Sabab" toggle value={REASONS.includes(reason) ? reason : null} onChange={(v) => setReason(v ?? '')}
+                 options={REASONS.map((r) => ({ value: r, label: r }))} />
           <Field placeholder="Yoki o'zingiz yozing (ixtiyoriy)" value={REASONS.includes(reason) ? '' : reason}
                  onChange={(e) => setReason(e.target.value)} maxLength={200} aria-label="Boshqa sabab" />
         </div>

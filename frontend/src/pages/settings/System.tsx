@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { openDb } from '@/lib/db';
 import { pendingCount, syncOfflineSales } from '@/lib/offlineSales';
 import { useTheme } from '@/lib/theme';
-import { Button, useConfirm, useToast } from '@/components/ui';
+import { Button, Switch, useConfirm, useToast } from '@/components/ui';
 
 export function System() {
   const toast = useToast();
@@ -46,8 +46,7 @@ export function System() {
     <section className="st-card" aria-labelledby="st-sys">
       <h2 id="st-sys" className="st-card__title"><i className="fa-solid fa-sliders" aria-hidden="true" /> Tizim</h2>
       <div className="st-row">
-        <span><b>Tungi rejim</b><small>Qorong'i fon, ko'zni kamroq charchatadi</small></span>
-        <label className="pf-switch"><input type="checkbox" checked={theme === 'dark'} onChange={toggleTheme} aria-label="Tungi rejim" /><span className="pf-switch__track" aria-hidden="true" /></label>
+        <Switch label="Tungi rejim" hint="Qorong'i fon, ko'zni kamroq charchatadi" checked={theme === 'dark'} onChange={toggleTheme} />
       </div>
       <div className="st-row">
         <span><b>Internet</b><small>{online ? 'Ulangan' : "Yo'q — sotuvlar qurilmada saqlanadi"}</small></span>

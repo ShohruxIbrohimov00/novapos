@@ -5,10 +5,10 @@ import { parseNum, qty as fmtQty } from '@/lib/format';
 import { UNIT_SHORT, type Product, type Unit } from '@/lib/products';
 import { useProducts } from '@/lib/useProducts';
 import { useScanner } from '@/lib/useScanner';
-import { Button, Field, IconButton, Page, Tabs, useToast } from '@/components/ui';
+import { Button, Field, IconButton, Page, Tabs, useToast, NumField } from '@/components/ui';
 import { currentLimits } from './LimitsPanel';
 import { useCategories } from './data';
-import { BarcodeField, CategorySelect, Margin, NumField, QtyInput, UnitPills } from './fields';
+import { BarcodeField, CategorySelect, Margin, QtyInput, UnitPills } from './fields';
 import './products.css';
 
 type Mode = 'single' | 'group';
