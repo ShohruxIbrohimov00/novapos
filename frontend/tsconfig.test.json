@@ -1,0 +1,7 @@
+{
+  // Testlar uchun alohida: Node turlari (fs, url) faqat testlarda, ilova kodida emas
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["vite/client", "node"] },
+  "include": ["src"],
+  "exclude": []
+}

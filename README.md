@@ -777,6 +777,39 @@ npm run build
 git add webapp/static/app frontend && git commit -m "Frontend: ..."
 ```
 
+### Testlar
+
+Har push va pull request'da GitHub o'zi tekshiradi (`.github/workflows/ci.yml`):
+backend testlari, frontend typecheck + testlar + build, va commit qilingan build
+manbaga mosligi. Qizil bo'lsa — serverga qo'yishdan oldin tuzating.
+
+Qo'lda ishga tushirish — backend (repo ildizidan, vaqtinchalik bazada, haqiqiy bazaga tegmaydi):
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+```bash
+pytest
+```
+
+Frontend:
+
+```bash
+cd frontend && npm test
+```
+
+Nimalar tekshiriladi:
+
+- `tests/test_isolation.py` — bir do'kon boshqasining tovari, sotuvi, mijozi, xodimini
+  ko'ra/o'zgartira olmasligi (eng muhim xavfsizlik talabi)
+- `tests/test_sales.py` — sotuv, qoldiq, chegirma, nasiya, oflayn sotuv takrorlanmasligi,
+  bekor qilish, qaytarish
+- `tests/test_subscription.py` — obuna tugaganda bloklash va to'lov jarayoni
+- qolganlari: ombor, mijozlar, xodimlar, ta'minotchilar, hisobot, superadmin, sahifalar
+- `frontend/src/**/*.test.ts(x)` — savat, server so'rovlari, oflayn navbat, yangilanish
+  banneri, xatolik oynasi, Service Worker va ilova bazasi sxemasi bir xilligi
+
 ### Qoidalar
 
 - Yangi tugma, maydon yoki oyna kerak bo'lsa — `components/ui/` dagi tayyor komponentdan

@@ -1,0 +1,2 @@
+# Faqat testlar uchun (serverga o'rnatish shart emas)
+pytest==8.3.4

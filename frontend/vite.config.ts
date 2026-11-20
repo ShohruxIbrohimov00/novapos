@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createHash } from 'node:crypto';
@@ -50,6 +51,12 @@ export default defineConfig(({ command }) => ({
     emptyOutDir: true,
     sourcemap: false,
     target: 'es2020',
+  },
+  test: {
+    environment: 'happy-dom',
+    include: ['src/**/*.test.{ts,tsx}'],
+    setupFiles: ['src/setupTests.ts'],
+    restoreMocks: true,
   },
   server: {
     port: 5173,
