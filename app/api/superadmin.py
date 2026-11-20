@@ -380,6 +380,36 @@ def extend_store(
     return {"status": "success", "expires_at": s.subscription_expires_at.isoformat()}
 
 
+def _delete_store_data(db: Session, store_id: int) -> None:
+    """
+    Do'konning BARCHA ma'lumotlari — bog'liqlik tartibida (avval bolalar).
+    Avval faqat xodimlar o'chirilardi va savdosi bor do'konda FOREIGN KEY xatosi (500) chiqardi.
+    """
+    M = models
+    sales     = db.query(M.Sale.id).filter(M.Sale.store_id == store_id)
+    customers = db.query(M.Customer.id).filter(M.Customer.store_id == store_id)
+    suppliers = db.query(M.Supplier.id).filter(M.Supplier.store_id == store_id)
+    steps = [
+        db.query(M.SaleReturn).filter(M.SaleReturn.sale_id.in_(sales)),
+        db.query(M.SaleItem).filter(M.SaleItem.sale_id.in_(sales)),
+        db.query(M.DebtPayment).filter(M.DebtPayment.customer_id.in_(customers)),
+        db.query(M.SupplierPayment).filter(M.SupplierPayment.supplier_id.in_(suppliers)),
+        db.query(M.SupplyBatch).filter(M.SupplyBatch.store_id == store_id),
+        db.query(M.StockAdjustment).filter(M.StockAdjustment.store_id == store_id),
+        db.query(M.AIProductScan).filter(M.AIProductScan.store_id == store_id),
+        db.query(M.Expense).filter(M.Expense.store_id == store_id),
+        db.query(M.Sale).filter(M.Sale.store_id == store_id),
+        db.query(M.Product).filter(M.Product.store_id == store_id),
+        db.query(M.Category).filter(M.Category.store_id == store_id),
+        db.query(M.Customer).filter(M.Customer.store_id == store_id),
+        db.query(M.Supplier).filter(M.Supplier.store_id == store_id),
+        db.query(M.SubscriptionRequest).filter(M.SubscriptionRequest.store_id == store_id),
+        db.query(M.Employee).filter(M.Employee.store_id == store_id),
+    ]
+    for q in steps:
+        q.delete(synchronize_session=False)
+
+
 @router.delete("/stores/{store_id}")
 def delete_store(
     store_id: int,
@@ -389,8 +419,7 @@ def delete_store(
     s = db.query(models.Store).filter(models.Store.id == store_id).first()
     if not s: raise HTTPException(404, "Do'kon topilmadi")
     name = s.name
-    db.query(models.SubscriptionRequest).filter(models.SubscriptionRequest.store_id == store_id).delete(synchronize_session=False)
-    db.query(models.Employee).filter(models.Employee.store_id == store_id).delete(synchronize_session=False)
+    _delete_store_data(db, store_id)
     db.delete(s); db.commit()
     logger.info(f"[DELETE] Store #{store_id} '{name}'")
     return {"status": "success", "message": f"'{name}' o'chirildi"}
